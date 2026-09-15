@@ -1,0 +1,42 @@
+{
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "ok": "OK"
+  },
+  "gallery": {
+    "title": "Design System Gallery",
+    "switchLang": "Switch to Hindi",
+    "buttons": "Buttons",
+    "inputs": "Text Inputs",
+    "cards": "Cards",
+    "badges": "Badges",
+    "modals": "Modals",
+    "emptyStates": "Empty States"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "email": "Email Address",
+    "password": "Password",
+    "forgot": "Forgot Password?"
+  },
+  "components": {
+    "primaryBtn": "Primary Action",
+    "secondaryBtn": "Secondary Action",
+    "textBtn": "Text Action",
+    "loadingBtn": "Loading Action",
+    "activeSubscription": "Active",
+    "expiredSubscription": "Expired",
+    "liveNow": "Live Now",
+    "emptyTitle": "Nothing here yet",
+    "emptyDesc": "Looks like you don't have any items.",
+    "emptyAction": "Add Item",
+    "openModal": "Open Modal",
+    "modalTitle": "Example Modal",
+    "modalDesc": "This is a simple customizable modal."
+  }
+}

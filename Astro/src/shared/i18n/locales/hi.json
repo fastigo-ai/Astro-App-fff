@@ -1,0 +1,42 @@
+{
+  "common": {
+    "submit": "प्रस्तुत करें",
+    "cancel": "रद्द करें",
+    "loading": "लोड हो रहा है...",
+    "error": "एक त्रुटि हुई",
+    "success": "सफलता",
+    "ok": "ठीक है"
+  },
+  "gallery": {
+    "title": "डिज़ाइन सिस्टम गैलरी",
+    "switchLang": "Switch to English",
+    "buttons": "बटन",
+    "inputs": "टेक्स्ट इनपुट",
+    "cards": "कार्ड",
+    "badges": "बैज",
+    "modals": "मॉडल",
+    "emptyStates": "खाली अवस्थाएं"
+  },
+  "auth": {
+    "login": "साइन इन करें",
+    "register": "साइन अप करें",
+    "email": "ईमेल पता",
+    "password": "पासवर्ड",
+    "forgot": "पासवर्ड भूल गए?"
+  },
+  "components": {
+    "primaryBtn": "प्राथमिक क्रिया",
+    "secondaryBtn": "माध्यमिक क्रिया",
+    "textBtn": "टेक्स्ट क्रिया",
+    "loadingBtn": "लोड हो रहा है",
+    "activeSubscription": "सक्रिय",
+    "expiredSubscription": "समाप्त",
+    "liveNow": "अभी लाइव",
+    "emptyTitle": "अभी तक यहाँ कुछ नहीं",
+    "emptyDesc": "ऐसा लगता है कि आपके पास कोई आइटम नहीं है।",
+    "emptyAction": "आइटम जोड़ें",
+    "openModal": "मॉडल खोलें",
+    "modalTitle": "उदाहरण मॉडल",
+    "modalDesc": "यह एक सरल अनुकूलन योग्य मॉडल है।"
+  }
+}
