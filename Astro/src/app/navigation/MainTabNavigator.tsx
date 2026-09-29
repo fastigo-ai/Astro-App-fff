@@ -1,121 +1,91 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from './types';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Home, BookOpen, Clock, Bell, User, CheckCircle2 } from 'lucide-react-native';
 import { DashboardScreen } from '~/features/dashboard/screens/DashboardScreen';
-import { ComponentGalleryScreen } from '~/features/debug/screens/ComponentGalleryScreen';
-import { theme } from '~/shared/theme';
+import { ProfileScreen } from '~/features/profile/screens/ProfileScreen';
+import { useAuthStore } from '~/store/useAuthStore';
+import { SubscribedScreen } from '~/features/dashboard/screens/SubscribedScreen';
+import { ClassesScreen } from '~/features/dashboard/screens/ClassesScreen';
+import { ActivityScreen } from '~/features/dashboard/screens/ActivityScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-import { useAuthStore } from '~/store/useAuthStore';
-import { LockedState } from '~/shared/components/LockedState';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppStackParamList } from './types';
-
-const LiveSessionsScreen = () => {
-  const status = useAuthStore(state => state.subscriptionStatus);
-  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  
-  if (status !== 'active') {
-    return <LockedState 
-      title="Live Sessions" 
-      description="Join daily live yoga, meditation, and expert Q&A sessions designed specifically for expecting mothers."
-      onPressPricing={() => navigation.navigate('Pricing')}
-    />;
+// Dynamic icon renderer based on state
+const getIcon = (routeName: string, color: string, isFocused: boolean) => {
+  const size = isFocused ? 28 : 24; 
+  const stroke = isFocused ? 2.5 : 1.5;
+  switch (routeName) {
+    case 'Dashboard': return <Home size={size} color={color} strokeWidth={stroke} />;
+    case 'Subscribed': return <BookOpen size={size} color={color} strokeWidth={stroke} />;
+    case 'Activity': return <CheckCircle2 size={size} color={color} strokeWidth={stroke} />;
+    case 'InProgress': return <Clock size={size} color={color} strokeWidth={stroke} />;
+    case 'Profile': return <User size={size} color={color} strokeWidth={stroke} />;
+    default: return <View style={{ width: size, height: size, backgroundColor: color }} />;
   }
-  return <View style={styles.center}><Text>Live Sessions coming soon!</Text></View>;
 };
 
-const OnDemandScreen = () => {
-  const status = useAuthStore(state => state.subscriptionStatus);
-  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  
-  if (status !== 'active') {
-    return <LockedState 
-      title="Premium Library" 
-      description="Access our complete catalog of prenatal workouts, diet plans, and educational videos anytime."
-      onPressPricing={() => navigation.navigate('Pricing')}
-    />;
-  }
-  return <View style={styles.center}><Text>On Demand coming soon!</Text></View>;
-};
-
-const ProfileScreen = () => {
-  const logout = useAuthStore(state => state.logout);
+const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   return (
-    <View style={styles.profileContainer}>
-      <View style={styles.profileHeader}>
-        <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>JD</Text>
-        </View>
-        <Text style={styles.profileName}>Jane Doe</Text>
-        <Text style={styles.profileSubtitle}>Week 24 • Trimester 2</Text>
-      </View>
-      <View style={styles.profileActions}>
-        <TouchableOpacity style={styles.logoutButton} onPress={() => logout()}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.tabBarContainer}>
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const label = options.title !== undefined ? options.title : route.name;
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={index}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            onPress={onPress}
+            style={styles.tabItem}
+            activeOpacity={0.8}
+          >
+            {isFocused ? (
+              <View style={styles.focusedCircle}>
+                {getIcon(route.name, '#FFFFFF', true)}
+              </View>
+            ) : (
+              <>
+                <View style={styles.iconWrapper}>
+                  {getIcon(route.name, '#9CA3AF', false)}
+                </View>
+                <Text style={styles.labelText}>{label}</Text>
+              </>
+            )}
+
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
 
-const TabIcon = ({ focused, label }: { focused: boolean; label: string }) => (
-  <View style={styles.iconContainer}>
-    <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
-      {label}
-    </Text>
-    {focused && <View style={styles.activeDot} />}
-  </View>
-);
-
 export const MainTabNavigator = () => {
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: { display: 'none' },
-      }}
+      tabBar={props => <CustomTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen 
-        name="Dashboard" 
-        component={DashboardScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="Home" />
-        }}
-      />
-      <Tab.Screen 
-        name="LiveSessions" 
-        component={LiveSessionsScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="Live" />
-        }}
-      />
-      <Tab.Screen 
-        name="OnDemand" 
-        component={OnDemandScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="Content" />
-        }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="Profile" />
-        }}
-      />
-      {/* Temporary Debug Tab */}
-      <Tab.Screen 
-        name="Gallery" 
-        component={ComponentGalleryScreen} 
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="Design UI" />
-        }}
-      />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="Subscribed" component={SubscribedScreen} options={{ title: 'Program' }} />
+      <Tab.Screen name="Activity" component={ActivityScreen} options={{ title: 'Activity' }} />
+      <Tab.Screen name="InProgress" component={ClassesScreen} options={{ title: 'Classes' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 };
@@ -125,51 +95,73 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#F8F9FA',
   },
-  tabBar: {
+  tabBarContainer: {
     position: 'absolute',
     bottom: 24,
-    left: 20,
-    right: 20,
-    elevation: 10,
+    left: 16,
+    right: 16,
+    height: 72,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    height: 70,
-    paddingBottom: 0, // Overrides default safe area inset
-    paddingTop: 0,
-    shadowColor: theme.colors.primary,
+    borderRadius: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    // Soft drop shadow
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 20,
-    borderTopWidth: 0,
+    elevation: 10,
   },
-  iconContainer: {
+  tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    height: 72,
+    flex: 1,
   },
-  tabLabel: {
-    fontSize: theme.typography.sizes.sm,
-    fontWeight: '600',
-    color: theme.colors.textMuted,
+  iconWrapper: {
     marginBottom: 4,
   },
-  tabLabelFocused: {
-    color: theme.colors.primary,
-    fontWeight: '800',
+  focusedCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#EC4899', // Signature vibrant pink color
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ translateY: -20 }], // Pops up playfully above the tab bar
+    shadowColor: '#EC4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.primary,
+  labelText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#9CA3AF',
+  },
+  badge: {
     position: 'absolute',
-    bottom: 12,
+    top: 10,
+    right: '50%',
+    backgroundColor: '#EC4899',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+    transform: [{ translateX: 15 }, { translateY: -15 }], // Pushed top-right of the icon
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
   profileContainer: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#F8F9FA',
   },
   profileHeader: {
     alignItems: 'center',
@@ -188,7 +180,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#EC4899',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,

@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
 import { Button } from '~/shared/components/Button';
 import { useAuthStore } from '~/store/useAuthStore';
+import { api } from '~/shared/api';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'LanguageSelect'>;
 
@@ -13,26 +14,38 @@ const { width } = Dimensions.get('window');
 const LANGUAGES = [
   { id: 'en', name: 'English', subtitle: 'Welcome' },
   { id: 'hi', name: 'हिन्दी', subtitle: 'स्वागत है' },
-  { id: 'l3', name: 'Language 3', subtitle: 'Welcome' },
-  { id: 'l4', name: 'Language 4', subtitle: 'Welcome' },
-  { id: 'l5', name: 'Language 5', subtitle: 'Welcome' },
-  { id: 'l6', name: 'Language 6', subtitle: 'Welcome' },
-  { id: 'l7', name: 'Language 7', subtitle: 'Welcome' },
-  { id: 'l8', name: 'Language 8', subtitle: 'Welcome' },
-  { id: 'l9', name: 'Language 9', subtitle: 'Welcome' },
-  { id: 'l10', name: 'Language 10', subtitle: 'Welcome' },
 ];
 
 export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
   const { i18n } = useTranslation();
   const [selectedLang, setSelectedLang] = useState('en');
+  const [isLoading, setIsLoading] = useState(false);
   const setHasLanguage = useAuthStore(state => state.setHasLanguage);
 
-  const handleContinue = () => {
-    if (selectedLang === 'en' || selectedLang === 'hi') {
-      i18n.changeLanguage(selectedLang);
+  const handleContinue = async () => {
+    try {
+      setIsLoading(true);
+      
+      // 1. Sync choice to Backend
+      await api.post('/api/v1/profile/language', { language: selectedLang });
+      
+      // 2. Change UI language instantly
+      if (selectedLang === 'en' || selectedLang === 'hi') {
+        i18n.changeLanguage(selectedLang);
+      }
+      
+      // 3. Complete step locally
+      setHasLanguage(true);
+    } catch (error) {
+      console.error('Failed to sync language to backend:', error);
+      // Fallback gracefully if backend is offline
+      if (selectedLang === 'en' || selectedLang === 'hi') {
+        i18n.changeLanguage(selectedLang);
+      }
+      setHasLanguage(true);
+    } finally {
+      setIsLoading(false);
     }
-    setHasLanguage(true);
   };
 
   const renderItem = ({ item }: { item: typeof LANGUAGES[0] }) => {
@@ -56,11 +69,8 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Decorative Bubbles */}
-      <View style={[styles.bubble, styles.bubble1]} />
-      <View style={[styles.bubble, styles.bubble2]} />
-      <View style={[styles.bubble, styles.bubble3]} />
-      <View style={[styles.bubble, styles.bubble4]} />
+      {/* Modern Background Decor */}
+      <View style={styles.bgDecorTop} pointerEvents="none" />
 
       <View style={styles.inner}>
         <View style={styles.header}>
@@ -68,7 +78,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.backButton} 
             onPress={() => useAuthStore.getState().logout()}
           >
-            <Text style={styles.backIcon}>{'<'}</Text>
+            <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
         </View>
 
@@ -93,8 +103,9 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         <Button 
-          title="Continue →" 
+          title={isLoading ? "Saving..." : "Continue →"} 
           onPress={handleContinue} 
+          isLoading={isLoading}
           style={styles.submitBtn}
           textStyle={styles.submitBtnText}
         />
@@ -106,69 +117,47 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFE6DF', // Matching Peach theme
+    backgroundColor: '#FAFAFA', // Clean off-white background
   },
   inner: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 10,
+    paddingHorizontal: 28,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
-  bubble: {
+  bgDecorTop: {
     position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  bubble1: {
-    width: 250,
-    height: 250,
-    top: -80,
-    right: -50,
-  },
-  bubble2: {
-    width: 200,
-    height: 200,
-    bottom: 50,
-    right: -80,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  bubble3: {
-    width: 120,
-    height: 120,
-    bottom: -40,
-    left: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-  },
-  bubble4: {
-    width: 80,
-    height: 80,
-    top: 150,
-    left: -30,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    top: -width * 0.5,
+    right: -width * 0.2,
+    width: width * 1.5,
+    height: width * 1.5,
+    borderRadius: width * 0.75,
+    backgroundColor: '#EEF2FF', // Very subtle indigo tint
+    opacity: 0.6,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: '#FFF',
+    borderColor: '#F3F4F6',
   },
   backIcon: {
-    fontSize: 20,
-    color: '#FFF',
-    fontWeight: 'bold',
+    fontSize: 22,
+    color: '#374151',
+    marginTop: -2,
   },
   logoContainer: {
     alignItems: 'center',
@@ -179,12 +168,12 @@ const styles = StyleSheet.create({
     height: 100,
   },
   title: {
-    fontFamily: 'serif',
-    fontWeight: '600',
-    fontSize: 26,
-    color: '#1E90FF', // Bright blue
-    textAlign: 'center',
+    fontSize: 28, 
+    fontWeight: '800',
+    color: '#111827',
     marginBottom: 24,
+    letterSpacing: -0.5,
+    textAlign: 'center',
   },
   listContent: {
     paddingBottom: 20,
@@ -194,19 +183,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    width: (width - 48 - 12) / 2, // 2 columns, 24 padding each side, 12 gap
+    backgroundColor: '#FFFFFF',
+    width: (width - 56 - 16) / 2, // 2 columns, 28 padding each side, 16 gap
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   cardSelected: {
-    backgroundColor: '#FFF',
-    borderColor: '#1E90FF',
+    borderColor: '#4F46E5', // Indigo
+    backgroundColor: '#EEF2FF', // Very subtle indigo
+    shadowColor: '#4F46E5',
+    shadowOpacity: 0.05,
   },
   cardContent: {
     flex: 1,
@@ -214,53 +210,53 @@ const styles = StyleSheet.create({
   langText: {
     fontWeight: '500',
     fontSize: 16,
-    color: '#333',
+    color: '#374151',
     marginBottom: 4,
   },
   textSelected: {
     fontWeight: '700',
-    color: '#111',
+    color: '#111827',
   },
   subText: {
     fontWeight: '500',
-    fontSize: 11,
-    color: '#666',
+    fontSize: 12,
+    color: '#6B7280',
   },
   radio: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: '#CCC',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
   },
   radioSelected: {
-    backgroundColor: '#1E90FF',
-    borderColor: '#1E90FF',
+    backgroundColor: '#EC4899', // Pink accent
+    borderColor: '#EC4899',
   },
   radioCheck: {
     color: '#FFF',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   submitBtn: {
-    backgroundColor: '#1E90FF', // Bright blue
-    borderRadius: 27,
-    height: 54,
+    backgroundColor: '#4F46E5', // Indigo primary
+    borderRadius: 16,
+    height: 60,
     marginTop: 10,
-    marginBottom: 20,
-    shadowColor: '#1E90FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 24,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
   },
   submitBtnText: {
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 17,
+    color: '#FFFFFF',
   },
 });

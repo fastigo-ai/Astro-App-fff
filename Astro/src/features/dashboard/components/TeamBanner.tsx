@@ -1,89 +1,67 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Dimensions } from 'react-native';
-import { theme } from '~/shared/theme';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated, Easing } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AppStackParamList } from '~/app/navigation/types';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width - 32; // Full width minus horizontal padding
-
-const BANNERS = [
-  { 
-    id: '1', 
-    title: 'EXPERT DOCTORS', 
-    image: require('~/assets/images/team_photo.png') 
-  },
-  { 
-    id: '2', 
-    title: 'TEAM ASTRO BABY', 
-    image: require('~/assets/images/team_photo.png') 
-  },
-  { 
-    id: '3', 
-    title: 'AWARD WINNING', 
-    image: require('~/assets/images/team_photo.png') 
-  },
-];
+const CARD_WIDTH = width - 32;
 
 export const TeamBanner = () => {
-  const scrollRef = useRef<ScrollView>(null);
-  const indexRef = useRef(0);
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  
+  // Create an animated value for the bounce
+  const bounceValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      indexRef.current = (indexRef.current + 1) % BANNERS.length;
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          x: indexRef.current * (CARD_WIDTH + 16),
-          animated: true,
-        });
-      }
-    }, 3000); // Auto-scroll every 3 seconds
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleScrollEnd = (event: any) => {
-    const x = event.nativeEvent.contentOffset.x;
-    indexRef.current = Math.round(x / (CARD_WIDTH + 16));
-  };
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceValue, {
+          toValue: -8, // bounce up
+          duration: 500,
+          useNativeDriver: false,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        Animated.timing(bounceValue, {
+          toValue: 0, // back down
+          duration: 500,
+          useNativeDriver: false,
+          easing: Easing.inOut(Easing.ease),
+        }),
+      ])
+    ).start();
+  }, [bounceValue]);
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        ref={scrollRef}
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        snapToInterval={CARD_WIDTH + 16} // card width + marginRight
-        decelerationRate="fast"
-        onMomentumScrollEnd={handleScrollEnd}
+      <TouchableOpacity 
+        style={styles.card}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('GiftRedeem')}
       >
-        {BANNERS.map((banner) => (
-          <View key={banner.id} style={styles.card}>
-            <Image 
-              source={banner.image} 
-              style={styles.imagePlaceholder}
-              resizeMode="cover"
-            />
-            <View style={styles.bannerBanner}>
-              <Text style={styles.bannerText}>{banner.title}</Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+        <Image 
+          source={require('~/assets/images/hero-2.png')} 
+          style={styles.imagePlaceholder}
+          resizeMode="cover"
+        />
+        <Animated.View style={[styles.bannerBanner, { transform: [{ translateY: bounceValue }] }]}>
+          <Text style={styles.bannerText}>🎁 TAP TO OPEN GIFT</Text>
+        </Animated.View>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 8,
   },
   scrollContent: {
     paddingHorizontal: 16, // padding at the start and end of the scroll view
   },
   card: {
     width: CARD_WIDTH,
-    marginRight: 16,
+    alignSelf: 'center',
     backgroundColor: '#FFF',
     borderRadius: 24,
     overflow: 'hidden',
@@ -96,7 +74,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F1F5F9',
     position: 'relative',
-    height: 180, // match image height
+    height: 180, 
   },
   imagePlaceholder: {
     width: '100%',
@@ -105,10 +83,11 @@ const styles = StyleSheet.create({
   },
   bannerBanner: {
     position: 'absolute',
-    bottom: 16,
-    backgroundColor: '#FFF9C4', // Soft yellow
-    paddingHorizontal: 24,
-    paddingVertical: 6,
+    right: 16,
+    bottom: 24,
+    backgroundColor: '#FFF9C4', 
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 20,
     shadowColor: '#F57F17',
     shadowOffset: { width: 0, height: 4 },
@@ -119,9 +98,9 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
   },
   bannerText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '900',
-    color: '#F57F17', // deep gold
+    color: '#F57F17', 
     letterSpacing: 1.5,
   },
 });

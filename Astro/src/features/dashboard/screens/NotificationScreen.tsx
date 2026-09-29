@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ChevronLeft } from 'lucide-react-native';
 
 const MOCK_NOTIFICATIONS = [
   { id: '1', title: 'Session Starting Soon! 🧘‍♀️', message: 'Your Pregnancy Yoga session with Rukmani begins in 15 minutes. Get ready!', time: '15 min ago', read: false, type: 'live' },
@@ -16,10 +17,10 @@ export const NotificationScreen = () => {
 
   const getIconForType = (type: string) => {
     switch (type) {
-      case 'live': return { icon: '🔴', bgColor: '#FEE2E2' };
-      case 'content': return { icon: '🎧', bgColor: '#E0E7FF' };
-      case 'tip': return { icon: '💡', bgColor: '#FEF3C7' };
-      default: return { icon: '🔔', bgColor: '#F3F4F6' };
+      case 'live': return { icon: '🔴', bgColor: '#FFE4E6' }; // Soft Rose
+      case 'content': return { icon: '🎧', bgColor: '#FEF3C7' }; // Soft Gold
+      case 'tip': return { icon: '💡', bgColor: '#FFEDD5' }; // Soft Orange
+      default: return { icon: '🔔', bgColor: '#F3E8FF' }; // Soft Purple
     }
   };
 
@@ -28,7 +29,7 @@ export const NotificationScreen = () => {
       {/* Sleek Header */}
       <View style={[styles.header, { paddingTop: insets.top || 40 }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+          <ChevronLeft size={24} color="#374151" strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
         <TouchableOpacity style={styles.placeholder}>
@@ -63,7 +64,7 @@ export const NotificationScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FAF9F6', // Soft creamy ethereal background
   },
   header: {
     flexDirection: 'row',
@@ -72,30 +73,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 15,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,
     zIndex: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FEF3C7',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   backIcon: {
-    fontSize: 24,
-    color: '#334155',
-    fontWeight: '600',
+    fontSize: 22,
+    color: '#374151',
+    marginTop: -2,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#4B5563',
     letterSpacing: 0.5,
   },
   placeholder: {
@@ -104,8 +114,8 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: 12,
-    color: '#3B82F6',
-    fontWeight: '600',
+    color: '#F59E0B', // Warm gold instead of blue
+    fontWeight: '700',
   },
   scrollContent: {
     padding: 20,
@@ -114,22 +124,24 @@ const styles = StyleSheet.create({
   },
   notifCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: '#FFFDF9', // Warm white
+    borderRadius: 24,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#FEF3C7', // Faint gold border
   },
   notifCardRead: {
-    backgroundColor: '#F1F5F9', // Gray out read notifications
+    backgroundColor: '#FDFBF7', // Slightly muted cream
     shadowOpacity: 0,
     elevation: 0,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#F3F4F6',
   },
   unreadDot: {
     position: 'absolute',
@@ -138,7 +150,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#EF4444', // Red dot for unread
+    backgroundColor: '#EC4899', // Pink dot for unread
   },
   iconContainer: {
     width: 48,
@@ -158,22 +170,22 @@ const styles = StyleSheet.create({
   notifTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#4B5563', // Warm dark gray
     marginBottom: 4,
     paddingRight: 10,
   },
   notifMessage: {
     fontSize: 13,
-    color: '#475569',
+    color: '#6B7280',
     lineHeight: 18,
     marginBottom: 8,
   },
   notifTime: {
     fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '500',
+    color: '#D97706', // Warm amber for time
+    fontWeight: '600',
   },
   textRead: {
-    color: '#64748B',
+    color: '#9CA3AF',
   },
 });

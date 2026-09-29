@@ -1,29 +1,58 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { theme } from '~/shared/theme';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AppStackParamList } from '~/app/navigation/types';
+import { Footprints, Bell } from 'lucide-react-native';
+import { useAuthStore } from '~/store/useAuthStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface DashboardHeaderProps {
-  onOpenMenu?: () => void;
-}
+type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
-export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onOpenMenu }) => {
+export const DashboardHeader: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const babyKicks = useAuthStore(state => state.babyKicks);
+  const incrementBabyKicks = useAuthStore(state => state.incrementBabyKicks);
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.menuButton} onPress={onOpenMenu}>
-        <Text style={styles.menuIcon}>☰</Text>
-      </TouchableOpacity>
-
-      <View style={styles.centerContainer}>
-        <Image 
-          source={require('~/assets/images/logo.png')} 
-          style={styles.logoImage} 
-          resizeMode="contain" 
+    <View style={[styles.container, { paddingTop: insets.top + 4 }]}>
+      {/* Left Side: Logo */}
+      <View style={styles.leftContainer}>
+        <Image
+          source={require('~/assets/images/logo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
         />
-        <Text style={styles.logoSubtitle}>India's Most Trusted Garbh Sanskar App.</Text>
       </View>
 
-      {/* Invisible spacer to keep logo centered */}
-      <View style={{ width: 40 }} />
+      {/* Right Side: Interactive Actions (Minimalist Icons) */}
+      <View style={styles.rightContainer}>
+        {/* Baby Kick Counter */}
+        <TouchableOpacity
+          style={styles.kickButton}
+          onPress={incrementBabyKicks}
+          activeOpacity={0.7}
+        >
+          <View style={styles.kickIconWrapper}>
+            <Footprints size={16} color="#E11D48" strokeWidth={2.5} />
+          </View>
+          <Text style={styles.kickButtonText}>
+            {babyKicks > 0 ? `${babyKicks} Kicks` : 'Record Kick'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Notification Bell */}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => navigation.navigate('Notifications')}
+          activeOpacity={0.7}
+        >
+          <Bell size={26} color="#111827" strokeWidth={1.5} />
+          <View style={styles.dotBadge} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -33,28 +62,65 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: '#FFFFFF', // Changed to white to seamlessly blend with the logo's white background
+    paddingHorizontal: 16,
+    paddingBottom: 8, // Drastically reduced from 16 to make the header thin
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    // Subtle drop shadow to visually lift the header off the page
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 3, // For Android shadow
+    zIndex: 10,
   },
-  menuButton: {
-    padding: theme.spacing.sm,
-  },
-  menuIcon: {
-    fontSize: 24,
-    color: theme.colors.textDark,
-  },
-  centerContainer: {
-    alignItems: 'center',
+  leftContainer: {
+    justifyContent: 'center',
   },
   logoImage: {
-    width: 160,
-    height: 40,
+    height: 32, // Slightly reduced to fit the thinner profile
+    width: 120,
   },
-  logoSubtitle: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#34495E',
-    marginTop: 2,
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 22,
+  },
+  iconButton: {
+    position: 'relative',
+    padding: 2,
+  },
+  kickButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF1F2', // Soft rose pink
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    marginRight: 4,
+  },
+  kickIconWrapper: {
+    marginRight: 6,
+  },
+  kickButtonText: {
+    color: '#E11D48',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  dotBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
+
+

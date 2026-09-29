@@ -12,15 +12,16 @@ export type OnboardingStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
-  LiveSessions: undefined;
-  OnDemand: undefined;
+  Subscribed: undefined;
+  Activity: undefined;
+  InProgress: undefined;
   Profile: undefined;
-  Gallery: undefined;
 };
 
 export type AppStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   LifeStage: undefined;
+  IntroVideo: undefined;
   LanguageSelect: undefined;
   ProfileSetup: undefined;
   Pricing: undefined;
@@ -31,6 +32,13 @@ export type AppStackParamList = {
   AboutUs: undefined;
   Notifications: undefined;
   SubscriptionDetails: undefined;
+  PrivacyPolicy: undefined;
+  TermsConditions: undefined;
+  AllPrograms: undefined;
+  GiftRedeem: undefined;
+  ActivityDetail: { id: string };
+  Reviews: undefined;
+  BabyBump: undefined;
 };
 
 export type RootStackParamList = {

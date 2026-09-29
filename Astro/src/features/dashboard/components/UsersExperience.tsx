@@ -23,7 +23,7 @@ export const UsersExperience = () => {
       <TouchableOpacity 
         style={styles.tapBtn} 
         activeOpacity={0.8}
-        onPress={() => navigation.navigate('AboutUs')}
+        onPress={() => navigation.navigate('Reviews')}
       >
         <Text style={styles.tapBtnText}>TAP HERE</Text>
       </TouchableOpacity>

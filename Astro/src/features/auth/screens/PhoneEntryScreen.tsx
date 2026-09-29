@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, TouchableOpacity, Image, TextInput, Dimensions } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '~/app/navigation/types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,13 +8,15 @@ import { RootState } from '../../../store';
 import { Button } from '~/shared/components/Button';
 import { Modal } from '~/shared/components/Modal';
 
+const { width } = Dimensions.get('window');
+
 type Props = NativeStackScreenProps<AuthStackParamList, 'PhoneEntry'>;
 
 const COUNTRY_CODES = [
-  { code: '+91', name: 'India' },
-  { code: '+1', name: 'USA/Canada' },
-  { code: '+44', name: 'UK' },
-  { code: '+61', name: 'Australia' },
+  { code: '+91', name: 'India', flag: '🇮🇳' },
+  { code: '+1', name: 'USA/Canada', flag: '🇺🇸' },
+  { code: '+44', name: 'UK', flag: '🇬🇧' },
+  { code: '+61', name: 'Australia', flag: '🇦🇺' },
 ];
 
 export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
@@ -31,30 +33,40 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSendOtp = async () => {
     const fullNumber = `${countryCode}${phone}`;
+    
+    // Update Redux state just in case other UI elements rely on it
     dispatch(setPhoneNumber(fullNumber));
     dispatch(setStatus('sending_otp'));
     dispatch(setErrorReason(null));
     
-    // --- LOCAL MOCK BYPASS ---
-    setTimeout(() => {
+    // Call the actual backend via Zustand store
+    const { useAuthStore } = require('~/store/useAuthStore');
+    await useAuthStore.getState().sendOtp(fullNumber);
+    
+    const authStatus = useAuthStore.getState().status;
+    
+    if (authStatus === 'otp_sent') {
       dispatch(setStatus('otp_sent'));
       navigation.navigate('OtpVerification');
-    }, 500);
+    } else {
+      dispatch(setErrorReason('network_error'));
+      dispatch(setStatus('error'));
+    }
   };
+
+  const selectedCountry = COUNTRY_CODES.find(c => c.code === countryCode);
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          {/* Decorative Bubbles */}
-          <View style={[styles.bubble, styles.bubble1]} />
-          <View style={[styles.bubble, styles.bubble2]} />
-          <View style={[styles.bubble, styles.bubble3]} />
-          <View style={[styles.bubble, styles.bubble4]} />
-
-          <View style={styles.inner}>
+          
+          {/* Modern Background Decor */}
+          <View style={styles.bgDecorTop} />
+          
+          <View style={styles.content}>
             
-            <View style={styles.logoContainer}>
+            <View style={styles.logoWrapper}>
               <Image
                 source={require('~/assets/images/logo.png')}
                 style={styles.logo}
@@ -63,53 +75,61 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.header}>
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Enter your mobile number to continue</Text>
+              <Text style={styles.title}>Welcome to Astro Baby</Text>
+              <Text style={styles.subtitle}>Enter your mobile number to get started</Text>
             </View>
 
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Mobile Number</Text>
-              <View style={styles.inputWrapper}>
-                <TouchableOpacity 
-                  style={styles.countryPickerBtn}
-                  onPress={() => setPickerVisible(true)}
-                >
-                  <Text style={styles.countryCodeText}>{countryCode} ▾</Text>
-                </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <TouchableOpacity 
+                style={styles.countrySelector}
+                onPress={() => setPickerVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.flagIcon}>{selectedCountry?.flag}</Text>
+                <Text style={styles.countryCodeText}>{countryCode}</Text>
+                <Text style={styles.chevron}>▼</Text>
+              </TouchableOpacity>
 
-                <TextInput 
-                  style={styles.input}
-                  value={phone}
-                  onChangeText={(val) => {
-                    setPhone(val.replace(/[^0-9]/g, ''));
-                    if (errorReason) resetState();
-                  }}
-                  keyboardType="phone-pad"
-                  placeholder="Enter Number"
-                  placeholderTextColor="#C4C4C4"
-                  maxLength={15}
-                />
-              </View>
-              {errorReason === 'invalid_phone' && <Text style={styles.errorText}>Invalid number</Text>}
+              <View style={styles.divider} />
+
+              <TextInput 
+                style={styles.input}
+                value={phone}
+                onChangeText={(val) => {
+                  setPhone(val.replace(/[^0-9]/g, ''));
+                  if (errorReason) resetState();
+                }}
+                keyboardType="phone-pad"
+                placeholder="Mobile number"
+                placeholderTextColor="#9CA3AF"
+                maxLength={15}
+                selectionColor="#4F46E5"
+              />
             </View>
+            
+            {errorReason === 'invalid_phone' && (
+              <Text style={styles.errorText}>Please enter a valid phone number</Text>
+            )}
 
             <Button 
-              title="Send OTP →" 
+              title="Continue" 
               onPress={handleSendOtp} 
               isLoading={status === 'sending_otp'} 
               disabled={phone.length < 5}
-              style={styles.submitBtn}
+              style={[styles.submitBtn, phone.length < 5 && styles.submitBtnDisabled]}
               textStyle={styles.submitBtnText}
             />
 
-            <View style={{ flex: 1 }} />
-
-            <Text style={styles.footerText}>
-              By continuing, you agree to our <Text style={styles.link}>Terms</Text>{'\n'}
-              & <Text style={styles.link}>Privacy Policy</Text>
-            </Text>
-
           </View>
+          
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.link}>Terms of Service</Text>{' '}and{' '}
+              <Text style={styles.link}>Privacy Policy</Text>
+            </Text>
+          </View>
+
         </View>
       </TouchableWithoutFeedback>
 
@@ -124,7 +144,10 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
               setPickerVisible(false);
             }}
           >
-            <Text style={styles.countryItemText}>{item.name}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.countryItemFlag}>{item.flag}</Text>
+              <Text style={styles.countryItemText}>{item.name}</Text>
+            </View>
             <Text style={styles.countryItemCode}>{item.code}</Text>
           </TouchableOpacity>
         ))}
@@ -136,157 +159,150 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#FFE6DF' // Soft peach tone from screenshot
+    backgroundColor: '#FAFAFA' // Clean off-white background
   },
-  inner: { 
-    flex: 1, 
-    padding: 24,
-    paddingTop: 60,
-  },
-  bubble: {
+  bgDecorTop: {
     position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 5,
+    top: -width * 0.5,
+    right: -width * 0.2,
+    width: width * 1.5,
+    height: width * 1.5,
+    borderRadius: width * 0.75,
+    backgroundColor: '#EEF2FF', // Very subtle indigo tint
+    opacity: 0.6,
   },
-  bubble1: {
-    width: 250,
-    height: 250,
-    top: -80,
-    right: -50,
+  content: { 
+    flex: 1, 
+    paddingHorizontal: 28,
+    paddingTop: Platform.OS === 'ios' ? 80 : 60,
   },
-  bubble2: {
-    width: 200,
-    height: 200,
-    bottom: 50,
-    right: -80,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  bubble3: {
-    width: 120,
-    height: 120,
-    bottom: -40,
-    left: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-  },
-  bubble4: {
-    width: 80,
-    height: 80,
-    top: 150,
-    left: -30,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  logoContainer: {
+  logoWrapper: {
     alignItems: 'center',
-    marginBottom: 40,
-    marginTop: 20,
+    marginBottom: 48,
   },
   logo: {
-    width: 280,
-    height: 120,
+    width: width * 0.7,
+    height: 100,
   },
   header: { 
+    marginBottom: 80,
     alignItems: 'center',
-    marginBottom: 30,
   },
   title: { 
-    fontFamily: 'serif', // Or whatever serif font is available natively
-    fontWeight: '600',
     fontSize: 28, 
-    color: '#222', 
-    marginBottom: 12,
-    textAlign: 'center'
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 10,
+    letterSpacing: -0.5,
+    textAlign: 'center',
   },
   subtitle: { 
-    fontWeight: '400',
     fontSize: 15,
-    color: '#333', 
-    textAlign: 'center'
+    fontWeight: '400',
+    color: '#6B7280', 
+    lineHeight: 22,
+    textAlign: 'center',
   },
-  inputSection: {
-    marginBottom: 30,
-  },
-  inputLabel: {
-    fontWeight: '500',
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 8,
-  },
-  inputWrapper: { 
+  inputContainer: { 
     flexDirection: 'row', 
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    height: 64,
+    paddingHorizontal: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    height: 54,
+    borderColor: '#F3F4F6',
   },
-  countryPickerBtn: {
-    height: '100%',
-    justifyContent: 'center',
+  countrySelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    borderRightWidth: 1,
-    borderRightColor: '#E0E0E0',
-    backgroundColor: '#F5F5F5',
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
+    height: '100%',
+  },
+  flagIcon: {
+    fontSize: 20,
+    marginRight: 6,
   },
   countryCodeText: { 
-    fontWeight: '500',
-    fontSize: 15, 
-    color: '#111' 
+    fontWeight: '600',
+    fontSize: 16, 
+    color: '#374151' 
+  },
+  chevron: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginLeft: 6,
+    marginTop: 2,
+  },
+  divider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#E5E7EB',
   },
   input: {
     flex: 1,
     height: '100%',
     paddingHorizontal: 16,
-    fontWeight: '400',
-    fontSize: 15,
-    color: '#111',
+    fontWeight: '500',
+    fontSize: 17,
+    color: '#111827',
   },
   errorText: {
-    fontWeight: '400',
-    color: '#FF3B30',
+    fontWeight: '500',
+    color: '#EF4444',
     fontSize: 13,
-    marginTop: 6,
+    marginTop: 10,
+    marginLeft: 4,
   },
   submitBtn: { 
-    backgroundColor: '#1E90FF', // Bright blue
-    borderRadius: 27,
-    height: 54,
-    shadowColor: '#1E90FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#4F46E5', // Indigo primary
+    borderRadius: 16,
+    height: 60,
+    marginTop: 32,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#C7D2FE',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   submitBtnText: {
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 17,
+    color: '#FFFFFF',
+  },
+  footer: {
+    paddingHorizontal: 32,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
   },
   footerText: {
     textAlign: 'center',
     fontSize: 13,
-    color: '#333',
+    color: '#6B7280',
     lineHeight: 20,
-    marginBottom: 20,
-    fontWeight: '500',
   },
   link: {
-    color: '#1E90FF',
+    color: '#4F46E5',
+    fontWeight: '600',
   },
   countryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: '#F3F4F6',
   },
-  countryItemText: { fontSize: 16, color: '#333' },
-  countryItemCode: { fontSize: 16, fontWeight: 'bold', color: '#1E90FF' },
+  countryItemFlag: { fontSize: 24, marginRight: 12 },
+  countryItemText: { fontSize: 16, color: '#111827', fontWeight: '500' },
+  countryItemCode: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
 });

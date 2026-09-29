@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Platform, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Platform, ScrollView, Dimensions, BackHandler } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
 import { Button } from '~/shared/components/Button';
 import { useAuthStore } from '~/store/useAuthStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { theme } from '~/shared/theme';
+import { SearchableDropdown } from '~/shared/components/SearchableDropdown';
+import { INDIA_STATES_CITIES, STATES_LIST } from '~/shared/data/india-states-cities';
+import { api } from '~/shared/api';
+
+const { width } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ProfileSetup'>;
 
@@ -14,14 +19,39 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [dob, setDob] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedState, setSelectedState] = useState('');
   const [city, setCity] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const setHasProfile = useAuthStore(state => state.setHasProfile);
   const setHasLanguage = useAuthStore(state => state.setHasLanguage);
 
-  const handleNextStep = () => {
-    // In a real app, you might validate the fields first.
-    // For now, we'll save locally and proceed.
-    setHasProfile(true, { name, dob, city });
+  const handleBack = () => {
+    setHasLanguage(false);
+    return true; // prevent default behavior
+  };
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => backHandler.remove();
+  }, []);
+
+  const handleNextStep = async () => {
+    if (!name) return; // Simple validation for now
+
+    try {
+      setIsLoading(true);
+      // Sync to backend
+      await api.post('/api/v1/profile/details', { name, dob, city, state: selectedState });
+      
+      // Update local state to advance to next screen
+      setHasProfile(true, { name, dob, city, state: selectedState });
+    } catch (error) {
+      console.error('Failed to save profile details:', error);
+      // Fallback to local state if backend is down during dev
+      setHasProfile(true, { name, dob, city, state: selectedState });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
@@ -37,14 +67,17 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Decorative Background */}
-      <View style={[styles.bubble, styles.bubble1]} />
-      <View style={[styles.bubble, styles.bubble2]} />
+      {/* Modern Background Decor */}
+      <View style={styles.bgDecorTop} pointerEvents="none" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => setHasLanguage(false)}>
-            <Text style={styles.backIcon}>‹</Text>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBack}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          >
+            <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           
           <View style={styles.progressContainer}>
@@ -74,6 +107,9 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor="#A9A9A9"
                 value={name}
                 onChangeText={setName}
+                autoComplete="name"
+                textContentType="name"
+                autoCorrect={false}
               />
             </View>
 
@@ -100,36 +136,35 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>City</Text>
-              <View style={styles.inputWithIcon}>
-                <Text style={styles.inputIcon}>📍</Text>
-                <TextInput 
-                  style={[styles.input, styles.inputBorderless]} 
-                  placeholder="e.g. San Francisco"
-                  placeholderTextColor="#A9A9A9"
-                  value={city}
-                  onChangeText={setCity}
-                />
-              </View>
+              <SearchableDropdown
+                label="State"
+                data={STATES_LIST}
+                value={selectedState}
+                onSelect={(val) => {
+                  setSelectedState(val);
+                  setCity(''); // Reset city when state changes
+                }}
+                placeholder="Select State"
+              />
             </View>
 
-            <TouchableOpacity style={styles.partnerCard}>
-              <View style={styles.partnerIconWrapper}>
-                <Text style={styles.partnerIcon}>⚣</Text>
-              </View>
-              <View style={styles.partnerTextWrapper}>
-                <Text style={styles.partnerTitle}>Partner's Details</Text>
-                <Text style={styles.partnerSubtitle}>Optional combined alignment</Text>
-              </View>
-              <View style={styles.partnerChevronWrapper}>
-                <Text style={styles.partnerChevron}>˅</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.inputGroup}>
+              <SearchableDropdown
+                label="City"
+                data={selectedState ? INDIA_STATES_CITIES[selectedState] : []}
+                value={city}
+                onSelect={setCity}
+                placeholder={selectedState ? "Select City" : "Select a State first"}
+                disabled={!selectedState}
+              />
+            </View>
 
             <Button 
-              title="Next Step →" 
+              title={isLoading ? "Saving..." : "Next Step →"} 
               onPress={handleNextStep} 
+              isLoading={isLoading}
               style={styles.submitBtn}
+              textStyle={styles.submitBtnText}
             />
           </View>
         </View>
@@ -141,24 +176,17 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#FAFAFA',
   },
-  bubble: {
+  bgDecorTop: {
     position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  bubble1: {
-    width: 300,
-    height: 300,
-    top: -100,
-    right: -100,
-  },
-  bubble2: {
-    width: 200,
-    height: 200,
-    bottom: -50,
-    left: -100,
+    top: -width * 0.5,
+    right: -width * 0.2,
+    width: width * 1.5,
+    height: width * 1.5,
+    borderRadius: width * 0.75,
+    backgroundColor: '#EEF2FF',
+    opacity: 0.6,
   },
   scrollContent: {
     flexGrow: 1,
@@ -172,64 +200,70 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.4)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    marginRight: 16,
   },
   backIcon: {
-    fontSize: 28,
-    color: '#FFF',
-    lineHeight: 32,
-    marginLeft: -2,
+    fontSize: 22,
+    color: '#374151',
+    marginTop: -2,
   },
   progressContainer: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-    paddingRight: 56, // to balance the back button width
+    paddingRight: 60, // balance the back button width
   },
   progressActive: {
     width: 32,
     height: 4,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#4F46E5', // Indigo
     borderRadius: 2,
   },
   progressInactive: {
     width: 32,
     height: 4,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#E5E7EB',
     borderRadius: 2,
-    opacity: 0.7,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.02,
     shadowRadius: 10,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   title: {
-    fontFamily: 'Libre Caslon Text',
-    fontWeight: '400',
+    fontWeight: '800',
     fontSize: 28,
-    lineHeight: 36,
-    color: '#1B1C1A',
+    color: '#111827',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 15,
+    color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: 24,
     paddingHorizontal: 10,
   },
@@ -238,21 +272,23 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   photoPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#DAB8C5',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#EEF2FF', // Soft indigo
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
   },
   cameraIcon: {
     fontSize: 32,
   },
   photoText: {
     fontSize: 14,
-    color: '#555',
-    fontWeight: '500',
+    color: '#4F46E5', // Indigo
+    fontWeight: '600',
   },
   form: {
     gap: 16,
@@ -261,34 +297,35 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontFamily: 'Plus Jakarta Sans',
     fontWeight: '600',
     fontSize: 14,
-    lineHeight: 20,
-    letterSpacing: 0.7,
-    color: '#57423A',
+    color: '#374151',
   },
   input: {
-    backgroundColor: '#F5F5F0',
-    height: 50,
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    height: 54,
+    borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#111',
+    color: '#111827',
   },
   dateText: {
     fontSize: 16,
-    color: '#111',
+    color: '#111827',
   },
   placeholderText: {
-    color: '#A9A9A9',
+    color: '#9CA3AF',
   },
   inputWithIcon: {
-    backgroundColor: '#F5F5F0',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
-    borderRadius: 8,
+    height: 54,
+    borderRadius: 12,
     paddingHorizontal: 16,
   },
   inputIcon: {
@@ -299,63 +336,27 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 0,
     backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   submitBtn: {
-    backgroundColor: '#1C77F2',
-    borderRadius: 26,
-    height: 52,
-    marginTop: 10,
-    shadowColor: '#1C77F2',
+    backgroundColor: '#4F46E5', // Indigo
+    borderRadius: 16,
+    height: 60,
+    marginTop: 16,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  partnerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#F0E5DF',
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 10,
+  submitBtnText: {
+    fontWeight: '700',
+    fontSize: 17,
+    color: '#FFFFFF',
   },
-  partnerIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FAF0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  partnerIcon: {
-    fontSize: 20,
-    color: '#57423A',
-  },
-  partnerTextWrapper: {
-    flex: 1,
-  },
-  partnerTitle: {
-    fontFamily: 'Plus Jakarta Sans',
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#111',
-    marginBottom: 2,
-  },
-  partnerSubtitle: {
-    fontSize: 12,
-    color: '#666',
-  },
-  partnerChevronWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#EBEBEB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  partnerChevron: {
-    fontSize: 14,
-    color: '#555',
-    fontWeight: 'bold',
-    marginTop: -2,
+  submitBtnText: {
+    fontWeight: '700',
+    fontSize: 17,
+    color: '#FFFFFF',
   },
 });

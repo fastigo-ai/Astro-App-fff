@@ -11,8 +11,16 @@ import { AboutScreen } from '~/features/about/screens/AboutScreen';
 import { LanguageSelectScreen } from '~/features/auth/screens/LanguageSelectScreen';
 import { ProfileSetupScreen } from '~/features/auth/screens/ProfileSetupScreen';
 import { LifeStageScreen } from '~/features/auth/screens/LifeStageScreen';
+import { IntroVideoScreen } from '~/features/onboarding/screens/IntroVideoScreen';
 import { NotificationScreen } from '~/features/dashboard/screens/NotificationScreen';
 import { SubscriptionDetailsScreen } from '~/features/subscription/screens/SubscriptionDetailsScreen';
+import { AllProgramsScreen } from '~/features/dashboard/screens/AllProgramsScreen';
+import { PrivacyPolicyScreen } from '~/features/about/screens/PrivacyPolicyScreen';
+import { TermsConditionsScreen } from '~/features/about/screens/TermsConditionsScreen';
+import { GiftRedeemScreen } from '~/features/dashboard/screens/GiftRedeemScreen';
+import { ActivityDetailScreen } from '~/features/dashboard/screens/ActivityDetailScreen';
+import { ReviewsScreen } from '~/features/dashboard/screens/ReviewsScreen';
+import { BabyBumpScreen } from '~/features/dashboard/screens/BabyBumpScreen';
 
 import { useAuthStore } from '~/store/useAuthStore';
 
@@ -22,6 +30,7 @@ export const AppStack = () => {
   const hasLanguage = useAuthStore(state => state.hasLanguage);
   const hasProfile = useAuthStore(state => state.hasProfile);
   const hasLifeStage = useAuthStore(state => state.hasLifeStage);
+  const hasSeenIntro = useAuthStore(state => state.hasSeenIntro);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -31,6 +40,8 @@ export const AppStack = () => {
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       ) : !hasLifeStage ? (
         <Stack.Screen name="LifeStage" component={LifeStageScreen} />
+      ) : !hasSeenIntro ? (
+        <Stack.Screen name="IntroVideo" component={IntroVideoScreen} />
       ) : (
         <>
           <Stack.Screen name="MainTabs" component={MainTabNavigator} />
@@ -39,6 +50,7 @@ export const AppStack = () => {
             component={PricingScreen} 
             options={{ presentation: 'fullScreenModal' }}
           />
+          <Stack.Screen name="AllPrograms" component={AllProgramsScreen} />
           <Stack.Screen name="Course" component={CourseScreen} />
           <Stack.Screen name="Garbhadhaan" component={GarbhadhaanScreen} />
           <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
@@ -46,6 +58,26 @@ export const AppStack = () => {
           <Stack.Screen name="AboutUs" component={AboutScreen} />
           <Stack.Screen name="Notifications" component={NotificationScreen} />
           <Stack.Screen name="SubscriptionDetails" component={SubscriptionDetailsScreen} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+          <Stack.Screen name="TermsConditions" component={TermsConditionsScreen} />
+          <Stack.Screen 
+            name="GiftRedeem" 
+            component={GiftRedeemScreen} 
+            options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen 
+            name="ActivityDetail" 
+            component={ActivityDetailScreen} 
+            options={{ presentation: 'fullScreenModal' }}
+          />
+          <Stack.Screen 
+            name="Reviews" 
+            component={ReviewsScreen} 
+          />
+          <Stack.Screen 
+            name="BabyBump" 
+            component={BabyBumpScreen} 
+          />
         </>
       )}
     </Stack.Navigator>

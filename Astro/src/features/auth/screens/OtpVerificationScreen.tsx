@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Linking, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Linking, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '~/app/navigation/types';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,12 +9,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '~/shared/components/Button';
 import SmsRetriever from 'react-native-sms-retriever';
 
+const { width } = Dimensions.get('window');
+
 type Props = NativeStackScreenProps<AuthStackParamList, 'OtpVerification'>;
 
 export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(28);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
   
   const dispatch = useDispatch();
   const { status, errorReason, phoneNumber } = useSelector((state: RootState) => state.auth);
@@ -59,15 +62,21 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleVerifyWithOtp = async (otpCode: string) => {
     dispatch(setStatus('verifying'));
-    // --- LOCAL MOCK BYPASS ---
-    setTimeout(async () => {
-      if (otpCode === '1234') { // Changed mock check back to 4 digits
-        await AsyncStorage.setItem('@mock_session', 'true');
-        dispatch(setAuthenticated({ isAuthenticated: true, isProfileComplete: true }));
-      } else {
-        dispatch(setErrorReason('invalid_otp'));
-      }
-    }, 1000);
+    
+    const { useAuthStore } = require('~/store/useAuthStore');
+    
+    // Call the real backend via Zustand store
+    await useAuthStore.getState().verifyOtp(otpCode);
+    
+    // Check if it was successful
+    const authStatus = useAuthStore.getState().status;
+    
+    if (authStatus === 'authenticated') {
+      setIsSuccess(true);
+      dispatch(setAuthenticated({ isAuthenticated: true })); // Fix missing payload
+    } else {
+      dispatch(setErrorReason('invalid_otp'));
+    }
   };
 
   const handleVerify = () => {
@@ -100,17 +109,15 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          {/* Decorative Bubbles */}
-          <View style={[styles.bubble, styles.bubble1]} />
-          <View style={[styles.bubble, styles.bubble2]} />
-          <View style={[styles.bubble, styles.bubble3]} />
-          <View style={[styles.bubble, styles.bubble4]} />
+          
+          {/* Modern Background Decor matching first screen */}
+          <View style={styles.bgDecorTop} />
 
           <View style={styles.inner}>
             
             {/* Back Button */}
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Text style={styles.backButtonText}>{'<'}</Text>
+              <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
 
             <View style={styles.content}>
@@ -134,7 +141,10 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
                       otp.length === index && styles.otpBoxActive,
                       otp.length > index && styles.otpBoxFilled
                     ]}>
-                      <Text style={styles.otpText}>{otp[index] || ''}</Text>
+                      <Text style={[
+                        styles.otpText,
+                        otp.length > index && styles.otpTextFilled
+                      ]}>{otp[index] || ''}</Text>
                     </View>
                   ))}
                 </View>
@@ -147,6 +157,7 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
                   keyboardType="number-pad"
                   maxLength={4}
                   style={styles.hiddenInput}
+                  autoFocus
                 />
               </View>
 
@@ -165,17 +176,24 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
                 )}
               </View>
 
-              <Button 
-                title="Verify & Proceed" 
-                onPress={handleVerify} 
-                isLoading={status === 'verifying'} 
-                disabled={otp.length !== 4}
-                style={styles.submitBtn}
-                textStyle={styles.submitBtnText}
-              />
+              {isSuccess ? (
+                <View style={styles.successContainer}>
+                  <Text style={styles.successIcon}>✅</Text>
+                  <Text style={styles.successText}>Verification Successful!</Text>
+                </View>
+              ) : (
+                <Button 
+                  title="Verify & Proceed" 
+                  onPress={handleVerify} 
+                  isLoading={status === 'verifying' && !isSuccess} 
+                  disabled={otp.length !== 4}
+                  style={[styles.submitBtn, otp.length !== 4 && styles.submitBtnDisabled]}
+                  textStyle={styles.submitBtnText}
+                />
+              )}
 
               <TouchableOpacity style={styles.supportContainer} onPress={handleSupportFallback}>
-                <Text style={styles.supportText}>❓ Need help? Contact support</Text>
+                <Text style={styles.supportText}>Need help? Contact support</Text>
               </TouchableOpacity>
               
             </View>
@@ -189,106 +207,87 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#FFE6DF' // Soft peach tone from screenshot
+    backgroundColor: '#FAFAFA' // Clean off-white background matching screen 1
+  },
+  bgDecorTop: {
+    position: 'absolute',
+    top: -width * 0.5,
+    right: -width * 0.2,
+    width: width * 1.5,
+    height: width * 1.5,
+    borderRadius: width * 0.75,
+    backgroundColor: '#EEF2FF', // Very subtle indigo tint
+    opacity: 0.6,
   },
   inner: { 
     flex: 1, 
-    padding: 24,
-    paddingTop: 50,
-  },
-  bubble: {
-    position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  bubble1: {
-    width: 250,
-    height: 250,
-    top: -80,
-    right: -50,
-  },
-  bubble2: {
-    width: 200,
-    height: 200,
-    bottom: 50,
-    right: -80,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  bubble3: {
-    width: 120,
-    height: 120,
-    bottom: -40,
-    left: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-  },
-  bubble4: {
-    width: 80,
-    height: 80,
-    top: 150,
-    left: -30,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    paddingHorizontal: 28,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: '#FFF',
+    borderColor: '#F3F4F6',
   },
   backButtonText: {
-    fontSize: 20,
-    color: '#FFF',
-    fontWeight: 'bold',
+    fontSize: 22,
+    color: '#374151',
+    marginTop: -2,
   },
   content: {
     alignItems: 'center',
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#DDE9FE',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   iconText: {
     fontSize: 32,
   },
   title: { 
-    fontFamily: 'serif',
-    fontSize: 30, 
-    fontWeight: '600', 
-    color: '#1E90FF', 
-    marginBottom: 16,
-    textAlign: 'center'
+    fontSize: 28, 
+    fontWeight: '800',
+    color: '#111827',
+    marginBottom: 12,
+    letterSpacing: -0.5,
+    textAlign: 'center',
   },
   subtitle: { 
     fontWeight: '400',
-    fontSize: 16, 
+    fontSize: 15, 
     lineHeight: 24,
-    color: '#333', 
+    color: '#6B7280', 
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 40,
   },
   phoneHighlight: {
-    fontWeight: '500',
-    color: '#111',
+    fontWeight: '600',
+    color: '#111827',
   },
   otpWrapper: {
     position: 'relative',
     width: '100%',
-    marginBottom: 20,
-    paddingHorizontal: 20,
+    marginBottom: 24,
   },
   otpBoxesContainer: {
     flexDirection: 'row',
@@ -296,26 +295,40 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   otpBox: {
-    width: 60,
-    height: 64,
-    borderRadius: 8,
-    backgroundColor: '#F7EBE8', // Muted background color
+    width: 64,
+    height: 72,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: '#E5E7EB',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   otpBoxFilled: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#4F46E5', // Indigo from brand
+    shadowOpacity: 0.05,
   },
   otpBoxActive: {
-    borderColor: '#1E90FF',
-    backgroundColor: '#FFF',
+    borderColor: '#EC4899', // Pink accent from the logo for active state
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#EC4899',
+    shadowOpacity: 0.1,
+    elevation: 3,
   },
   otpText: {
     fontSize: 28,
-    fontWeight: '600',
-    color: '#111',
+    fontWeight: '500',
+    color: '#9CA3AF',
+  },
+  otpTextFilled: {
+    color: '#111827',
+    fontWeight: '700',
   },
   hiddenInput: {
     position: 'absolute',
@@ -324,54 +337,80 @@ const styles = StyleSheet.create({
     opacity: 0,
   },
   errorText: {
-    color: '#FF3B30',
+    color: '#EF4444',
     fontSize: 14,
-    marginBottom: 10,
+    marginBottom: 16,
     fontWeight: '500',
   },
   resendContainer: { 
     alignItems: 'center', 
-    marginBottom: 30,
+    marginBottom: 40,
   },
   resendPrompt: {
-    fontSize: 15,
-    color: '#333',
+    fontSize: 14,
+    color: '#6B7280',
     marginBottom: 8,
     fontWeight: '400',
   },
   timerText: { 
     fontSize: 15, 
-    color: '#1E90FF',
-    fontWeight: '500',
+    color: '#4F46E5',
+    fontWeight: '600',
   },
   resendLink: {
     fontSize: 15, 
-    color: '#1E90FF',
-    fontWeight: '500',
+    color: '#EC4899', // Pink accent for links
+    fontWeight: '600',
   },
   submitBtn: { 
-    backgroundColor: '#1E90FF', // Bright blue
-    borderRadius: 27,
-    height: 54,
+    backgroundColor: '#4F46E5', // Indigo primary
+    borderRadius: 16,
+    height: 60,
     width: '100%',
     marginBottom: 24,
-    shadowColor: '#1E90FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#C7D2FE',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   submitBtnText: {
-    fontWeight: '600',
-    fontSize: 16,
-    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 17,
+    color: '#FFFFFF',
+  },
+  successContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ECFDF5', // Soft green background
+    borderRadius: 16,
+    height: 60,
+    width: '100%',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  successIcon: {
+    fontSize: 22,
+    marginRight: 8,
+  },
+  successText: {
+    fontWeight: '700',
+    fontSize: 17,
+    color: '#059669', // Emerald green text
   },
   supportContainer: {
     paddingVertical: 10,
   },
   supportText: {
-    fontSize: 13,
-    color: '#333',
+    fontSize: 14,
+    color: '#6B7280',
     fontWeight: '500',
   },
 });
