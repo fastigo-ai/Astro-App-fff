@@ -7,6 +7,7 @@ import {
   ScrollView,
   Animated,
   Vibration,
+  Platform,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -139,6 +140,14 @@ export const MoodTherapyScreen = () => {
     }
   };
 
+  const safeVibrate = (pattern: number | number[] = 25) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Vibration.vibrate(pattern);
+      }
+    } catch (e) {}
+  };
+
   // Breathing Pacer Logic: 4s inhale, 4s hold, 4s exhale
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
@@ -153,17 +162,17 @@ export const MoodTherapyScreen = () => {
       // Loop sequence
       const runBreathingCycle = () => {
         setBreathPhase('inhale');
-        try { Vibration.vibrate(20); } catch (e) {}
+        safeVibrate(20);
         Animated.timing(breathAnim, {
           toValue: 1.5,
           duration: 4000,
           useNativeDriver: true,
         }).start(() => {
           setBreathPhase('hold');
-          try { Vibration.vibrate(20); } catch (e) {}
+          safeVibrate(20);
           phaseTimer = setTimeout(() => {
             setBreathPhase('exhale');
-            try { Vibration.vibrate(20); } catch (e) {}
+            safeVibrate(20);
             Animated.timing(breathAnim, {
               toValue: 1,
               duration: 4000,
@@ -193,7 +202,7 @@ export const MoodTherapyScreen = () => {
 
   const handleSelectMood = (mood: MoodOption) => {
     setSelectedMood(mood);
-    try { Vibration.vibrate(30); } catch (e) {}
+    safeVibrate(30);
   };
 
   const handleSaveMood = async () => {
@@ -427,7 +436,7 @@ export const MoodTherapyScreen = () => {
               style={styles.audioPlayBtn}
               onPress={() => {
                 setIsPlayingAudio(!isPlayingAudio);
-                try { Vibration.vibrate(30); } catch (e) {}
+                safeVibrate(30);
               }}
             >
               {isPlayingAudio ? (

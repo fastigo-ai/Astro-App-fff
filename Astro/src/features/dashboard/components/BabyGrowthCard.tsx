@@ -72,23 +72,42 @@ export const BabyGrowthCard = () => {
         {/* Bottom Text */}
         <Text style={styles.footerText}>Mumma, It has been {totalDays} days in your womb.</Text>
 
-        {/* Quick Interaction Link */}
-        <TouchableOpacity 
-          style={styles.quickKickLink}
-          onPress={() => {
-            const parent = navigation.getParent();
-            if (parent) {
-              (parent as any).navigate('KickCounter');
-            } else {
-              (navigation as any).navigate('KickCounter');
-            }
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.quickKickLinkText}>
-            🌸 Count Baby's Kicks Today (शिशु की हलचल गिनें) →
-          </Text>
-        </TouchableOpacity>
+        {/* Quick Interaction Links Row */}
+        <View style={styles.quickLinksRow}>
+          <TouchableOpacity 
+            style={styles.quickKickLink}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                (parent as any).navigate('KickCounter');
+              } else {
+                (navigation as any).navigate('KickCounter');
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.quickKickLinkText}>
+              🌸 {t('dashboard.recordKick', 'Baby Kicks')} →
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.quickBumpLink}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                (parent as any).navigate('BabyBump');
+              } else {
+                (navigation as any).navigate('BabyBump');
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.quickBumpLinkText}>
+              📸 Baby Bump Photo →
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Routine Section Below Card */}
@@ -209,11 +228,16 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontStyle: 'italic',
   },
+  quickLinksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+  },
   quickKickLink: {
-    marginTop: 12,
     backgroundColor: '#FFF1F2',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#FECDD3',
@@ -222,6 +246,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#E11D48',
+  },
+  quickBumpLink: {
+    backgroundColor: '#FDF2F8',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FBCFE8',
+  },
+  quickBumpLinkText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#DB2777',
   },
   routineSection: {
     alignItems: 'center',

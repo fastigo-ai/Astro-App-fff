@@ -160,6 +160,14 @@ export const KickCounterScreen = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const safeVibrate = (pattern: number | number[] = 40) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Vibration.vibrate(pattern);
+      }
+    } catch (e) {}
+  };
+
   const handleRecordKick = () => {
     // If timer was stopped, start it
     if (!isActive) {
@@ -167,9 +175,7 @@ export const KickCounterScreen = () => {
     }
 
     // Trigger gentle maternal haptic vibration
-    try {
-      Vibration.vibrate(40);
-    } catch (e) {}
+    safeVibrate(40);
 
     // Button press bounce animation
     Animated.sequence([

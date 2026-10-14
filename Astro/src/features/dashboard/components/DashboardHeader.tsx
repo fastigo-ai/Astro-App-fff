@@ -35,7 +35,14 @@ export const DashboardHeader: React.FC = () => {
         {/* Baby Kick Counter */}
         <TouchableOpacity
           style={styles.kickButton}
-          onPress={incrementBabyKicks}
+          onPress={() => {
+            const parent = navigation.getParent();
+            if (parent) {
+              (parent as any).navigate('KickCounter');
+            } else {
+              (navigation as any).navigate('KickCounter');
+            }
+          }}
           activeOpacity={0.7}
         >
           <View style={styles.kickIconWrapper}>

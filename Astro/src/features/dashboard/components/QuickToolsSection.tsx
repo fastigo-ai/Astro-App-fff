@@ -55,7 +55,12 @@ export const QuickToolsSection = () => {
   ];
 
   const handleToolPress = (route: keyof AppStackParamList) => {
-    navigation.navigate(route as any);
+    const parent = navigation.getParent();
+    if (parent) {
+      (parent as any).navigate(route);
+    } else {
+      (navigation as any).navigate(route);
+    }
   };
 
   return (
@@ -72,11 +77,7 @@ export const QuickToolsSection = () => {
         </View>
       </View>
       
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <View style={styles.gridContainer}>
         {TOOLS.map((tool) => (
           <TouchableOpacity 
             key={tool.id} 
@@ -84,12 +85,13 @@ export const QuickToolsSection = () => {
             activeOpacity={0.8}
             onPress={() => handleToolPress(tool.route)}
           >
-            <View style={[styles.badgePill, { backgroundColor: tool.colors[1] }]}>
-              <Text style={styles.badgeText}>{tool.badge}</Text>
-            </View>
-
-            <View style={[styles.iconBox, { backgroundColor: tool.colors[1] }]}>
-              {tool.icon}
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconBox, { backgroundColor: tool.colors[1] }]}>
+                {tool.icon}
+              </View>
+              <View style={[styles.badgePill, { backgroundColor: tool.colors[1] }]}>
+                <Text style={styles.badgeText}>{tool.badge}</Text>
+              </View>
             </View>
 
             <View style={styles.textContainer}>
@@ -98,7 +100,7 @@ export const QuickToolsSection = () => {
             </View>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     marginBottom: 14,
   },
   sectionTitle: {
@@ -135,15 +137,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#B45309',
   },
-  scrollContent: {
-    paddingHorizontal: 20,
-    gap: 14,
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: 12,
+    justifyContent: 'space-between',
   },
   toolCard: {
-    width: 142,
+    width: '48%',
     padding: 14,
-    borderRadius: 22,
-    alignItems: 'center',
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.04)',
     shadowColor: '#000',
@@ -151,14 +155,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
-    position: 'relative',
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   badgePill: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    paddingVertical: 2,
-    paddingHorizontal: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
     borderRadius: 8,
   },
   badgeText: {
@@ -168,33 +174,29 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   iconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 3,
   },
   textContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '800',
     color: '#1F2937',
     marginBottom: 3,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 11,
     color: '#6B7280',
     fontWeight: '500',
-    textAlign: 'center',
   }
 });

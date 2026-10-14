@@ -7,6 +7,7 @@ import {
   ScrollView,
   Animated,
   Vibration,
+  Platform,
   TextInput,
   Alert,
 } from 'react-native';
@@ -176,16 +177,24 @@ export const GarbhSamvadScreen = () => {
     };
   }, [isRecording]);
 
+  const safeVibrate = (pattern: number | number[] = 30) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Vibration.vibrate(pattern);
+      }
+    } catch (e) {}
+  };
+
   const handleToggleRecord = () => {
     if (!isRecording) {
       setRecordSeconds(0);
       setIsRecording(true);
       setRecordedAudioReady(false);
-      try { Vibration.vibrate([0, 50, 50, 50]); } catch (e) {}
+      safeVibrate([0, 50, 50, 50]);
     } else {
       setIsRecording(false);
       setRecordedAudioReady(true);
-      try { Vibration.vibrate(50); } catch (e) {}
+      safeVibrate(50);
       Alert.alert(
         useHindiText ? 'रिकॉर्डिंग पूरी हुई 🎙️' : 'Voice Message Recorded 🎙️',
         useHindiText 
@@ -299,7 +308,7 @@ export const GarbhSamvadScreen = () => {
                 ]}
                 onPress={() => {
                   setSelectedScript(s);
-                  try { Vibration.vibrate(25); } catch (e) {}
+                  safeVibrate(25);
                 }}
               >
                 <Text style={[
