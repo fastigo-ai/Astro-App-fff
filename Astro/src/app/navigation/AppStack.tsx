@@ -21,6 +21,9 @@ import { GiftRedeemScreen } from '~/features/dashboard/screens/GiftRedeemScreen'
 import { ActivityDetailScreen } from '~/features/dashboard/screens/ActivityDetailScreen';
 import { ReviewsScreen } from '~/features/dashboard/screens/ReviewsScreen';
 import { BabyBumpScreen } from '~/features/dashboard/screens/BabyBumpScreen';
+import { KickCounterScreen } from '~/features/interactions/screens/KickCounterScreen';
+import { MoodTherapyScreen } from '~/features/interactions/screens/MoodTherapyScreen';
+import { GarbhSamvadScreen } from '~/features/interactions/screens/GarbhSamvadScreen';
 
 import { useAuthStore } from '~/store/useAuthStore';
 
@@ -82,6 +85,18 @@ export const AppStack = () => {
           <Stack.Screen 
             name="BabyBump" 
             component={BabyBumpScreen} 
+          />
+          <Stack.Screen 
+            name="KickCounter" 
+            component={KickCounterScreen} 
+          />
+          <Stack.Screen 
+            name="MoodTherapy" 
+            component={MoodTherapyScreen} 
+          />
+          <Stack.Screen 
+            name="GarbhSamvad" 
+            component={GarbhSamvadScreen} 
           />
         </>
       )}

@@ -168,9 +168,9 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
                 {timer > 0 ? (
                   <Text style={styles.timerText}>Resend in {timer}s</Text>
                 ) : (
-                  <TouchableOpacity onPress={handleResend} disabled={errorReason === 'rate_limit_exceeded'}>
+                  <TouchableOpacity onPress={handleResend} disabled={(errorReason as string) === 'rate_limit_exceeded'}>
                     <Text style={styles.resendLink}>
-                      {errorReason === 'rate_limit_exceeded' ? 'Too many attempts' : 'Resend Code'}
+                      {(errorReason as string) === 'rate_limit_exceeded' ? 'Too many attempts' : 'Resend Code'}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -187,7 +187,7 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
                   onPress={handleVerify} 
                   isLoading={status === 'verifying' && !isSuccess} 
                   disabled={otp.length !== 4}
-                  style={[styles.submitBtn, otp.length !== 4 && styles.submitBtnDisabled]}
+                  style={StyleSheet.flatten([styles.submitBtn, otp.length !== 4 && styles.submitBtnDisabled]) as any}
                   textStyle={styles.submitBtnText}
                 />
               )}

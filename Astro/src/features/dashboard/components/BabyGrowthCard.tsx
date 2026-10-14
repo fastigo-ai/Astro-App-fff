@@ -71,6 +71,24 @@ export const BabyGrowthCard = () => {
 
         {/* Bottom Text */}
         <Text style={styles.footerText}>Mumma, It has been {totalDays} days in your womb.</Text>
+
+        {/* Quick Interaction Link */}
+        <TouchableOpacity 
+          style={styles.quickKickLink}
+          onPress={() => {
+            const parent = navigation.getParent();
+            if (parent) {
+              (parent as any).navigate('KickCounter');
+            } else {
+              (navigation as any).navigate('KickCounter');
+            }
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.quickKickLinkText}>
+            🌸 Count Baby's Kicks Today (शिशु की हलचल गिनें) →
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Routine Section Below Card */}
@@ -190,6 +208,20 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontWeight: '400',
     fontStyle: 'italic',
+  },
+  quickKickLink: {
+    marginTop: 12,
+    backgroundColor: '#FFF1F2',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  quickKickLinkText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#E11D48',
   },
   routineSection: {
     alignItems: 'center',

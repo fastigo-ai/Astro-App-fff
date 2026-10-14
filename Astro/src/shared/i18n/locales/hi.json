@@ -88,13 +88,19 @@
     "heightWeight": "लंबाई/वजन ✨",
     "week": "सप्ताह",
     "day": "दिन",
-    "dailyEssentials": "दैनिक आवश्यक",
+    "dailyEssentials": "माँ व शिशु का दैनिक जुड़ाव",
     "babyBump": "बेबी बम्प",
     "babyBumpSub": "यादें संजोएं",
     "omChanter": "ओम जप",
     "omChanterSub": "शांति पाएं",
     "mindGames": "माइंड गेम्स",
-    "mindGamesSub": "सक्रिय रहें"
+    "mindGamesSub": "सक्रिय रहें",
+    "kickCounter": "शिशु स्पंदन",
+    "kickCounterSub": "हलचल गिनें",
+    "moodTherapy": "मन की शांति",
+    "moodTherapySub": "प्राणायाम व नाद",
+    "garbhSamvad": "गर्भ संवाद",
+    "garbhSamvadSub": "शिशु से बातें"
   },
   "profile": {
     "title": "प्रोफ़ाइल",

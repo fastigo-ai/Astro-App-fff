@@ -107,7 +107,7 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
             
-            {errorReason === 'invalid_phone' && (
+            {(errorReason as string) === 'invalid_phone' && (
               <Text style={styles.errorText}>Please enter a valid phone number</Text>
             )}
 
@@ -116,7 +116,7 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
               onPress={handleSendOtp} 
               isLoading={status === 'sending_otp'} 
               disabled={phone.length < 5}
-              style={[styles.submitBtn, phone.length < 5 && styles.submitBtnDisabled]}
+              style={StyleSheet.flatten([styles.submitBtn, phone.length < 5 && styles.submitBtnDisabled]) as any}
               textStyle={styles.submitBtnText}
             />
 

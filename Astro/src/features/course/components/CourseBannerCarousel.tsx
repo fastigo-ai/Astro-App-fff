@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as any),
     backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'flex-end',
     padding: 20,

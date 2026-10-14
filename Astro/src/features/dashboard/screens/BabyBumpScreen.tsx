@@ -72,13 +72,14 @@ export const BabyBumpScreen = () => {
         compressImageQuality: 0.8,
       });
 
-      if (!image || !image.data) return;
+      const img = image as any;
+      if (!img || !img.data) return;
 
       // 2. START UPLOADING
       setIsUploading(true);
       
       const res = await api.post('/api/v1/bump/upload', {
-        imageBase64: `data:${image.mime};base64,${image.data}`,
+        imageBase64: `data:${img.mime};base64,${img.data}`,
         frameType: selectedFrame.id,
         month: calculateMonth(),
         notes: 'Just captured my beautiful bump today! ✨'
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   frameBgImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as any),
     width: '100%',
     height: '100%',
     resizeMode: 'cover',

@@ -39,6 +39,9 @@ export type AppStackParamList = {
   ActivityDetail: { id: string };
   Reviews: undefined;
   BabyBump: undefined;
+  KickCounter: undefined;
+  MoodTherapy: undefined;
+  GarbhSamvad: undefined;
 };
 
 export type RootStackParamList = {

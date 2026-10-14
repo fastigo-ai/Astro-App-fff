@@ -9,7 +9,7 @@ const { width, height: windowHeight } = Dimensions.get('window');
 export const WhyAstroBabyVideo = () => {
   const [isPaused, setIsPaused] = useState(true);
   const [componentY, setComponentY] = useState(0);
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
   
   const scrollY = useScrollStore(state => state.scrollY);
 
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...(StyleSheet.absoluteFill as any),
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',

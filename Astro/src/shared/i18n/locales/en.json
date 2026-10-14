@@ -88,13 +88,19 @@
     "heightWeight": "Height/Weight ✨",
     "week": "w",
     "day": "d",
-    "dailyEssentials": "Daily Essentials",
+    "dailyEssentials": "Maa & Baby Daily Connect",
     "babyBump": "Baby Bump",
     "babyBumpSub": "Capture memory",
     "omChanter": "Om Chanter",
     "omChanterSub": "Find peace",
     "mindGames": "Mind Games",
-    "mindGamesSub": "Stay sharp"
+    "mindGamesSub": "Stay sharp",
+    "kickCounter": "Kick Counter",
+    "kickCounterSub": "Track baby's movements",
+    "moodTherapy": "Mood & Calming",
+    "moodTherapySub": "Pranayama & sound therapy",
+    "garbhSamvad": "Garbh Samvad",
+    "garbhSamvadSub": "Speak to baby in womb"
   },
   "profile": {
     "title": "Profile",

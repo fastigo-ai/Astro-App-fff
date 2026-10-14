@@ -137,9 +137,54 @@ export interface IPaymentRecord {
   updatedAt?: string;
 }
 
+export interface IKickSession {
+  _id?: string;
+  userId?: string;
+  phone?: string;
+  totalKicks: number;
+  durationSeconds: number;
+  targetKicks: number;
+  completed: boolean;
+  notes?: string;
+  kickTimestamps?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IMoodLog {
+  _id?: string;
+  userId?: string;
+  phone?: string;
+  moodId: string;
+  moodLabel: string;
+  moodEmoji: string;
+  calmingTherapyUsed?: string;
+  breathingSeconds?: number;
+  note?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ISamvadNote {
+  _id?: string;
+  userId?: string;
+  phone?: string;
+  category: string;
+  title: string;
+  promptSnippet: string;
+  momNote?: string;
+  hasAudioRecording?: boolean;
+  durationSeconds?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const UserJourneysCollection = new JsonCollection<IUserJourney>('user_journeys');
 export const SubscriptionsCollection = new JsonCollection<ISubscriptionRecord>('subscriptions');
 export const PaymentsCollection = new JsonCollection<IPaymentRecord>('payments');
+export const KickSessionsCollection = new JsonCollection<IKickSession>('kick_sessions');
+export const MoodLogsCollection = new JsonCollection<IMoodLog>('mood_logs');
+export const SamvadNotesCollection = new JsonCollection<ISamvadNote>('samvad_notes');
 
 // ACID Transaction Engine with Isolation Mutex and Rollback Guarantees
 let transactionMutex = Promise.resolve();
