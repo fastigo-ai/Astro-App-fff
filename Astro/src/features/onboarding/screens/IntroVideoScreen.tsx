@@ -4,8 +4,11 @@ import Video from 'react-native-video';
 import { useAuthStore } from '~/store/useAuthStore';
 import { theme } from '~/shared/theme';
 
+import { useNavigation } from '@react-navigation/native';
+
 export const IntroVideoScreen = () => {
   const setHasSeenIntro = useAuthStore(state => state.setHasSeenIntro);
+  const navigation = useNavigation<any>();
   const videoRef = useRef<any>(null);
   const [isReady, setIsReady] = React.useState(false);
 
@@ -15,14 +18,20 @@ export const IntroVideoScreen = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleVideoEnd = () => {
-    // When the video finishes, advance them to the dashboard
-    setHasSeenIntro(true);
+  const handleVideoEnd = async () => {
+    await setHasSeenIntro(true);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'MainTabs' }],
+    });
   };
 
-  const handleSkip = () => {
-    // If they want to skip the video, advance them to the dashboard
-    setHasSeenIntro(true);
+  const handleSkip = async () => {
+    await setHasSeenIntro(true);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'MainTabs' }],
+    });
   };
 
   return (

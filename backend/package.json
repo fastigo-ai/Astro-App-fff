@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
     "dev:api": "tsx watch src/server.ts",
     "dev:worker": "tsx watch src/worker.ts",
     "build": "tsc",
@@ -23,6 +24,7 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.12.1",
     "rate-limit-redis": "^6.0.1",
+    "razorpay": "^2.9.8",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.2",

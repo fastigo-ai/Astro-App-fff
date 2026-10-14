@@ -10,7 +10,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
+import { useTranslation } from 'react-i18next';
+
 export const DashboardHeader: React.FC = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NavigationProp>();
   const babyKicks = useAuthStore(state => state.babyKicks);
   const incrementBabyKicks = useAuthStore(state => state.incrementBabyKicks);
@@ -39,7 +42,7 @@ export const DashboardHeader: React.FC = () => {
             <Footprints size={16} color="#E11D48" strokeWidth={2.5} />
           </View>
           <Text style={styles.kickButtonText}>
-            {babyKicks > 0 ? `${babyKicks} Kicks` : 'Record Kick'}
+            {babyKicks > 0 ? `${babyKicks} ${t('dashboard.kicks')}` : t('dashboard.recordKick')}
           </Text>
         </TouchableOpacity>
 

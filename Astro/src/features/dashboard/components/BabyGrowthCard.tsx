@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, Lock } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,6 +8,7 @@ import { useAuthStore } from '~/store/useAuthStore';
 import { MainTabParamList } from '~/app/navigation/types';
 
 export const BabyGrowthCard = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<MainTabParamList>>();
   // In reality, this would be fetched from user profile (e.g., user.profileType === 'pregnant')
   const isPregnant = true;
@@ -43,7 +45,7 @@ export const BabyGrowthCard = () => {
       <View style={styles.card}>
         {/* Top section */}
         <View style={styles.headerRow}>
-          <Text style={styles.title}>{userName}, your baby's growth today</Text>
+          <Text style={styles.title}>{t('dashboard.babyGrowthToday', { name: userName })}</Text>
           <TouchableOpacity style={styles.arrowButton}>
             <ChevronRight size={18} color="#9CA3AF" />
           </TouchableOpacity>
@@ -52,8 +54,8 @@ export const BabyGrowthCard = () => {
         {/* Middle Stats Section */}
         <View style={styles.statsRow}>
           <View style={styles.statPill}>
-            <Text style={styles.statLabel}>Week/Month ✨</Text>
-            <Text style={styles.statValue}>{weeks}w & {days}d/{trimester}</Text>
+            <Text style={styles.statLabel}>{t('dashboard.weekMonth')}</Text>
+            <Text style={styles.statValue}>{weeks}{t('dashboard.week')} & {days}{t('dashboard.day')}/{trimester}</Text>
           </View>
           
           <View style={styles.imagePlaceholder}>
@@ -62,7 +64,7 @@ export const BabyGrowthCard = () => {
           </View>
 
           <View style={styles.statPill}>
-            <Text style={styles.statLabel}>Height/Weight ✨</Text>
+            <Text style={styles.statLabel}>{t('dashboard.heightWeight')}</Text>
             <Text style={styles.statValue}>1.5mm/&lt;1g</Text>
           </View>
         </View>
@@ -82,7 +84,18 @@ export const BabyGrowthCard = () => {
             <Text style={[styles.trialButtonText, { color: '#CA8A04' }]}>Play Today's Routine ✨</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.trialButton}>
+          <TouchableOpacity 
+            style={styles.trialButton}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                (parent as any).navigate('Pricing');
+              } else {
+                (navigation as any).navigate('Pricing');
+              }
+            }}
+            activeOpacity={0.8}
+          >
             <Lock size={14} color="#854D0E" style={styles.lockIcon} />
             <Text style={styles.trialButtonText}>3-day free trial</Text>
           </TouchableOpacity>

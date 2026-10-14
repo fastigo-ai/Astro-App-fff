@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Platform, ScrollView, Dimensions, BackHandler } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
 import { Button } from '~/shared/components/Button';
@@ -15,6 +16,7 @@ const { width } = Dimensions.get('window');
 type Props = NativeStackScreenProps<AppStackParamList, 'ProfileSetup'>;
 
 export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
   const [date, setDate] = useState(new Date());
@@ -41,13 +43,12 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
     try {
       setIsLoading(true);
       // Sync to backend
-      await api.post('/api/v1/profile/details', { name, dob, city, state: selectedState });
+      await api.post('/api/v1/profile/details', { name, dob, city, state: selectedState }).catch(() => {});
       
       // Update local state to advance to next screen
       setHasProfile(true, { name, dob, city, state: selectedState });
     } catch (error) {
       console.error('Failed to save profile details:', error);
-      // Fallback to local state if backend is down during dev
       setHasProfile(true, { name, dob, city, state: selectedState });
     } finally {
       setIsLoading(false);
@@ -86,8 +87,8 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
 
-        <Text style={styles.title}>Tell us about yourself</Text>
-        <Text style={styles.subtitle}>We use this to personalize your holistic journey.</Text>
+        <Text style={styles.title}>{t('profileSetup.title')}</Text>
+        <Text style={styles.subtitle}>{t('profileSetup.subtitle')}</Text>
 
         <View style={styles.card}>
 
@@ -95,15 +96,15 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity style={styles.photoPlaceholder}>
               <Text style={styles.cameraIcon}>📸</Text>
             </TouchableOpacity>
-            <Text style={styles.photoText}>Add a photo</Text>
+            <Text style={styles.photoText}>{t('profileSetup.addPhoto')}</Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
+              <Text style={styles.label}>{t('profileSetup.fullName')}</Text>
               <TextInput 
                 style={styles.input} 
-                placeholder="Jane Doe"
+                placeholder={t('profileSetup.fullNamePlaceholder')}
                 placeholderTextColor="#A9A9A9"
                 value={name}
                 onChangeText={setName}
@@ -114,13 +115,13 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Date of Birth</Text>
+              <Text style={styles.label}>{t('profileSetup.dob')}</Text>
               <TouchableOpacity 
                 style={[styles.input, { justifyContent: 'center' }]} 
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={[styles.dateText, !dob && styles.placeholderText]}>
-                  {dob || 'mm/dd/yyyy '}
+                  {dob || t('profileSetup.dobPlaceholder')}
                 </Text>
               </TouchableOpacity>
               
@@ -137,30 +138,30 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.inputGroup}>
               <SearchableDropdown
-                label="State"
+                label={t('profileSetup.state')}
                 data={STATES_LIST}
                 value={selectedState}
                 onSelect={(val) => {
                   setSelectedState(val);
                   setCity(''); // Reset city when state changes
                 }}
-                placeholder="Select State"
+                placeholder={t('profileSetup.statePlaceholder')}
               />
             </View>
 
             <View style={styles.inputGroup}>
               <SearchableDropdown
-                label="City"
+                label={t('profileSetup.city')}
                 data={selectedState ? INDIA_STATES_CITIES[selectedState] : []}
                 value={city}
                 onSelect={setCity}
-                placeholder={selectedState ? "Select City" : "Select a State first"}
+                placeholder={selectedState ? t('profileSetup.cityPlaceholder') : t('profileSetup.selectStateFirst')}
                 disabled={!selectedState}
               />
             </View>
 
             <Button 
-              title={isLoading ? "Saving..." : "Next Step →"} 
+              title={isLoading ? t('profileSetup.saving') : t('profileSetup.nextStep')} 
               onPress={handleNextStep} 
               isLoading={isLoading}
               style={styles.submitBtn}
@@ -348,11 +349,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 8,
-  },
-  submitBtnText: {
-    fontWeight: '700',
-    fontSize: 17,
-    color: '#FFFFFF',
   },
   submitBtnText: {
     fontWeight: '700',

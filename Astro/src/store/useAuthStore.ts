@@ -12,7 +12,16 @@ export interface User {
   lmp_date?: string;
 }
 
-export type SubscriptionStatus = 'active' | 'expired' | 'none';
+export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'none';
+
+export interface JourneyData {
+  stage: 'pregnant' | 'planning';
+  lmp_date?: string;
+  edd_date?: string;
+  confirmed_month?: number;
+  remaining_months?: number;
+  planning_timeline?: string;
+}
 
 interface AuthState {
   status: AuthStatus;
@@ -22,7 +31,9 @@ interface AuthState {
   hasLanguage: boolean;
   hasProfile: boolean;
   hasLifeStage: boolean;
+  hasSeenPricing: boolean;
   hasSeenIntro: boolean;
+  journeyData: JourneyData | null;
   otpRequestTimestamps: number[]; // For rate limiting
   subscriptionStatus: SubscriptionStatus;
   babyKicks: number;
@@ -31,7 +42,9 @@ interface AuthState {
   setHasLanguage: (val: boolean) => void;
   setHasProfile: (val: boolean, data?: { name: string; dob: string; city: string; state: string }) => void;
   setHasLifeStage: (val: boolean, stageId?: string, extraData?: any) => void;
+  setHasSeenPricing: (val: boolean) => void;
   setHasSeenIntro: (val: boolean) => void;
+  setJourneyData: (data: JourneyData) => void;
   restoreSession: () => Promise<void>;
   sendOtp: (phone: string) => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
@@ -53,7 +66,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasLanguage: false,
   hasProfile: false,
   hasLifeStage: false,
+  hasSeenPricing: false,
   hasSeenIntro: false,
+  journeyData: null,
   otpRequestTimestamps: [],
   subscriptionStatus: 'none',
   babyKicks: 0,
@@ -92,10 +107,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     // Also save to state so it's instantly available without reloading
+    const jData = extraData ? { stage: (stageId as any) || 'pregnant', ...extraData } : null;
     set((state) => ({ 
       hasLifeStage: val,
+      journeyData: jData || state.journeyData,
       user: state.user ? { ...state.user, lmp_date: extraData?.lmp_date } : null
     }));
+  },
+
+  setHasSeenPricing: async (val: boolean) => {
+    if (val) {
+      await AsyncStorage.setItem('@garbhcompanion/has_seen_pricing', 'true');
+    } else {
+      await AsyncStorage.removeItem('@garbhcompanion/has_seen_pricing');
+    }
+    set({ hasSeenPricing: val });
   },
 
   setHasSeenIntro: async (val: boolean) => {
@@ -105,11 +131,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ hasSeenIntro: val });
   },
 
+  setJourneyData: (data: JourneyData) => {
+    set({ journeyData: data });
+  },
+
   restoreSession: async () => {
     const hasLang = await AsyncStorage.getItem('@garbhcompanion/has_language');
     const hasProf = await AsyncStorage.getItem('@garbhcompanion/has_profile');
     const hasLife = await AsyncStorage.getItem('@garbhcompanion/has_life_stage');
+    const hasPricing = await AsyncStorage.getItem('@garbhcompanion/has_seen_pricing');
     const hasIntro = await AsyncStorage.getItem('@garbhcompanion/has_seen_intro');
+    const storedSub = await AsyncStorage.getItem('@garbhcompanion/subscription_status');
     const hasSession = await AsyncStorage.getItem('@mock_session');
     const token = await AsyncStorage.getItem('@jwt_token');
     
@@ -121,10 +153,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     let extraData = null;
+    const stageId = await AsyncStorage.getItem('@garbhcompanion/life_stage_data');
     if (hasLife) {
       const storedExtra = await AsyncStorage.getItem('@garbhcompanion/life_stage_extra');
       if (storedExtra) extraData = JSON.parse(storedExtra);
     }
+
+    const jData: JourneyData | null = extraData ? { stage: (stageId as any) || 'pregnant', ...extraData } : null;
     
     if (hasSession === 'true' && token) {
       // Restore API token for subsequent requests
@@ -141,7 +176,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hasLanguage: !!hasLang,
         hasProfile: !!hasProf,
         hasLifeStage: !!hasLife,
-        hasSeenIntro: !!hasIntro
+        hasSeenPricing: !!hasPricing,
+        hasSeenIntro: !!hasIntro,
+        journeyData: jData,
+        subscriptionStatus: (storedSub as any) || 'none'
       });
     } else {
       set({ status: 'idle', user: null });
@@ -208,6 +246,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const hasLang = await AsyncStorage.getItem('@garbhcompanion/has_language');
         const hasProf = await AsyncStorage.getItem('@garbhcompanion/has_profile');
         const hasLife = await AsyncStorage.getItem('@garbhcompanion/has_life_stage');
+        const hasPricing = await AsyncStorage.getItem('@garbhcompanion/has_seen_pricing');
         const hasIntro = await AsyncStorage.getItem('@garbhcompanion/has_seen_intro');
         
         set({ 
@@ -217,6 +256,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           hasLanguage: !!hasLang,
           hasProfile: !!hasProf,
           hasLifeStage: !!hasLife,
+          hasSeenPricing: !!hasPricing,
           hasSeenIntro: !!hasIntro
         });
       } else {
@@ -242,8 +282,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await AsyncStorage.removeItem('@garbhcompanion/profile_data');
     await AsyncStorage.removeItem('@garbhcompanion/has_life_stage');
     await AsyncStorage.removeItem('@garbhcompanion/life_stage_data');
+    await AsyncStorage.removeItem('@garbhcompanion/life_stage_extra');
+    await AsyncStorage.removeItem('@garbhcompanion/has_seen_pricing');
     await AsyncStorage.removeItem('@garbhcompanion/has_seen_intro');
-    set({ status: 'idle', user: null, phoneNumber: null, subscriptionStatus: 'none', hasLanguage: false, hasProfile: false, hasLifeStage: false, hasSeenIntro: false });
+    await AsyncStorage.removeItem('@garbhcompanion/subscription_status');
+    set({ 
+      status: 'idle', 
+      user: null, 
+      phoneNumber: null, 
+      subscriptionStatus: 'none', 
+      hasLanguage: false, 
+      hasProfile: false, 
+      hasLifeStage: false, 
+      hasSeenPricing: false, 
+      hasSeenIntro: false,
+      journeyData: null 
+    });
   },
 
   setSubscriptionStatus: (status: SubscriptionStatus) => set({ subscriptionStatus: status }),

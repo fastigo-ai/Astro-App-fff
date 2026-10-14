@@ -12,6 +12,7 @@ import authRoutes from './routes/authRoutes';
 import activityRoutes from './routes/activityRoutes';
 import profileRoutes from './routes/profileRoutes';
 import bumpRoutes from './routes/bumpRoutes';
+import subscriptionRoutes from './routes/subscriptionRoutes';
 
 const app: Application = express();
 
@@ -34,6 +35,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/activities', activityRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/bump', bumpRoutes);
+app.use('/api/v1/subscription', subscriptionRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy' });

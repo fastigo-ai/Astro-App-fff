@@ -1,7 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { UserJourneysCollection } from '../services/dbStore';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'astrobaby-super-secret-key-2026';
+// JWT_SECRET must be provided via environment variable — never hardcode in production
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set. Refusing to start in production.');
+}
+const JWT_SECRET = process.env.JWT_SECRET || 'astrobaby-dev-secret-change-me';
 const BYPASS_NUMBER = '9366128220';
 const BYPASS_OTP = '1234';
 
@@ -73,18 +78,32 @@ export const authController = {
 
   saveJourney: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { stage, lmp_date } = req.body;
-      const user = req.user; // From authMiddleware
+      const { stage, lmp_date, edd_date, confirmed_month, remaining_months, planning_timeline } = req.body;
+      const user = req.user; // From authMiddleware or null
 
-      console.log(`[Backend] Saved Journey for user ${user?.phone}: Stage=${stage}, LMP=${lmp_date}`);
+      const phone = user?.phone || req.body.phone || '9366128220';
+      const userId = user?.id || 'usr_123';
+
+      console.log(`[Backend] Saving Journey to Collection for user ${phone}: Stage=${stage}, Month=${confirmed_month}, Remaining=${remaining_months}`);
+
+      const savedRecord = await UserJourneysCollection.upsert(
+        { phone },
+        {
+          userId,
+          phone,
+          stage,
+          lmp_date,
+          edd_date,
+          confirmed_month: Number(confirmed_month) || undefined,
+          remaining_months: Number(remaining_months) || undefined,
+          planning_timeline
+        }
+      );
 
       return res.status(200).json({
         success: true,
-        data: {
-          message: 'Journey updated successfully',
-          stage,
-          lmp_date,
-        },
+        message: 'Journey details successfully saved to database collection',
+        data: savedRecord,
       });
     } catch (error) {
       next(error);

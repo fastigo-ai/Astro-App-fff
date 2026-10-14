@@ -7,6 +7,8 @@ import { Button } from '~/shared/components/Button';
 import { useAuthStore } from '~/store/useAuthStore';
 import { api } from '~/shared/api';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 type Props = NativeStackScreenProps<AppStackParamList, 'LanguageSelect'>;
 
 const { width } = Dimensions.get('window');
@@ -17,31 +19,34 @@ const LANGUAGES = [
 ];
 
 export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
-  const { i18n } = useTranslation();
-  const [selectedLang, setSelectedLang] = useState('en');
+  const { t, i18n } = useTranslation();
+  const [selectedLang, setSelectedLang] = useState(i18n.language?.startsWith('hi') ? 'hi' : 'en');
   const [isLoading, setIsLoading] = useState(false);
   const setHasLanguage = useAuthStore(state => state.setHasLanguage);
+
+  const handleSelect = (id: string) => {
+    setSelectedLang(id);
+    i18n.changeLanguage(id);
+    AsyncStorage.setItem('@garbhcompanion/language', id);
+  };
 
   const handleContinue = async () => {
     try {
       setIsLoading(true);
+      await AsyncStorage.setItem('@garbhcompanion/language', selectedLang);
+      i18n.changeLanguage(selectedLang);
       
       // 1. Sync choice to Backend
-      await api.post('/api/v1/profile/language', { language: selectedLang });
-      
-      // 2. Change UI language instantly
-      if (selectedLang === 'en' || selectedLang === 'hi') {
-        i18n.changeLanguage(selectedLang);
+      try {
+        await api.post('/api/v1/profile/language', { language: selectedLang });
+      } catch (e) {
+        console.warn('Backend language sync optional warning:', e);
       }
       
-      // 3. Complete step locally
+      // 2. Complete step locally
       setHasLanguage(true);
     } catch (error) {
-      console.error('Failed to sync language to backend:', error);
-      // Fallback gracefully if backend is offline
-      if (selectedLang === 'en' || selectedLang === 'hi') {
-        i18n.changeLanguage(selectedLang);
-      }
+      console.error('Failed to save language:', error);
       setHasLanguage(true);
     } finally {
       setIsLoading(false);
@@ -53,7 +58,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <TouchableOpacity 
         style={[styles.card, isSelected && styles.cardSelected]} 
-        onPress={() => setSelectedLang(item.id)}
+        onPress={() => handleSelect(item.id)}
         activeOpacity={0.8}
       >
         <View style={styles.cardContent}>
@@ -90,7 +95,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.title}>Choose your preferred{'\n'}language</Text>
+        <Text style={styles.title}>{t('languageSelect.title')}</Text>
 
         <FlatList
           data={LANGUAGES}
@@ -103,7 +108,7 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
         />
 
         <Button 
-          title={isLoading ? "Saving..." : "Continue →"} 
+          title={isLoading ? t('languageSelect.saving') : t('languageSelect.continue')} 
           onPress={handleContinue} 
           isLoading={isLoading}
           style={styles.submitBtn}

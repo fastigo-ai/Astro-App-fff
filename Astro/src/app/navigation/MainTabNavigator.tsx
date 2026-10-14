@@ -75,17 +75,21 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
   );
 };
 
+import { useTranslation } from 'react-i18next';
+
 export const MainTabNavigator = () => {
+  const { t } = useTranslation();
+
   return (
     <Tab.Navigator
       tabBar={props => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="Subscribed" component={SubscribedScreen} options={{ title: 'Program' }} />
-      <Tab.Screen name="Activity" component={ActivityScreen} options={{ title: 'Activity' }} />
-      <Tab.Screen name="InProgress" component={ClassesScreen} options={{ title: 'Classes' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+      <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: t('tabs.home') }} />
+      <Tab.Screen name="Subscribed" component={SubscribedScreen} options={{ title: t('tabs.program') }} />
+      <Tab.Screen name="Activity" component={ActivityScreen} options={{ title: t('tabs.activity') }} />
+      <Tab.Screen name="InProgress" component={ClassesScreen} options={{ title: t('tabs.classes') }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('tabs.profile') }} />
     </Tab.Navigator>
   );
 };

@@ -29,3 +29,18 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     return res.status(401).json({ success: false, error: 'Unauthorized, invalid token' });
   }
 };
+
+export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+    } catch (error) {
+      // Token expired or invalid, continue as guest
+    }
+  }
+  next();
+};

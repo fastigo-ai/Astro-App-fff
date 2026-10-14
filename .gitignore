@@ -38,12 +38,32 @@ DerivedData
 *.ipa
 *.xcuserstate
 
-# Environment variables
+# Environment variables — NEVER commit real secrets
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+
+# Firebase / Google services — contains API keys
+Astro/android/app/google-services.json
+Astro/ios/GoogleService-Info.plist
+
+# Backend compiled TypeScript output — commit source (.ts) not output (.js/.d.ts)
+backend/src/**/*.js
+backend/src/**/*.js.map
+backend/src/**/*.d.ts
+backend/src/**/*.d.ts.map
+backend/dist/
+
+# Backend runtime local database files
+backend/data/*.json
+backend/data/
+
+# Temporary test dumps & screenshots
+*.xml
+*.png
 
 # IDEs and Editors
 .idea/
@@ -53,3 +73,4 @@ DerivedData
 
 # macOS
 .DS_Store
+

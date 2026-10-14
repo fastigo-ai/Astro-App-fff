@@ -2,11 +2,12 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { useAuthStore } from '../store/useAuthStore';
 
-// Android emulator requires 10.0.2.2 to access localhost of the host machine
-const baseURL = Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+// For physical device testing on the same Wi-Fi network, use your computer's local IP address
+const baseURL = 'http://192.168.1.8:8000';
 
 export const api = axios.create({
   baseURL,
+  timeout: 10000, // 10 second timeout
   headers: {
     'Content-Type': 'application/json',
   },

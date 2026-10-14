@@ -1,39 +1,41 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Camera, Music, Gamepad2 } from 'lucide-react-native';
 import { AppStackParamList } from '~/app/navigation/types';
 
-const TOOLS = [
-  {
-    id: 'baby-bump',
-    title: 'Baby Bump',
-    subtitle: 'Capture memory',
-    icon: <Camera size={24} color="#FFF" />,
-    colors: ['#F9A8D4', '#EC4899'], // Pink gradient-ish
-    bgColor: '#FDF2F8'
-  },
-  {
-    id: 'om-chanter',
-    title: 'Om Chanter',
-    subtitle: 'Find peace',
-    icon: <Music size={24} color="#FFF" />,
-    colors: ['#FDE047', '#D97706'], // Gold/Amber
-    bgColor: '#FFFBEB'
-  },
-  {
-    id: 'mind-games',
-    title: 'Mind Games',
-    subtitle: 'Stay sharp',
-    icon: <Gamepad2 size={24} color="#FFF" />,
-    colors: ['#A78BFA', '#7C3AED'], // Purple
-    bgColor: '#F5F3FF'
-  }
-];
-
 export const QuickToolsSection = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+
+  const TOOLS = [
+    {
+      id: 'baby-bump',
+      title: t('dashboard.babyBump'),
+      subtitle: t('dashboard.babyBumpSub'),
+      icon: <Camera size={24} color="#FFF" />,
+      colors: ['#F9A8D4', '#EC4899'], // Pink gradient-ish
+      bgColor: '#FDF2F8'
+    },
+    {
+      id: 'om-chanter',
+      title: t('dashboard.omChanter'),
+      subtitle: t('dashboard.omChanterSub'),
+      icon: <Music size={24} color="#FFF" />,
+      colors: ['#FDE047', '#D97706'], // Gold/Amber
+      bgColor: '#FFFBEB'
+    },
+    {
+      id: 'mind-games',
+      title: t('dashboard.mindGames'),
+      subtitle: t('dashboard.mindGamesSub'),
+      icon: <Gamepad2 size={24} color="#FFF" />,
+      colors: ['#A78BFA', '#7C3AED'], // Purple
+      bgColor: '#F5F3FF'
+    }
+  ];
 
   const handleToolPress = (id: string) => {
     if (id === 'baby-bump') {
@@ -45,7 +47,7 @@ export const QuickToolsSection = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Daily Essentials</Text>
+      <Text style={styles.sectionTitle}>{t('dashboard.dailyEssentials')}</Text>
       
       <ScrollView 
         horizontal 

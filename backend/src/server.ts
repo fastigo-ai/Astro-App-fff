@@ -10,8 +10,8 @@ const startServer = async () => {
     // await connectDB();
     // await connectRedis();
 
-    app.listen(PORT, () => {
-      console.log(`🚀 API Server running on port ${PORT}`);
+    app.listen(Number(PORT), '0.0.0.0', () => {
+      console.log(`🚀 API Server running on port ${PORT} (Accessible via LAN)`);
       console.log(`📚 Swagger Docs available at http://localhost:${PORT}/api-docs`);
     });
   } catch (error) {

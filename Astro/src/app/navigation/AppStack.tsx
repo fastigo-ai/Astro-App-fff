@@ -30,6 +30,7 @@ export const AppStack = () => {
   const hasLanguage = useAuthStore(state => state.hasLanguage);
   const hasProfile = useAuthStore(state => state.hasProfile);
   const hasLifeStage = useAuthStore(state => state.hasLifeStage);
+  const hasSeenPricing = useAuthStore(state => state.hasSeenPricing);
   const hasSeenIntro = useAuthStore(state => state.hasSeenIntro);
 
   return (
@@ -40,6 +41,8 @@ export const AppStack = () => {
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
       ) : !hasLifeStage ? (
         <Stack.Screen name="LifeStage" component={LifeStageScreen} />
+      ) : !hasSeenPricing ? (
+        <Stack.Screen name="Pricing" component={PricingScreen} />
       ) : !hasSeenIntro ? (
         <Stack.Screen name="IntroVideo" component={IntroVideoScreen} />
       ) : (
@@ -50,6 +53,8 @@ export const AppStack = () => {
             component={PricingScreen} 
             options={{ presentation: 'fullScreenModal' }}
           />
+          <Stack.Screen name="LifeStage" component={LifeStageScreen} />
+          <Stack.Screen name="IntroVideo" component={IntroVideoScreen} />
           <Stack.Screen name="AllPrograms" component={AllProgramsScreen} />
           <Stack.Screen name="Course" component={CourseScreen} />
           <Stack.Screen name="Garbhadhaan" component={GarbhadhaanScreen} />
