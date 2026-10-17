@@ -74,3 +74,5 @@ backend/data/
 # macOS
 .DS_Store
 
+# Android APK binaries
+*.apk
