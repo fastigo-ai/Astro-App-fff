@@ -39,6 +39,24 @@ app.use('/api/v1/bump', bumpRoutes);
 app.use('/api/v1/subscription', subscriptionRoutes);
 app.use('/api/v1/mom', momInteractionsRoutes);
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: '🚀 Astrobaby API Server is Live & Healthy!',
+    version: '1.0.0',
+    documentation: '/api-docs',
+    health: '/health',
+    endpoints: {
+      auth: '/api/v1/auth',
+      activities: '/api/v1/activities',
+      profile: '/api/v1/profile',
+      bump: '/api/v1/bump',
+      subscription: '/api/v1/subscription',
+      mom: '/api/v1/mom',
+    },
+  });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Server is healthy' });
 });

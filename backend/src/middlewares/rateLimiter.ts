@@ -1,57 +1,35 @@
 import { Request, Response, NextFunction } from 'express';
 import Redis from 'ioredis';
 
-// Ensure you have REDIS_URL in your env
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+// Only connect to Redis if REDIS_URL is explicitly provided
+let redis: Redis | null = null;
 
-/**
- * Advanced Redis Token Bucket Rate Limiter
- * Inspired by Uber's distributed global rate limiting architecture.
- * Uses an atomic Lua script to prevent race conditions across multiple node instances.
- */
-const TOKEN_BUCKET_SCRIPT = `
-  local key = KEYS[1]
-  local max_tokens = tonumber(ARGV[1])
-  local refill_rate = tonumber(ARGV[2])
-  local now = tonumber(ARGV[3])
-  local requested = tonumber(ARGV[4])
+if (process.env.REDIS_URL) {
+  try {
+    redis = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      retryStrategy: (times) => (times > 3 ? null : Math.min(times * 200, 2000)),
+      enableOfflineQueue: false,
+    });
 
-  local bucket = redis.call('HMGET', key, 'tokens', 'last_update')
-  local tokens = tonumber(bucket[1])
-  local last_update = tonumber(bucket[2])
+    redis.on('error', (err) => {
+      console.warn('[Redis] Cache disconnected, falling back gracefully:', err.message);
+    });
 
-  if not tokens then
-    tokens = max_tokens
-    last_update = now
-  else
-    -- Calculate tokens to add based on elapsed time
-    local elapsed = math.max(0, now - last_update)
-    local tokens_to_add = math.floor(elapsed * refill_rate)
-    
-    if tokens_to_add > 0 then
-      tokens = math.min(max_tokens, tokens + tokens_to_add)
-      last_update = now
-    end
-  end
-
-  if tokens >= requested then
-    tokens = tokens - requested
-    redis.call('HMSET', key, 'tokens', tokens, 'last_update', last_update)
-    -- Set TTL to clean up old keys (e.g., 60 seconds)
-    redis.call('EXPIRE', key, 60)
-    return {1, tokens}
-  else
-    return {0, tokens}
-  end
-`;
-
-// Define a command for ioredis
-redis.defineCommand('rateLimit', {
-  numberOfKeys: 1,
-  lua: TOKEN_BUCKET_SCRIPT,
-});
+    redis.defineCommand('rateLimit', {
+      numberOfKeys: 1,
+      lua: TOKEN_BUCKET_SCRIPT,
+    });
+  } catch (e) {
+    console.warn('[Redis] Initialization skipped:', e);
+    redis = null;
+  }
+}
 
 export const rateLimiter = async (req: Request, res: Response, next: NextFunction) => {
+  if (!redis) {
+    return next(); // Fail open if Redis is not configured
+  }
   try {
     // Identify user by IP or User ID if authenticated
     const identifier = (req as any).user?.id || req.ip || 'global';
