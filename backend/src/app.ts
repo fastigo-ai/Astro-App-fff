@@ -20,6 +20,7 @@ import bumpRoutes from './routes/bumpRoutes';
 import subscriptionRoutes from './routes/subscriptionRoutes';
 import momInteractionsRoutes from './routes/momInteractionsRoutes';
 import paymentRoutes from './routes/paymentRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 const app: Application = express();
 
@@ -34,7 +35,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. Static Files (Standard Web Checkout Demo)
+// 3. Static Files (Standard Web Checkout & Admin Dashboard)
 app.use(express.static(path.join(__dirname, '../public')));
 
 // 4. Logging
@@ -42,12 +43,18 @@ app.use(morgan('combined'));
 
 // 5. Routes
 app.use('/api', paymentRoutes);
+app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/activities', activityRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/bump', bumpRoutes);
 app.use('/api/v1/subscription', subscriptionRoutes);
 app.use('/api/v1/mom', momInteractionsRoutes);
+
+// Admin Dashboard UI Route
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin.html'));
+});
 
 app.get('/', (req, res) => {
   res.status(200).json({
