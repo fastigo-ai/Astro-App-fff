@@ -413,6 +413,45 @@
         payButton.innerText = '🔒 Pay with Razorpay';
       }
     }
+
+    // Auto-parse URL query parameters from mobile app (amount, planName, phone, autoOpen)
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const amountParam = params.get('amount');
+      const planNameParam = params.get('planName');
+      const phoneParam = params.get('phone');
+      const nameParam = params.get('name');
+      const autoOpen = params.get('autoOpen');
+
+      if (phoneParam) document.getElementById('userPhone').value = phoneParam;
+      if (nameParam) document.getElementById('userName').value = nameParam;
+
+      if (amountParam) {
+        const sel = document.getElementById('planSelect');
+        let found = false;
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value === amountParam) {
+            sel.selectedIndex = i;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          const opt = document.createElement('option');
+          opt.value = amountParam;
+          opt.text = (planNameParam || 'App Selected Plan') + ' — ₹' + Number(amountParam).toLocaleString('en-IN');
+          opt.setAttribute('data-name', planNameParam || 'App Selected Plan');
+          opt.setAttribute('data-desc', 'Selected subscription scheme from AstroBaby mobile app');
+          sel.add(opt, 0);
+          sel.selectedIndex = 0;
+        }
+        handlePlanChange();
+      }
+
+      if (autoOpen === 'true') {
+        setTimeout(initiateCheckout, 600);
+      }
+    });
   </script>
 </body>
 </html>

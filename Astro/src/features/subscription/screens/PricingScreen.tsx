@@ -10,13 +10,14 @@ import {
   Dimensions,
   Platform,
   Modal,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
 import { useAuthStore } from '~/store/useAuthStore';
-import { api } from '~/shared/api';
+import { api, baseURL } from '~/shared/api';
 import {
   Check,
   Sparkles,
@@ -283,6 +284,25 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
       setShowRazorpayModal(true);
     } finally {
       setIsSubscribing(false);
+    }
+  };
+
+  // Open Official Razorpay Test Checkout Page
+  const openRazorpayTestGateway = async () => {
+    try {
+      const amount = activePlan?.calculatedPrice || 2499;
+      const planName = activePlan?.name || 'Utkarsh';
+      const phone = user?.phone || '9366128220';
+      const url = `${baseURL}/checkout.html?amount=${amount}&planName=${encodeURIComponent(planName)}&phone=${phone}&autoOpen=true`;
+
+      const supported = await Linking.canOpenURL(url).catch(() => true);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Checkout Link', `Please open in your browser:\n${url}`);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Unable to open checkout URL');
     }
   };
 
@@ -837,6 +857,23 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
                   {selectedPaymentMethod === 'netbanking' && <View style={styles.radioDot} />}
                 </View>
               </TouchableOpacity>
+            </View>
+
+            {/* Official Razorpay Web Test Gateway Link */}
+            <TouchableOpacity
+              style={styles.razorpayWebLinkBtn}
+              onPress={openRazorpayTestGateway}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.razorpayWebLinkText}>
+                ⚡ Open Official Razorpay Test Link (Web / UPI) ↗
+              </Text>
+            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
+              <Text style={{ marginHorizontal: 8, fontSize: 11, color: '#94A3B8', fontWeight: '600' }}>OR VERIFY IN-APP</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
             </View>
 
             {/* Pay Button */}
@@ -1786,5 +1823,21 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: '#2563EB',
+  },
+  razorpayWebLinkBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+    borderColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  razorpayWebLinkText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#1D4ED8',
   },
 });

@@ -11,6 +11,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -36,7 +37,7 @@ import {
 } from 'lucide-react-native';
 import { PROGRAMS_DATA, ProgramTier } from '../data/programsData';
 import { useAuthStore } from '~/store/useAuthStore';
-import { api } from '~/shared/api';
+import { api, baseURL } from '~/shared/api';
 
 const { width } = Dimensions.get('window');
 
@@ -78,6 +79,25 @@ export const CourseScreen: React.FC = () => {
       return;
     }
     setShowPaymentModal(true);
+  };
+
+  // Open Official Razorpay Test Checkout Page
+  const openRazorpayWebCheckout = async () => {
+    try {
+      const amount = selectedTier.calculatedPrice;
+      const planName = `${program.title} - ${selectedTier.name}`;
+      const phone = user?.phone || '9366128220';
+      const url = `${baseURL}/checkout.html?amount=${amount}&planName=${encodeURIComponent(planName)}&phone=${phone}&autoOpen=true`;
+
+      const supported = await Linking.canOpenURL(url).catch(() => true);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Checkout Link', `Please open in your browser:\n${url}`);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Unable to open checkout URL');
+    }
   };
 
   // Process Razorpay Payment
@@ -548,6 +568,23 @@ export const CourseScreen: React.FC = () => {
               <Text style={styles.securityText}>
                 Secured by Razorpay • 100% Refund Guarantee within 7 days
               </Text>
+            </View>
+
+            {/* Official Razorpay Web Test Gateway Link */}
+            <TouchableOpacity
+              style={styles.webCheckoutBtn}
+              onPress={openRazorpayWebCheckout}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.webCheckoutBtnText}>
+                ⚡ Open Official Razorpay Test Link (Web / UPI) ↗
+              </Text>
+            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
+              <Text style={{ marginHorizontal: 8, fontSize: 11, color: '#94A3B8', fontWeight: '600' }}>OR COMPLETE IN-APP</Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: '#E2E8F0' }} />
             </View>
 
             {/* Pay Button */}
@@ -1255,5 +1292,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  webCheckoutBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+    borderColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  webCheckoutBtnText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#1D4ED8',
   },
 });
