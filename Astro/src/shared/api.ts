@@ -4,10 +4,15 @@ import { useAuthStore } from '../store/useAuthStore';
 
 // Production Render Cloud Server (works on any physical phone via mobile data or Wi-Fi)
 export const PRODUCTION_URL = 'https://astrobaby-pj0t.onrender.com';
-export const LOCAL_DEV_URL = 'http://192.168.1.8:8000';
+export const LAN_DEV_URL = 'http://10.101.231.1:8000';
+export const EMULATOR_DEV_URL = Platform.select({
+  android: 'http://10.0.2.2:8000',
+  ios: 'http://localhost:8000',
+  default: 'http://localhost:8000',
+});
 
-// Use production cloud backend for real phone connectivity
-const baseURL = PRODUCTION_URL;
+// In development, automatically connect to the local active backend on port 8000
+export const baseURL = __DEV__ ? (EMULATOR_DEV_URL || PRODUCTION_URL) : PRODUCTION_URL;
 
 export const api = axios.create({
   baseURL,
