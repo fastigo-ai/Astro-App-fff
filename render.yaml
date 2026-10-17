@@ -4,6 +4,7 @@ services:
     env: node
     plan: free
     rootDir: backend
+    autoDeploy: true
     buildCommand: npm install
     startCommand: npx tsx src/server.ts
     envVars:
