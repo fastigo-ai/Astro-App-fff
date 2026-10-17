@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage, Dimensions, Animated, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { CheckCircle2, Sparkles } from 'lucide-react-native';
+import { useAuthStore } from '~/store/useAuthStore';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
@@ -146,19 +147,14 @@ export const CourseGrid = () => {
             extrapolate: 'clamp',
           });
 
+          const isSubscribed = useAuthStore.getState().isProgramSubscribed(item.id);
           return (
             <View style={{ width: CARD_WIDTH }}>
               <Animated.View style={[styles.cardWrapper, { transform: [{ scale }], opacity }]}>
                 <TouchableOpacity 
-                  style={styles.card} 
+                  style={[styles.card, isSubscribed && { borderColor: '#BBF7D0', borderWidth: 2 }]} 
                   activeOpacity={0.9}
-                  onPress={() => {
-                    if (item.id === 'garbhdhaan_sanskar') {
-                      navigation.navigate('Garbhadhaan', { courseId: item.id });
-                    } else {
-                      navigation.navigate('Course', { courseId: item.id });
-                    }
-                  }}
+                  onPress={() => navigation.navigate('Course', { courseId: item.id })}
                 >
                   <View style={styles.imageContainer}>
                     <RNImage 
@@ -167,10 +163,12 @@ export const CourseGrid = () => {
                       resizeMode="cover"
                     />
                     <View style={styles.floatingIconBadge}>
-                      <Sparkles size={14} color="#EC4899" />
+                      <Sparkles size={14} color={isSubscribed ? '#16A34A' : '#EC4899'} />
                     </View>
-                    <View style={styles.floatingTextBadge}>
-                      <Text style={styles.floatingBadgeText}>{item.badge}</Text>
+                    <View style={[styles.floatingTextBadge, isSubscribed && { backgroundColor: '#DCFCE7' }]}>
+                      <Text style={[styles.floatingBadgeText, isSubscribed && { color: '#15803D' }]}>
+                        {isSubscribed ? '✓ ACTIVE MEMBER' : item.badge}
+                      </Text>
                     </View>
                   </View>
                   
@@ -184,8 +182,10 @@ export const CourseGrid = () => {
 
                     <View style={styles.cardFooter}>
                       <View style={styles.checkRow}>
-                        <CheckCircle2 size={14} color="#EC4899" />
-                        <Text style={styles.checkText}>Enroll for {item.price}</Text>
+                        <CheckCircle2 size={14} color={isSubscribed ? '#16A34A' : '#EC4899'} />
+                        <Text style={[styles.checkText, isSubscribed && { color: '#15803D', fontWeight: '700' }]}>
+                          {isSubscribed ? 'Access Unlocked' : `Enroll from ${item.price}`}
+                        </Text>
                       </View>
                     </View>
                   </View>

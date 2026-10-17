@@ -36,6 +36,8 @@ interface AuthState {
   journeyData: JourneyData | null;
   otpRequestTimestamps: number[]; // For rate limiting
   subscriptionStatus: SubscriptionStatus;
+  subscribedPrograms: string[];
+  activeSubscriptions: Record<string, any>;
   babyKicks: number;
   
   // Actions
@@ -53,6 +55,9 @@ interface AuthState {
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   fetchSubscriptionStatus: () => Promise<void>;
   incrementBabyKicks: () => void;
+  isProgramSubscribed: (programId: string) => boolean;
+  isModuleUnlocked: (moduleId: string) => boolean;
+  subscribeToProgram: (programId: string, planDetails: any) => Promise<void>;
 }
 
 const RATE_LIMIT_COUNT = 3;
@@ -71,6 +76,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   journeyData: null,
   otpRequestTimestamps: [],
   subscriptionStatus: 'none',
+  subscribedPrograms: [],
+  activeSubscriptions: {},
   babyKicks: 0,
 
   setHasLanguage: async (val: boolean) => {
@@ -161,6 +168,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const jData: JourneyData | null = extraData ? { stage: (stageId as any) || 'pregnant', ...extraData } : null;
     
+    const storedPrograms = await AsyncStorage.getItem('@garbhcompanion/subscribed_programs');
+    const storedActiveSubs = await AsyncStorage.getItem('@garbhcompanion/active_subscriptions');
+    let parsedPrograms: string[] = [];
+    let parsedActiveSubs: Record<string, any> = {};
+    if (storedPrograms) {
+      try { parsedPrograms = JSON.parse(storedPrograms); } catch (e) {}
+    }
+    if (storedActiveSubs) {
+      try { parsedActiveSubs = JSON.parse(storedActiveSubs); } catch (e) {}
+    }
+
     if (hasSession === 'true' && token) {
       // Restore API token for subsequent requests
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -179,10 +197,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hasSeenPricing: !!hasPricing,
         hasSeenIntro: !!hasIntro,
         journeyData: jData,
-        subscriptionStatus: (storedSub as any) || 'none'
+        subscriptionStatus: (storedSub as any) || 'none',
+        subscribedPrograms: parsedPrograms,
+        activeSubscriptions: parsedActiveSubs,
       });
     } else {
-      set({ status: 'idle', user: null });
+      set({ 
+        status: 'idle', 
+        user: null, 
+        subscribedPrograms: parsedPrograms,
+        activeSubscriptions: parsedActiveSubs,
+        subscriptionStatus: (storedSub as any) || 'none' 
+      });
     }
   },
 
@@ -319,5 +345,52 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   incrementBabyKicks: () => {
     set((state) => ({ babyKicks: state.babyKicks + 1 }));
+  },
+
+  isProgramSubscribed: (programId: string) => {
+    const { subscriptionStatus, subscribedPrograms } = get();
+    // Default garbh_sanskar is active if general subscriptionStatus is active
+    if (programId === 'garbh_sanskar' && subscriptionStatus === 'active') {
+      return true;
+    }
+    return subscribedPrograms.includes(programId);
+  },
+
+  isModuleUnlocked: (moduleId: string) => {
+    const { subscriptionStatus, subscribedPrograms, activeSubscriptions } = get();
+    // If full Garbhsanskar subscription is active, default modules are unlocked
+    if (subscriptionStatus === 'active') return true;
+
+    // Check specific module against all active program subscriptions
+    for (const progId of subscribedPrograms) {
+      const sub = activeSubscriptions[progId];
+      if (sub && Array.isArray(sub.unlockedModules) && sub.unlockedModules.includes(moduleId)) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  subscribeToProgram: async (programId: string, planDetails: any) => {
+    const { subscribedPrograms, activeSubscriptions } = get();
+    const updatedPrograms = Array.from(new Set([...subscribedPrograms, programId]));
+    const updatedActiveSubs = {
+      ...activeSubscriptions,
+      [programId]: {
+        ...planDetails,
+        activatedAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + (planDetails?.durationMonths || 3) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    };
+
+    await AsyncStorage.setItem('@garbhcompanion/subscribed_programs', JSON.stringify(updatedPrograms));
+    await AsyncStorage.setItem('@garbhcompanion/active_subscriptions', JSON.stringify(updatedActiveSubs));
+    await AsyncStorage.setItem('@garbhcompanion/subscription_status', 'active');
+
+    set({
+      subscribedPrograms: updatedPrograms,
+      activeSubscriptions: updatedActiveSubs,
+      subscriptionStatus: 'active',
+    });
   },
 }));

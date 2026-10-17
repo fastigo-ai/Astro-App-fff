@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage, ScrollView 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react-native';
+import { useAuthStore } from '~/store/useAuthStore';
 
 const COURSES = [
   {
@@ -69,6 +70,7 @@ const COURSES = [
 
 export const AllProgramsScreen = () => { // force refresh
   const navigation = useNavigation<any>();
+  const isProgramSubscribed = useAuthStore(state => state.isProgramSubscribed);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'right', 'left']}>
@@ -87,50 +89,51 @@ export const AllProgramsScreen = () => { // force refresh
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {COURSES.map((item, index) => (
-          <TouchableOpacity 
-            key={item.id}
-            style={styles.card} 
-            activeOpacity={0.9}
-            onPress={() => {
-              if (item.id === 'garbhdhaan') {
-                navigation.navigate('Garbhadhaan', { courseId: item.id });
-              } else {
-                navigation.navigate('Course', { courseId: item.id });
-              }
-            }}
-          >
-            <View style={styles.imageContainer}>
-              <RNImage 
-                source={item.image} 
-                style={styles.cardImage} 
-                resizeMode="cover"
-              />
-              <View style={styles.floatingIconBadge}>
-                <Sparkles size={14} color="#EC4899" />
-              </View>
-              <View style={styles.floatingTextBadge}>
-                <Text style={styles.floatingBadgeText}>{item.badge}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.cardContent}>
-              <Text style={styles.courseTitle}>{item.title}</Text>
-              <Text style={styles.courseSubtitle}>{item.subtitle}</Text>
-              
-              <Text style={styles.courseDescription}>
-                {item.description}
-              </Text>
-
-              <View style={styles.cardFooter}>
-                <View style={styles.checkRow}>
-                  <CheckCircle2 size={14} color="#EC4899" />
-                  <Text style={styles.checkText}>Enroll for {item.price}</Text>
+        {COURSES.map((item, index) => {
+          const isSubscribed = isProgramSubscribed(item.id);
+          return (
+            <TouchableOpacity 
+              key={item.id}
+              style={[styles.card, isSubscribed && { borderColor: '#BBF7D0', borderWidth: 2 }]} 
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Course', { courseId: item.id })}
+            >
+              <View style={styles.imageContainer}>
+                <RNImage 
+                  source={item.image} 
+                  style={styles.cardImage} 
+                  resizeMode="cover"
+                />
+                <View style={styles.floatingIconBadge}>
+                  <Sparkles size={14} color={isSubscribed ? '#16A34A' : '#EC4899'} />
+                </View>
+                <View style={[styles.floatingTextBadge, isSubscribed && { backgroundColor: '#DCFCE7' }]}>
+                  <Text style={[styles.floatingBadgeText, isSubscribed && { color: '#15803D' }]}>
+                    {isSubscribed ? '✓ ACTIVE MEMBER' : item.badge}
+                  </Text>
                 </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+              
+              <View style={styles.cardContent}>
+                <Text style={styles.courseTitle}>{item.title}</Text>
+                <Text style={styles.courseSubtitle}>{item.subtitle}</Text>
+                
+                <Text style={styles.courseDescription}>
+                  {item.description}
+                </Text>
+
+                <View style={styles.cardFooter}>
+                  <View style={styles.checkRow}>
+                    <CheckCircle2 size={14} color={isSubscribed ? '#16A34A' : '#EC4899'} />
+                    <Text style={[styles.checkText, isSubscribed && { color: '#15803D', fontWeight: '700' }]}>
+                      {isSubscribed ? 'Access Unlocked' : `Starting at ${item.price}`}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );

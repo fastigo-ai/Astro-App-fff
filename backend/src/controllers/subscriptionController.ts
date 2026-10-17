@@ -263,6 +263,7 @@ export const subscriptionController = {
           const subscriptionRecord = await SubscriptionsCollection.insert({
             userId,
             phone,
+            programId: (req.body.programId as string) || 'garbh_sanskar',
             planId: planId || 'garbhsanskar-utkarsh',
             tier: (tier as 'full' | 'half') || 'full',
             planName: planName || 'Utkarsh (उत्कर्ष)',
@@ -270,6 +271,7 @@ export const subscriptionController = {
             currency: 'INR',
             durationMonths: duration,
             calculatedForMonth: Number(month) || undefined,
+            unlockedModules: req.body.unlockedModules || ['kicks', 'bump', 'samvad', 'mood', 'activities', 'diet', 'doctor_chat'],
             status: 'active',
             paymentId: razorpay_payment_id,
             orderId: razorpay_order_id,
@@ -282,7 +284,8 @@ export const subscriptionController = {
             { phone },
             {
               subscription_tier: (tier as 'full' | 'half') || 'full',
-              subscription_status: 'active'
+              subscription_status: 'active',
+              last_subscribed_program: (req.body.programId as string) || 'garbh_sanskar'
             }
           );
 
