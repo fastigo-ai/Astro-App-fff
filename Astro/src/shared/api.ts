@@ -2,12 +2,16 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { useAuthStore } from '../store/useAuthStore';
 
-// For physical device testing on the same Wi-Fi network, use your computer's local IP address
-const baseURL = 'http://192.168.1.8:8000';
+// Production Render Cloud Server (works on any physical phone via mobile data or Wi-Fi)
+export const PRODUCTION_URL = 'https://astrobaby-pj0t.onrender.com';
+export const LOCAL_DEV_URL = 'http://192.168.1.8:8000';
+
+// Use production cloud backend for real phone connectivity
+const baseURL = PRODUCTION_URL;
 
 export const api = axios.create({
   baseURL,
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 30 second timeout to accommodate cloud cold starts
   headers: {
     'Content-Type': 'application/json',
   },
@@ -53,7 +57,7 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error('No refresh token found');
 
         // Request a new access token
-        const res = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+        const res = await axios.post(`${baseURL}/api/v1/auth/refresh`, { refreshToken });
         const newAccessToken = res.data.data.accessToken;
 
         // Save new token and set it for this retry request
