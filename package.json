@@ -1,0 +1,11 @@
+{
+  "name": "astrobaby-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Astrobaby root runner for deployment",
+  "scripts": {
+    "postinstall": "cd backend && npm install",
+    "build": "cd backend && npm run build",
+    "start": "cd backend && npm start"
+  }
+}
