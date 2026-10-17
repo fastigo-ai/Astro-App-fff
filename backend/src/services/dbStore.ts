@@ -221,6 +221,68 @@ export interface IProgramSchemeRecord {
   updatedAt?: string;
 }
 
+export interface ICoupon {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'flat';
+  discountValue: number;
+  minOrderValue: number;
+  maxDiscountCap?: number;
+  expiresAt: string;
+  usageLimit: number;
+  usedCount: number;
+  status: 'active' | 'inactive';
+  description: string;
+  createdAt?: string;
+}
+
+export interface ILiveClass {
+  id: string;
+  programId: string;
+  title: string;
+  instructor: string;
+  dateTime: string;
+  durationMinutes: number;
+  joinUrl: string;
+  status: 'upcoming' | 'live' | 'completed';
+  attendeesCount: number;
+  createdAt?: string;
+}
+
+export interface ICourseLesson {
+  id: string;
+  programId: string;
+  moduleTitle: string;
+  lessonTitle: string;
+  contentType: 'video' | 'audio' | 'pdf' | 'activity';
+  duration: string;
+  contentUrl: string;
+  isFreePreview: boolean;
+  createdAt?: string;
+}
+
+export interface IKitDispatch {
+  id: string;
+  orderId: string;
+  phone: string;
+  userName: string;
+  kitName: string;
+  shippingAddress: string;
+  courier: string;
+  trackingNumber: string;
+  status: 'processing' | 'shipped' | 'out_for_delivery' | 'delivered';
+  updatedAt: string;
+  createdAt?: string;
+}
+
+export interface IBroadcastNotification {
+  id: string;
+  title: string;
+  message: string;
+  targetAudience: 'all' | 'pregnant' | 'planning' | 'subscribed';
+  sentAt: string;
+}
+
 export const UserJourneysCollection = new JsonCollection<IUserJourney>('user_journeys');
 export const SubscriptionsCollection = new JsonCollection<ISubscriptionRecord>('subscriptions');
 export const PaymentsCollection = new JsonCollection<IPaymentRecord>('payments');
@@ -228,6 +290,11 @@ export const KickSessionsCollection = new JsonCollection<IKickSession>('kick_ses
 export const MoodLogsCollection = new JsonCollection<IMoodLog>('mood_logs');
 export const SamvadNotesCollection = new JsonCollection<ISamvadNote>('samvad_notes');
 export const ProgramSchemesCollection = new JsonCollection<IProgramSchemeRecord>('program_schemes');
+export const CouponsCollection = new JsonCollection<ICoupon>('coupons');
+export const LiveClassesCollection = new JsonCollection<ILiveClass>('live_classes');
+export const CourseLessonsCollection = new JsonCollection<ICourseLesson>('course_lessons');
+export const KitDispatchesCollection = new JsonCollection<IKitDispatch>('kit_dispatches');
+export const BroadcastNotificationsCollection = new JsonCollection<IBroadcastNotification>('broadcast_notifications');
 
 // Auto-seed default 6 programs if empty
 export const seedDefaultPrograms = () => {
@@ -473,6 +540,96 @@ export const seedDefaultPrograms = () => {
       },
     ];
     ProgramSchemesCollection.write(defaultPrograms);
+  }
+
+  // Seed default coupons if empty
+  if (CouponsCollection.read().length === 0) {
+    CouponsCollection.write([
+      {
+        id: 'coup_vedic20',
+        code: 'VEDIC20',
+        discountType: 'percentage',
+        discountValue: 20,
+        minOrderValue: 999,
+        maxDiscountCap: 1000,
+        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        usageLimit: 500,
+        usedCount: 42,
+        status: 'active',
+        description: '20% Off on all Garbh Sanskar Complete Plans',
+      },
+      {
+        id: 'coup_welcome500',
+        code: 'WELCOME500',
+        discountType: 'flat',
+        discountValue: 500,
+        minOrderValue: 1999,
+        expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+        usageLimit: 1000,
+        usedCount: 156,
+        status: 'active',
+        description: 'Flat ₹500 discount for new expecting mothers',
+      },
+      {
+        id: 'coup_festive30',
+        code: 'AUSTRO30',
+        discountType: 'percentage',
+        discountValue: 30,
+        minOrderValue: 2499,
+        maxDiscountCap: 1500,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        usageLimit: 200,
+        usedCount: 88,
+        status: 'active',
+        description: 'Special 30% Festive Discount on Beej Sanskar & Garbh Sanskar',
+      },
+    ]);
+  }
+
+  // Seed default live classes if empty
+  if (LiveClassesCollection.read().length === 0) {
+    LiveClassesCollection.write([
+      {
+        id: 'live_gs_01',
+        programId: 'garbh_sanskar',
+        title: 'Trimester 2 Womb Communication & Raga Meditation Masterclass',
+        instructor: 'Dr. Meenakshi Sharma (Ayurvedic Obstetrician)',
+        dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+        durationMinutes: 45,
+        joinUrl: 'https://meet.google.com/astrobaby-live-gs',
+        status: 'upcoming',
+        attendeesCount: 148,
+      },
+      {
+        id: 'live_beej_02',
+        programId: 'beej_sanskar',
+        title: 'Beej Shuddhi & Cellular Detox Diet for Couple Fertility',
+        instructor: 'Acharya Vidyadhar (Vedic Health Scholar)',
+        dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+        durationMinutes: 60,
+        joinUrl: 'https://meet.google.com/astrobaby-beej-live',
+        status: 'upcoming',
+        attendeesCount: 92,
+      },
+    ]);
+  }
+
+  // Seed default physical kit dispatches if empty
+  if (KitDispatchesCollection.read().length === 0) {
+    KitDispatchesCollection.write([
+      {
+        id: 'dispatch_101',
+        orderId: 'order_TouAiyghT5AUp0',
+        phone: '9366128220',
+        userName: 'Astro Parent',
+        kitName: 'Vedic Garbh Samvad Kit + Organic Saffron & Herb Pack',
+        shippingAddress: 'Flat 402, Lotus Tower, Indiranagar, Bengaluru, 560038',
+        courier: 'BlueDart Express',
+        trackingNumber: 'BD982736412IN',
+        status: 'out_for_delivery',
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
   }
 };
 

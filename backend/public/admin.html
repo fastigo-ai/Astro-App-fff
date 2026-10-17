@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AstroBaby Admin | Real-Time App & User Command Center</title>
+  <title>AstroBaby Admin | Course & E-Commerce Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -30,6 +30,7 @@
       --purple: #a855f7;
       --purple-light: rgba(168, 85, 247, 0.15);
       --pink: #ec4899;
+      --pink-light: rgba(236, 72, 153, 0.15);
       --radius: 12px;
       --radius-sm: 8px;
     }
@@ -52,8 +53,8 @@
 
     /* TOPBAR */
     .topbar {
-      background: rgba(18, 24, 38, 0.85);
-      backdrop-filter: blur(12px);
+      background: rgba(18, 24, 38, 0.9);
+      backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
@@ -71,14 +72,14 @@
     }
 
     .logo-badge {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 10px;
       background: linear-gradient(135deg, #6366f1, #a855f7);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     }
 
@@ -179,58 +180,35 @@
       color: #fff;
     }
 
+    .btn-success {
+      background: var(--success-light);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover {
+      background: var(--success);
+      color: #fff;
+    }
+
     .btn-sm {
       padding: 5px 10px;
       font-size: 11px;
     }
 
-    /* MAIN CONTAINER */
+    /* CONTAINER */
     .container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
       padding: 24px;
       width: 100%;
       flex: 1;
     }
 
-    /* NAV TABS */
-    .nav-tabs {
-      display: flex;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
-      overflow-x: auto;
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 600;
-      padding: 12px 18px;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn:hover {
-      color: var(--text-main);
-    }
-
-    .tab-btn.active {
-      color: #818cf8;
-      border-bottom-color: var(--primary);
-    }
-
-    /* STATS GRID */
+    /* STATS ROW */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
       margin-bottom: 24px;
     }
 
@@ -238,7 +216,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px;
+      padding: 16px 18px;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -257,40 +235,75 @@
     }
 
     .stat-label {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       text-transform: uppercase;
       font-weight: 600;
       letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .stat-value {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
       color: #fff;
       letter-spacing: -0.5px;
     }
 
     .stat-sub {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-dim);
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
     .stat-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
       background: var(--surface-card);
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 18px;
     }
 
-    /* CARD WRAPPER */
+    /* TABS */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: #818cf8;
+      border-bottom-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    /* PANELS */
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -365,35 +378,12 @@
       font-weight: 600;
     }
 
-    .badge-success {
-      background: var(--success-light);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .badge-warning {
-      background: var(--warning-light);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-
-    .badge-danger {
-      background: var(--danger-light);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .badge-primary {
-      background: var(--primary-light);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.3);
-    }
-
-    .badge-purple {
-      background: var(--purple-light);
-      color: #c084fc;
-      border: 1px solid rgba(168, 85, 247, 0.3);
-    }
+    .badge-success { background: var(--success-light); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: var(--warning-light); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-danger { background: var(--danger-light); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-primary { background: var(--primary-light); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-purple { background: var(--purple-light); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-pink { background: var(--pink-light); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
 
     .code-pill {
       font-family: 'JetBrains Mono', monospace;
@@ -405,7 +395,6 @@
       color: #cbd5e1;
     }
 
-    /* MODULE PILL TAGS */
     .module-tag {
       display: inline-flex;
       align-items: center;
@@ -413,26 +402,20 @@
       font-size: 11px;
       padding: 2px 7px;
       border-radius: 4px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      margin: 2px;
-      color: #e2e8f0;
-    }
-
-    .module-tag.active {
       background: rgba(99, 102, 241, 0.2);
-      border-color: rgba(99, 102, 241, 0.4);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      margin: 2px;
       color: #c7d2fe;
     }
 
-    /* MODAL */
+    /* MODALS */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(8px);
       z-index: 200;
       display: none;
@@ -441,9 +424,7 @@
       padding: 16px;
     }
 
-    .modal-overlay.open {
-      display: flex;
-    }
+    .modal-overlay.open { display: flex; }
 
     .modal {
       background: var(--surface);
@@ -471,29 +452,11 @@
       justify-content: space-between;
     }
 
-    .modal-title {
-      font-size: 16px;
-      font-weight: 700;
-    }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+    .close-btn:hover { color: #fff; }
 
-    .close-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 20px;
-      cursor: pointer;
-      line-height: 1;
-    }
-    .close-btn:hover {
-      color: #fff;
-    }
-
-    .modal-body {
-      padding: 24px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
     .modal-footer {
       padding: 16px 24px;
       border-top: 1px solid var(--border);
@@ -504,11 +467,7 @@
       background: rgba(255, 255, 255, 0.015);
     }
 
-    /* FORMS */
-    .form-group {
-      margin-bottom: 16px;
-    }
-
+    .form-group { margin-bottom: 16px; }
     .form-label {
       display: block;
       font-size: 12px;
@@ -530,7 +489,6 @@
       outline: none;
       transition: border-color 0.2s;
     }
-
     .form-control:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 2px var(--primary-light);
@@ -559,22 +517,9 @@
       gap: 8px;
       cursor: pointer;
       font-size: 13px;
-      user-select: none;
     }
+    .checkbox-pill input { accent-color: var(--primary); }
 
-    .checkbox-pill input {
-      accent-color: var(--primary);
-    }
-
-    .tier-box {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    /* SEARCH BAR */
     .search-input {
       background: var(--surface-card);
       border: 1px solid var(--border);
@@ -585,12 +530,8 @@
       outline: none;
       width: 240px;
     }
+    .search-input:focus { border-color: var(--primary); }
 
-    .search-input:focus {
-      border-color: var(--primary);
-    }
-
-    /* TOAST */
     #toast-box {
       position: fixed;
       bottom: 24px;
@@ -630,7 +571,7 @@
       <div>
         <div class="brand-title">
           AstroBaby Command Center
-          <span class="brand-badge">Real-Time Core</span>
+          <span class="brand-badge">Course & E-Commerce Core</span>
         </div>
       </div>
     </div>
@@ -638,8 +579,11 @@
     <div class="top-actions">
       <div class="pulse-indicator">
         <span class="pulse-dot"></span>
-        <span>Live Sync Active</span>
+        <span>App Live Sync Active</span>
       </div>
+      <button class="btn btn-secondary" onclick="openBroadcastModal()">
+        📢 Broadcast Alert
+      </button>
       <a href="/checkout.html" target="_blank" class="btn btn-secondary">
         💳 Checkout Demo
       </a>
@@ -649,16 +593,16 @@
     </div>
   </header>
 
-  <!-- MAIN VIEW CONTAINER -->
+  <!-- MAIN CONTAINER -->
   <main class="container">
     
     <!-- STATS OVERVIEW -->
-    <section class="stats-grid" id="stats-container">
+    <section class="stats-grid">
       <div class="stat-card">
         <div>
-          <div class="stat-label">Total Registered Users</div>
+          <div class="stat-label">Total Users</div>
           <div class="stat-value" id="stat-users">--</div>
-          <div class="stat-sub">Across pregnancy & preconception</div>
+          <div class="stat-sub">Registered parents</div>
         </div>
         <div class="stat-icon">👥</div>
       </div>
@@ -667,7 +611,7 @@
         <div>
           <div class="stat-label">Active Subscriptions</div>
           <div class="stat-value" id="stat-subs" style="color: #34d399;">--</div>
-          <div class="stat-sub">Live paying & granted parents</div>
+          <div class="stat-sub">Unlocked schemes</div>
         </div>
         <div class="stat-icon">🌟</div>
       </div>
@@ -676,43 +620,79 @@
         <div>
           <div class="stat-label">Verified Revenue</div>
           <div class="stat-value" id="stat-rev" style="color: #fbbf24;">₹0</div>
-          <div class="stat-sub">Via Razorpay Standard Checkout</div>
+          <div class="stat-sub">Razorpay verified</div>
         </div>
         <div class="stat-icon">💰</div>
       </div>
 
       <div class="stat-card">
         <div>
-          <div class="stat-label">Dynamic Program Schemes</div>
+          <div class="stat-label">Programs / Courses</div>
           <div class="stat-value" id="stat-progs" style="color: #818cf8;">--</div>
-          <div class="stat-sub">Real-time mobile app syllabus</div>
+          <div class="stat-sub">Live syllabus</div>
         </div>
         <div class="stat-icon">📚</div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Active Coupons</div>
+          <div class="stat-value" id="stat-coupons" style="color: #ec4899;">--</div>
+          <div class="stat-sub">Discounts & Promos</div>
+        </div>
+        <div class="stat-icon">🎟️</div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Live Masterclasses</div>
+          <div class="stat-value" id="stat-classes" style="color: #60a5fa;">--</div>
+          <div class="stat-sub">Upcoming webinars</div>
+        </div>
+        <div class="stat-icon">🎥</div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Kit Dispatches</div>
+          <div class="stat-value" id="stat-dispatches" style="color: #a78bfa;">--</div>
+          <div class="stat-sub">Pending physical orders</div>
+        </div>
+        <div class="stat-icon">🚚</div>
       </div>
     </section>
 
     <!-- NAVIGATION TABS -->
     <nav class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('tab-users')">
-        👥 User Management & Subscriptions
+        👥 Users & Subscriptions
       </button>
       <button class="tab-btn" onclick="switchTab('tab-schemes')">
-        📦 Program Schemes & Module Access
+        📦 Course Programs & Modules
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-coupons')">
+        🎟️ Coupons & Discounts
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-classes')">
+        🎥 Live Classes & Webinars
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-dispatches')">
+        🚚 Kit Deliveries & Tracking
       </button>
       <button class="tab-btn" onclick="switchTab('tab-payments')">
-        💳 Razorpay Payments & Receipts
+        💳 Razorpay Payments
       </button>
       <button class="tab-btn" onclick="switchTab('tab-app-sync')">
-        📱 Live Mobile Sync Guide
+        📱 App Sync Guide
       </button>
     </nav>
 
-    <!-- TAB 1: USER HANDLING -->
+    <!-- TAB 1: USERS -->
     <div id="tab-users" class="tab-content">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span>Registered App Users & Access Status</span>
+            <span>Registered App Parents & Gating Status</span>
             <span class="badge badge-purple" id="users-count-badge">0 Users</span>
           </div>
           <div style="display: flex; gap: 10px; align-items: center;">
@@ -727,7 +707,7 @@
           <table>
             <thead>
               <tr>
-                <th>User / Phone</th>
+                <th>Parent / Phone</th>
                 <th>Life Stage</th>
                 <th>Active Scheme</th>
                 <th>Status</th>
@@ -737,27 +717,23 @@
               </tr>
             </thead>
             <tbody id="users-table-body">
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">
-                  Loading registered users...
-                </td>
-              </tr>
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading users...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: PROGRAM SCHEMES -->
+    <!-- TAB 2: COURSE SCHEMES -->
     <div id="tab-schemes" class="tab-content" style="display: none;">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span>Dynamic Program Schemes & Modules</span>
+            <span>Dynamic Course Schemes & Unlocked Modules</span>
             <span class="badge badge-primary">Directly Connected to Mobile App</span>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openSchemeModal()">
-            ➕ Add New Program Scheme
+            ➕ Add New Course Scheme
           </button>
         </div>
 
@@ -775,18 +751,117 @@
               </tr>
             </thead>
             <tbody id="schemes-table-body">
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">
-                  Loading program schemes...
-                </td>
-              </tr>
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading schemes...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 3: PAYMENTS -->
+    <!-- TAB 3: COUPONS -->
+    <div id="tab-coupons" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Discount Coupons & E-Commerce Promos</span>
+            <span class="badge badge-pink" id="coupons-count-badge">0 Coupons</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openCouponModal()">
+            ➕ Create New Coupon
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Min Order</th>
+                <th>Max Cap</th>
+                <th>Usage</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="coupons-table-body">
+              <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading coupons...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: LIVE CLASSES -->
+    <div id="tab-classes" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Live Zoom / Meet Masterclasses</span>
+            <span class="badge badge-primary" id="classes-count-badge">0 Sessions</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openClassModal()">
+            ➕ Schedule Live Class
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Topic / Title</th>
+                <th>Program</th>
+                <th>Instructor / Doctor</th>
+                <th>Date & Time</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Meeting Link</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="classes-table-body">
+              <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading classes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: KIT DELIVERIES -->
+    <div id="tab-dispatches" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Physical Vedic Welcome Kits & Order Fulfillment</span>
+            <span class="badge badge-purple" id="dispatches-count-badge">0 Shipments</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openDispatchModal()">
+            ➕ Create Kit Shipment
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer / Phone</th>
+                <th>Physical Kit Name</th>
+                <th>Shipping Address</th>
+                <th>Courier & Tracking</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dispatches-table-body">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading shipments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: PAYMENTS -->
     <div id="tab-payments" class="tab-content" style="display: none;">
       <div class="panel">
         <div class="panel-header">
@@ -803,51 +878,54 @@
                 <th>Payment ID</th>
                 <th>Order ID</th>
                 <th>Customer Phone</th>
-                <th>Program Plan</th>
+                <th>Plan Name</th>
                 <th>Amount</th>
                 <th>Status</th>
                 <th>Date / Time</th>
               </tr>
             </thead>
             <tbody id="payments-table-body">
-              <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">
-                  Loading payment transactions...
-                </td>
-              </tr>
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading transactions...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 4: MOBILE APP SYNC ARCHITECTURE -->
+    <!-- TAB 7: APP SYNC ARCHITECTURE -->
     <div id="tab-app-sync" class="tab-content" style="display: none;">
       <div class="panel" style="padding: 24px;">
-        <h3 style="margin-bottom: 14px; color: #fff;">📱 How Real-Time Dynamic Gating Works in AstroBaby</h3>
+        <h3 style="margin-bottom: 14px; color: #fff;">📱 Complete Course eCommerce Mobile App Integration</h3>
         <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-          When an admin updates a scheme or grants a subscription, the mobile app reflects it in real time through our unified store and backend services:
+          This command center manages everything live on the app: courses, coupons, live classes, kit deliveries, and module gating without needing app redeployments.
         </p>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
           <div style="background: var(--surface-card); padding: 18px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-weight: 700; color: #818cf8; margin-bottom: 8px;">1. Schemes Backend API</div>
+            <div style="font-weight: 700; color: #ec4899; margin-bottom: 8px;">1. Coupons & Promotions</div>
             <p style="color: var(--text-muted); font-size: 13px;">
-              Endpoint <code>GET /api/v1/subscription/programs</code> feeds the exact program titles, categories, pricing tiers, and inside modules to <code>CourseScreen.tsx</code> and <code>SubscriptionDetailsScreen.tsx</code>.
+              Coupons created here can be applied at checkout via <code>POST /api/v1/admin/coupons/verify</code>, computing instant discounts on orders.
             </p>
           </div>
 
           <div style="background: var(--surface-card); padding: 18px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-weight: 700; color: #34d399; margin-bottom: 8px;">2. User Locked Gating</div>
+            <div style="font-weight: 700; color: #60a5fa; margin-bottom: 8px;">2. Live Masterclasses</div>
             <p style="color: var(--text-muted); font-size: 13px;">
-              Inside the app, <code>ModuleAccessGate</code> checks if the user has subscribed to the program and whether modules like <code>kicks</code>, <code>bump</code>, <code>samvad</code>, or <code>doctor_chat</code> are unlocked.
+              Webinars scheduled here sync with the app's <code>ClassesScreen.tsx</code> so expecting parents can join directly via Zoom or Google Meet.
             </p>
           </div>
 
           <div style="background: var(--surface-card); padding: 18px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-weight: 700; color: #fbbf24; margin-bottom: 8px;">3. Instant Grant / Revoke</div>
+            <div style="font-weight: 700; color: #34d399; margin-bottom: 8px;">3. Dynamic Gating & Locking</div>
             <p style="color: var(--text-muted); font-size: 13px;">
-              When you grant or revoke a user's scheme from this dashboard, it immediately updates <code>UserJourneysCollection</code> and <code>SubscriptionsCollection</code>, locking or unlocking their access.
+              The app's <code>ModuleAccessGate</code> checks the user's active scheme to selectively lock or unlock kick counters, 3D baby bumps, and Garbh Samvad.
+            </p>
+          </div>
+
+          <div style="background: var(--surface-card); padding: 18px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-weight: 700; color: #a78bfa; margin-bottom: 8px;">4. Physical Kit Dispatch</div>
+            <p style="color: var(--text-muted); font-size: 13px;">
+              When users purchase premium packages, kit shipments (saffron, books, sound kits) are tracked here with courier numbers.
             </p>
           </div>
         </div>
@@ -856,7 +934,7 @@
 
   </main>
 
-  <!-- MODAL: GRANT SUBSCRIPTION TO USER -->
+  <!-- MODAL: GRANT USER SCHEME -->
   <div class="modal-overlay" id="grant-modal">
     <div class="modal">
       <div class="modal-header">
@@ -868,18 +946,14 @@
           <label class="form-label">User Phone Number</label>
           <input type="text" id="grant-phone" class="form-control" placeholder="+919876543210">
         </div>
-
         <div class="form-group">
-          <label class="form-label">Select Program Scheme</label>
-          <select id="grant-program" class="form-control" onchange="onGrantProgramChanged()">
-            <!-- Dynamic options -->
-          </select>
+          <label class="form-label">Select Course / Program</label>
+          <select id="grant-program" class="form-control" onchange="onGrantProgramChanged()"></select>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Tier / Plan Name</label>
-            <input type="text" id="grant-tier" class="form-control" placeholder="e.g. 6 Months Complete Guidance">
+            <input type="text" id="grant-tier" class="form-control" placeholder="6 Months Full Guidance">
           </div>
           <div class="form-group">
             <label class="form-label">Duration (Months)</label>
@@ -892,11 +966,10 @@
             </select>
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Amount (₹)</label>
           <input type="number" id="grant-amount" class="form-control" value="0">
-          <small style="color: var(--text-dim); margin-top: 4px; display: block;">Set 0 for complimentary/admin grant, or enter transaction fee.</small>
+          <small style="color: var(--text-dim); margin-top: 4px; display: block;">Set 0 for complimentary grant.</small>
         </div>
       </div>
       <div class="modal-footer">
@@ -910,12 +983,11 @@
   <div class="modal-overlay" id="scheme-modal">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title" id="scheme-modal-title">➕ Add New Program Scheme</div>
+        <div class="modal-title" id="scheme-modal-title">➕ Add New Course Scheme</div>
         <button class="close-btn" onclick="closeSchemeModal()">&times;</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="scheme-edit-mode" value="create">
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Program ID (Key)</label>
@@ -979,24 +1051,206 @@
     </div>
   </div>
 
+  <!-- MODAL: CREATE COUPON -->
+  <div class="modal-overlay" id="coupon-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🎟️ Create Discount Coupon</div>
+        <button class="close-btn" onclick="closeCouponModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Coupon Code (Uppercase)</label>
+            <input type="text" id="coupon-code" class="form-control" placeholder="VEDIC30" style="text-transform: uppercase;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discount Type</label>
+            <select id="coupon-type" class="form-control">
+              <option value="percentage">Percentage (%) Off</option>
+              <option value="flat">Flat Amount (₹) Off</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Discount Value (% or ₹)</label>
+            <input type="number" id="coupon-val" class="form-control" placeholder="25">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Min Order Value (₹)</label>
+            <input type="number" id="coupon-min" class="form-control" value="999">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Max Discount Cap (₹)</label>
+            <input type="number" id="coupon-cap" class="form-control" placeholder="1000 (optional)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Usage Limit</label>
+            <input type="number" id="coupon-limit" class="form-control" value="500">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description / Offer Text</label>
+          <input type="text" id="coupon-desc" class="form-control" placeholder="Special festive discount on Garbh Sanskar courses">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCouponModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateCoupon()">Create Coupon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SCHEDULE LIVE CLASS -->
+  <div class="modal-overlay" id="class-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🎥 Schedule Live Masterclass</div>
+        <button class="close-btn" onclick="closeClassModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Class Topic / Title</label>
+          <input type="text" id="class-title" class="form-control" placeholder="Trimester 2 Womb Meditation & Raga Therapy">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Related Course</label>
+            <select id="class-program" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Instructor / Vaidya</label>
+            <input type="text" id="class-instructor" class="form-control" placeholder="Dr. Meenakshi Sharma (Gynecologist)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" id="class-datetime" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration (Minutes)</label>
+            <input type="number" id="class-duration" class="form-control" value="45">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Meeting Join URL (Zoom / Google Meet)</label>
+          <input type="url" id="class-url" class="form-control" placeholder="https://meet.google.com/xyz-abc-def">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeClassModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateClass()">Schedule Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE KIT SHIPMENT -->
+  <div class="modal-overlay" id="dispatch-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">🚚 New Physical Kit Dispatch</div>
+        <button class="close-btn" onclick="closeDispatchModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Customer Phone</label>
+            <input type="text" id="dispatch-phone" class="form-control" placeholder="9366128220">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Customer Name</label>
+            <input type="text" id="dispatch-name" class="form-control" placeholder="Astro Parent">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Physical Kit Name</label>
+          <input type="text" id="dispatch-kit" class="form-control" value="Vedic Garbh Samvad Sound Kit + Saffron Pack">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Shipping Address</label>
+          <textarea id="dispatch-address" class="form-control" rows="2" placeholder="Full postal delivery address with pincode..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Courier Partner</label>
+            <select id="dispatch-courier" class="form-control">
+              <option value="BlueDart">BlueDart Express</option>
+              <option value="Delhivery">Delhivery</option>
+              <option value="DTDC">DTDC</option>
+              <option value="IndiaPost">India Post Speed Post</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tracking Number (AWB)</label>
+            <input type="text" id="dispatch-awb" class="form-control" placeholder="BD89274619IN">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDispatchModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateDispatch()">Save Shipment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BROADCAST ALERT -->
+  <div class="modal-overlay" id="broadcast-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">📢 Broadcast In-App Announcement</div>
+        <button class="close-btn" onclick="closeBroadcastModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Announcement Title</label>
+          <input type="text" id="broadcast-title" class="form-control" placeholder="🎉 Live Garbh Sanskar Meditation starting in 15 mins!">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message Content</label>
+          <textarea id="broadcast-msg" class="form-control" rows="3" placeholder="Join Dr. Sharma live on Zoom for your daily positive baby connection routine..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Audience</label>
+          <select id="broadcast-target" class="form-control">
+            <option value="all">All Registered Users</option>
+            <option value="pregnant">Pregnant Parents Only</option>
+            <option value="planning">Pre-conception Couples Only</option>
+            <option value="subscribed">Active Subscribed Members Only</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBroadcastModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitBroadcast()">Send Broadcast</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-box"></div>
 
-  <!-- SCRIPT -->
+  <!-- JAVASCRIPT LOGIC -->
   <script>
     let currentUsers = [];
     let currentSchemes = [];
+    let currentCoupons = [];
+    let currentClasses = [];
+    let currentDispatches = [];
     let currentPayments = [];
 
-    // Switch Tabs
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-
       document.getElementById(tabId).style.display = 'block';
       event.currentTarget.classList.add('active');
     }
 
-    // Toast
     function showToast(msg, type = 'success') {
       const box = document.getElementById('toast-box');
       const toast = document.createElement('div');
@@ -1006,13 +1260,15 @@
       setTimeout(() => toast.remove(), 4000);
     }
 
-    // Load All Data
     async function loadAllData() {
       try {
         await Promise.all([
           loadStats(),
           loadUsers(),
           loadSchemes(),
+          loadCoupons(),
+          loadClasses(),
+          loadDispatches(),
           loadPayments()
         ]);
         showToast('Real-time data refreshed');
@@ -1022,7 +1278,7 @@
       }
     }
 
-    // 1. Stats
+    // 1. STATS
     async function loadStats() {
       const res = await fetch('/api/v1/admin/stats');
       const json = await res.json();
@@ -1031,10 +1287,13 @@
         document.getElementById('stat-subs').innerText = json.data.activeSubscriptions || 0;
         document.getElementById('stat-rev').innerText = `₹${(json.data.totalRevenue || 0).toLocaleString('en-IN')}`;
         document.getElementById('stat-progs').innerText = json.data.totalPrograms || 0;
+        document.getElementById('stat-coupons').innerText = json.data.totalCoupons || 0;
+        document.getElementById('stat-classes').innerText = json.data.upcomingClasses || 0;
+        document.getElementById('stat-dispatches').innerText = json.data.activeDispatches || 0;
       }
     }
 
-    // 2. Users
+    // 2. USERS
     async function loadUsers() {
       const res = await fetch('/api/v1/admin/users');
       const json = await res.json();
@@ -1064,38 +1323,24 @@
               <div style="font-weight: 700; color: #fff;">${u.name || 'Astro Parent'}</div>
               <div class="code-pill">${u.phone}</div>
             </td>
-            <td>
-              <span class="badge badge-purple">${u.stage || 'pregnancy'}</span>
-            </td>
+            <td><span class="badge badge-purple">${u.stage || 'pregnancy'}</span></td>
             <td>
               <div style="font-weight: 600;">${schemeTitle}</div>
               ${sub?.expiresAt ? `<div style="font-size: 11px; color: var(--text-dim);">Exp: ${new Date(sub.expiresAt).toLocaleDateString()}</div>` : ''}
             </td>
             <td>
-              ${hasActive 
-                ? `<span class="badge badge-success">● Active Access</span>` 
-                : `<span class="badge badge-warning">Free / Inactive</span>`}
+              ${hasActive ? `<span class="badge badge-success">● Active Access</span>` : `<span class="badge badge-warning">Free / Inactive</span>`}
             </td>
             <td>
               <div style="max-width: 250px;">
-                ${modules.length 
-                  ? modules.map(m => `<span class="module-tag active">${m}</span>`).join('') 
-                  : '<span style="color: var(--text-dim); font-size: 12px;">Locked</span>'}
+                ${modules.length ? modules.map(m => `<span class="module-tag">${m}</span>`).join('') : '<span style="color: var(--text-dim); font-size: 12px;">Locked</span>'}
               </div>
             </td>
-            <td>
-              <strong style="color: #fbbf24;">₹${(u.totalSpent || 0).toLocaleString('en-IN')}</strong>
-            </td>
+            <td><strong style="color: #fbbf24;">₹${(u.totalSpent || 0).toLocaleString('en-IN')}</strong></td>
             <td>
               <div style="display: flex; gap: 6px;">
-                <button class="btn btn-primary btn-sm" onclick="openGrantModal('${u.phone}')">
-                  Grant Scheme
-                </button>
-                ${hasActive ? `
-                  <button class="btn btn-danger btn-sm" onclick="revokeUser('${u.phone}')">
-                    Revoke
-                  </button>
-                ` : ''}
+                <button class="btn btn-primary btn-sm" onclick="openGrantModal('${u.phone}')">Grant Scheme</button>
+                ${hasActive ? `<button class="btn btn-danger btn-sm" onclick="revokeUser('${u.phone}')">Revoke</button>` : ''}
               </div>
             </td>
           </tr>
@@ -1112,24 +1357,19 @@
       renderUsers(filtered);
     }
 
-    // 3. Schemes
+    // 3. SCHEMES
     async function loadSchemes() {
       const res = await fetch('/api/v1/subscription/programs');
       const json = await res.json();
       if (json.success && json.data) {
         currentSchemes = json.data;
         renderSchemes(currentSchemes);
-        populateGrantProgramDropdown(currentSchemes);
+        populateProgramDropdowns(currentSchemes);
       }
     }
 
     function renderSchemes(schemes) {
       const tbody = document.getElementById('schemes-table-body');
-      if (!schemes.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">No programs found.</td></tr>`;
-        return;
-      }
-
       tbody.innerHTML = schemes.map(p => {
         const tiers = p.pricingTiers || [];
         const tiersDisplay = tiers.map(t => `${t.name}: <strong>₹${t.price}</strong> (${t.durationMonths}m)`).join('<br>');
@@ -1146,27 +1386,155 @@
             <td style="font-size: 12px;">${tiersDisplay || 'No tiers'}</td>
             <td>
               <div style="max-width: 250px;">
-                ${modules.map(m => `<span class="module-tag active">${m}</span>`).join('')}
+                ${modules.map(m => `<span class="module-tag">${m}</span>`).join('')}
               </div>
             </td>
+            <td><span class="badge ${p.status === 'active' ? 'badge-success' : 'badge-warning'}">${p.status}</span></td>
             <td>
-              <span class="badge ${p.status === 'active' ? 'badge-success' : 'badge-warning'}">
-                ${p.status}
-              </span>
-            </td>
-            <td>
-              <div style="display: flex; gap: 6px;">
-                <button class="btn btn-secondary btn-sm" onclick="editScheme('${p.id}')">
-                  Edit
-                </button>
-              </div>
+              <button class="btn btn-secondary btn-sm" onclick="editScheme('${p.id}')">Edit</button>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    // 4. Payments
+    function populateProgramDropdowns(schemes) {
+      const options = schemes.map(s => `<option value="${s.id}">${s.title} (${s.id})</option>`).join('');
+      document.getElementById('grant-program').innerHTML = options;
+      document.getElementById('class-program').innerHTML = options;
+      onGrantProgramChanged();
+    }
+
+    // 4. COUPONS
+    async function loadCoupons() {
+      const res = await fetch('/api/v1/admin/coupons');
+      const json = await res.json();
+      if (json.success && json.data) {
+        currentCoupons = json.data;
+        document.getElementById('coupons-count-badge').innerText = `${currentCoupons.length} Coupons`;
+        renderCoupons(currentCoupons);
+      }
+    }
+
+    function renderCoupons(coupons) {
+      const tbody = document.getElementById('coupons-table-body');
+      if (!coupons.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">No coupons created yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = coupons.map(c => {
+        const valDisplay = c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} FLAT OFF`;
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #ec4899; font-family: monospace; font-size: 14px;">${c.code}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${c.description || ''}</div>
+            </td>
+            <td><strong style="color: #34d399;">${valDisplay}</strong></td>
+            <td>₹${c.minOrderValue || 0}</td>
+            <td>${c.maxDiscountCap ? `₹${c.maxDiscountCap}` : 'No Cap'}</td>
+            <td>${c.usedCount || 0} / ${c.usageLimit || '∞'}</td>
+            <td style="font-size: 11px; color: var(--text-dim);">${new Date(c.expiresAt).toLocaleDateString()}</td>
+            <td><span class="badge ${c.status === 'active' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteCoupon('${c.id}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 5. LIVE CLASSES
+    async function loadClasses() {
+      const res = await fetch('/api/v1/admin/classes');
+      const json = await res.json();
+      if (json.success && json.data) {
+        currentClasses = json.data;
+        document.getElementById('classes-count-badge').innerText = `${currentClasses.length} Sessions`;
+        renderClasses(currentClasses);
+      }
+    }
+
+    function renderClasses(classes) {
+      const tbody = document.getElementById('classes-table-body');
+      if (!classes.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">No live classes scheduled yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = classes.map(cls => {
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${cls.title}</div>
+            </td>
+            <td><span class="code-pill">${cls.programId}</span></td>
+            <td>${cls.instructor || 'Astro Mentor'}</td>
+            <td>${new Date(cls.dateTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+            <td>${cls.durationMinutes} mins</td>
+            <td><span class="badge badge-primary">● ${cls.status}</span></td>
+            <td>
+              <a href="${cls.joinUrl}" target="_blank" class="code-pill" style="color: #60a5fa; text-decoration: none;">Join Link ↗</a>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteClass('${cls.id}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 6. KIT DISPATCHES
+    async function loadDispatches() {
+      const res = await fetch('/api/v1/admin/dispatches');
+      const json = await res.json();
+      if (json.success && json.data) {
+        currentDispatches = json.data;
+        document.getElementById('dispatches-count-badge').innerText = `${currentDispatches.length} Shipments`;
+        renderDispatches(currentDispatches);
+      }
+    }
+
+    function renderDispatches(dispatches) {
+      const tbody = document.getElementById('dispatches-table-body');
+      if (!dispatches.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">No kit dispatches yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = dispatches.map(d => {
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${d.userName}</div>
+              <div class="code-pill">${d.phone}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600;">${d.kitName}</div>
+            </td>
+            <td style="font-size: 12px; color: var(--text-muted); max-width: 250px;">${d.shippingAddress}</td>
+            <td>
+              <div>${d.courier}</div>
+              <span class="code-pill">${d.trackingNumber}</span>
+            </td>
+            <td>
+              <select class="form-control" style="padding: 4px 8px; font-size: 11px;" onchange="updateDispatchStatus('${d.id}', this.value)">
+                <option value="processing" ${d.status === 'processing' ? 'selected' : ''}>⏳ Processing</option>
+                <option value="shipped" ${d.status === 'shipped' ? 'selected' : ''}>📦 Shipped</option>
+                <option value="out_for_delivery" ${d.status === 'out_for_delivery' ? 'selected' : ''}>🚚 Out for Delivery</option>
+                <option value="delivered" ${d.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="showToast('Shipment updated')">Saved</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 7. PAYMENTS
     async function loadPayments() {
       const res = await fetch('/api/v1/admin/payments');
       const json = await res.json();
@@ -1184,36 +1552,25 @@
         return;
       }
 
-      tbody.innerHTML = payments.map(p => {
-        return `
-          <tr>
-            <td><span class="code-pill">${p.paymentId || 'N/A'}</span></td>
-            <td><span class="code-pill">${p.orderId || 'N/A'}</span></td>
-            <td>${p.phone || 'Anonymous'}</td>
-            <td>${p.planName || p.programId || 'Subscription'}</td>
-            <td><strong style="color: #fbbf24;">₹${Number(p.amount).toLocaleString('en-IN')}</strong></td>
-            <td><span class="badge badge-success">● Verified</span></td>
-            <td style="font-size: 11px; color: var(--text-dim);">${new Date(p.createdAt || Date.now()).toLocaleString()}</td>
-          </tr>
-        `;
-      }).join('');
+      tbody.innerHTML = payments.map(p => `
+        <tr>
+          <td><span class="code-pill">${p.paymentId || 'N/A'}</span></td>
+          <td><span class="code-pill">${p.orderId || 'N/A'}</span></td>
+          <td>${p.phone || 'Anonymous'}</td>
+          <td>${p.planName || p.programId || 'Subscription'}</td>
+          <td><strong style="color: #fbbf24;">₹${Number(p.amount).toLocaleString('en-IN')}</strong></td>
+          <td><span class="badge badge-success">● Verified</span></td>
+          <td style="font-size: 11px; color: var(--text-dim);">${new Date(p.createdAt || Date.now()).toLocaleString()}</td>
+        </tr>
+      `).join('');
     }
 
-    // Modal: Grant Scheme
+    // MODAL ACTIONS
     function openGrantModal(phone = '') {
       document.getElementById('grant-phone').value = phone;
       document.getElementById('grant-modal').classList.add('open');
     }
-
-    function closeGrantModal() {
-      document.getElementById('grant-modal').classList.remove('open');
-    }
-
-    function populateGrantProgramDropdown(schemes) {
-      const sel = document.getElementById('grant-program');
-      sel.innerHTML = schemes.map(s => `<option value="${s.id}">${s.title} (${s.id})</option>`).join('');
-      onGrantProgramChanged();
-    }
+    function closeGrantModal() { document.getElementById('grant-modal').classList.remove('open'); }
 
     function onGrantProgramChanged() {
       const pid = document.getElementById('grant-program').value;
@@ -1233,92 +1590,61 @@
       const durationMonths = Number(document.getElementById('grant-duration').value);
       const amount = Number(document.getElementById('grant-amount').value);
 
-      if (!phone) {
-        alert('Please enter a phone number');
-        return;
-      }
+      if (!phone) return alert('Phone number required');
 
-      try {
-        const res = await fetch('/api/v1/admin/users/grant', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, programId, tierName, durationMonths, amount })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Scheme granted to ${phone}`);
-          closeGrantModal();
-          loadAllData();
-        } else {
-          alert('Error: ' + data.error);
-        }
-      } catch (e) {
-        alert('Network error granting scheme');
+      const res = await fetch('/api/v1/admin/users/grant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, programId, tierName, durationMonths, amount })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Scheme granted to ${phone}`);
+        closeGrantModal();
+        loadAllData();
+      } else {
+        alert(data.error);
       }
     }
 
     async function revokeUser(phone) {
-      if (!confirm(`Are you sure you want to revoke active access for ${phone}?`)) return;
-
-      try {
-        const res = await fetch('/api/v1/admin/users/revoke', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Revoked subscriptions for ${phone}`);
-          loadAllData();
-        } else {
-          alert('Error: ' + data.error);
-        }
-      } catch (e) {
-        alert('Network error revoking access');
+      if (!confirm(`Revoke access for ${phone}?`)) return;
+      const res = await fetch('/api/v1/admin/users/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Revoked access for ${phone}`);
+        loadAllData();
       }
     }
 
-    // Modal: Scheme
+    // SCHEME MODAL
     function openSchemeModal() {
       document.getElementById('scheme-edit-mode').value = 'create';
-      document.getElementById('scheme-modal-title').innerText = '➕ Add New Program Scheme';
+      document.getElementById('scheme-modal-title').innerText = '➕ Add New Course Scheme';
       document.getElementById('scheme-id').value = '';
       document.getElementById('scheme-id').removeAttribute('disabled');
       document.getElementById('scheme-title').value = '';
       document.getElementById('scheme-hindi').value = '';
       document.getElementById('scheme-desc').value = '';
-      document.getElementById('scheme-price-1m').value = '999';
-      document.getElementById('scheme-price-6m').value = '2999';
       document.getElementById('scheme-modal').classList.add('open');
     }
-
-    function closeSchemeModal() {
-      document.getElementById('scheme-modal').classList.remove('open');
-    }
+    function closeSchemeModal() { document.getElementById('scheme-modal').classList.remove('open'); }
 
     function editScheme(id) {
       const scheme = currentSchemes.find(s => s.id === id);
       if (!scheme) return;
-
       document.getElementById('scheme-edit-mode').value = 'edit';
-      document.getElementById('scheme-modal-title').innerText = '✏️ Edit Program Scheme: ' + scheme.title;
+      document.getElementById('scheme-modal-title').innerText = '✏️ Edit Course Scheme: ' + scheme.title;
       document.getElementById('scheme-id').value = scheme.id;
       document.getElementById('scheme-id').setAttribute('disabled', 'true');
       document.getElementById('scheme-title').value = scheme.title;
       document.getElementById('scheme-hindi').value = scheme.subtitle || '';
       document.getElementById('scheme-desc').value = scheme.description || '';
       document.getElementById('scheme-category').value = scheme.category || 'pregnancy';
-
-      const tier1 = scheme.pricingTiers?.find(t => t.durationMonths === 1);
-      const tier6 = scheme.pricingTiers?.find(t => t.durationMonths === 6 || t.durationMonths === 9);
-      document.getElementById('scheme-price-1m').value = tier1 ? tier1.price : '999';
-      document.getElementById('scheme-price-6m').value = tier6 ? tier6.price : '2999';
-
-      const unlocked = scheme.unlockedModules || [];
-      document.querySelectorAll('input[name="unlocked-module"]').forEach(cb => {
-        cb.checked = unlocked.includes(cb.value);
-      });
-
       document.getElementById('scheme-modal').classList.add('open');
     }
 
@@ -1333,62 +1659,161 @@
       const price6m = Number(document.getElementById('scheme-price-6m').value);
 
       const unlockedModules = [];
-      document.querySelectorAll('input[name="unlocked-module"]:checked').forEach(cb => {
-        unlockedModules.push(cb.value);
-      });
+      document.querySelectorAll('input[name="unlocked-module"]:checked').forEach(cb => unlockedModules.push(cb.value));
 
-      if (!id || !title) {
-        alert('Program ID and Title are required');
-        return;
-      }
+      if (!id || !title) return alert('ID and Title required');
 
       const payload = {
-        id,
-        title,
-        subtitle,
-        category,
-        description,
-        unlockedModules,
-        status: 'active',
+        id, title, subtitle, category, description, unlockedModules, status: 'active',
         pricingTiers: [
-          {
-            tierKey: 'monthly',
-            name: '1 Month Kickstart',
-            durationMonths: 1,
-            price: price1m,
-            originalPrice: Math.round(price1m * 1.4),
-            features: ['Live Vedic sessions', 'Daily dietary chart', 'App module access']
-          },
-          {
-            tierKey: 'full',
-            name: '6 Months Complete Guidance',
-            durationMonths: 6,
-            price: price6m,
-            originalPrice: Math.round(price6m * 1.5),
-            isPopular: true,
-            features: ['Full unlocked modules', 'Doctor consultation', 'Personalized mentor', 'Garbh Samvad kit']
-          }
+          { tierKey: 'monthly', name: '1 Month Starter', durationMonths: 1, price: price1m },
+          { tierKey: 'full', name: '6 Months Complete Guidance', durationMonths: 6, price: price6m, isPopular: true }
         ]
       };
 
-      try {
-        const url = isEdit ? `/api/v1/subscription/admin/programs/${id}` : `/api/v1/subscription/admin/programs`;
-        const method = isEdit ? 'PUT' : 'POST';
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Scheme saved successfully!`);
-          closeSchemeModal();
-          loadAllData();
-        } else {
-          alert('Error: ' + data.error);
-        }
-      } catch (e) {
-        alert('Network error saving scheme');
+      const url = isEdit ? `/api/v1/subscription/admin/programs/${id}` : `/api/v1/subscription/admin/programs`;
+      const res = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Scheme saved successfully!');
+        closeSchemeModal();
+        loadAllData();
+      }
+    }
+
+    // COUPON MODAL
+    function openCouponModal() { document.getElementById('coupon-modal').classList.add('open'); }
+    function closeCouponModal() { document.getElementById('coupon-modal').classList.remove('open'); }
+
+    async function submitCreateCoupon() {
+      const code = document.getElementById('coupon-code').value.trim().toUpperCase();
+      const discountType = document.getElementById('coupon-type').value;
+      const discountValue = Number(document.getElementById('coupon-val').value);
+      const minOrderValue = Number(document.getElementById('coupon-min').value);
+      const maxDiscountCap = document.getElementById('coupon-cap').value ? Number(document.getElementById('coupon-cap').value) : undefined;
+      const usageLimit = Number(document.getElementById('coupon-limit').value);
+      const description = document.getElementById('coupon-desc').value.trim();
+
+      if (!code || !discountValue) return alert('Code and discount value required');
+
+      const res = await fetch('/api/v1/admin/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, discountType, discountValue, minOrderValue, maxDiscountCap, usageLimit, description })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Coupon ${code} created!`);
+        closeCouponModal();
+        loadCoupons();
+      }
+    }
+
+    async function deleteCoupon(id) {
+      if (!confirm('Delete this coupon?')) return;
+      await fetch(`/api/v1/admin/coupons/${id}`, { method: 'DELETE' });
+      showToast('Coupon deleted');
+      loadCoupons();
+    }
+
+    // CLASS MODAL
+    function openClassModal() {
+      const dt = new Date(Date.now() + 24 * 3600 * 1000);
+      document.getElementById('class-datetime').value = dt.toISOString().slice(0, 16);
+      document.getElementById('class-modal').classList.add('open');
+    }
+    function closeClassModal() { document.getElementById('class-modal').classList.remove('open'); }
+
+    async function submitCreateClass() {
+      const title = document.getElementById('class-title').value.trim();
+      const programId = document.getElementById('class-program').value;
+      const instructor = document.getElementById('class-instructor').value.trim();
+      const dateTime = new Date(document.getElementById('class-datetime').value).toISOString();
+      const durationMinutes = Number(document.getElementById('class-duration').value);
+      const joinUrl = document.getElementById('class-url').value.trim();
+
+      if (!title || !joinUrl) return alert('Title and Meeting URL required');
+
+      const res = await fetch('/api/v1/admin/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, programId, instructor, dateTime, durationMinutes, joinUrl })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Live session scheduled!');
+        closeClassModal();
+        loadClasses();
+      }
+    }
+
+    async function deleteClass(id) {
+      if (!confirm('Delete this class?')) return;
+      await fetch(`/api/v1/admin/classes/${id}`, { method: 'DELETE' });
+      showToast('Class deleted');
+      loadClasses();
+    }
+
+    // DISPATCH MODAL
+    function openDispatchModal() { document.getElementById('dispatch-modal').classList.add('open'); }
+    function closeDispatchModal() { document.getElementById('dispatch-modal').classList.remove('open'); }
+
+    async function submitCreateDispatch() {
+      const phone = document.getElementById('dispatch-phone').value.trim();
+      const userName = document.getElementById('dispatch-name').value.trim();
+      const kitName = document.getElementById('dispatch-kit').value.trim();
+      const shippingAddress = document.getElementById('dispatch-address').value.trim();
+      const courier = document.getElementById('dispatch-courier').value;
+      const trackingNumber = document.getElementById('dispatch-awb').value.trim();
+
+      if (!phone || !kitName) return alert('Phone and kit name required');
+
+      const res = await fetch('/api/v1/admin/dispatches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, userName, kitName, shippingAddress, courier, trackingNumber, status: 'processing' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Shipment created!');
+        closeDispatchModal();
+        loadDispatches();
+      }
+    }
+
+    async function updateDispatchStatus(id, status) {
+      await fetch(`/api/v1/admin/dispatches/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      showToast(`Status updated to ${status}`);
+    }
+
+    // BROADCAST MODAL
+    function openBroadcastModal() { document.getElementById('broadcast-modal').classList.add('open'); }
+    function closeBroadcastModal() { document.getElementById('broadcast-modal').classList.remove('open'); }
+
+    async function submitBroadcast() {
+      const title = document.getElementById('broadcast-title').value.trim();
+      const message = document.getElementById('broadcast-msg').value.trim();
+      const targetAudience = document.getElementById('broadcast-target').value;
+
+      if (!title || !message) return alert('Title and message required');
+
+      const res = await fetch('/api/v1/admin/broadcasts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, message, targetAudience })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Notification broadcasted to mobile app users!');
+        closeBroadcastModal();
       }
     }
 
