@@ -3,6 +3,7 @@ import {
   UserJourneysCollection, 
   SubscriptionsCollection, 
   PaymentsCollection,
+  ProgramSchemesCollection,
   executeAcidTransaction 
 } from '../services/dbStore';
 import { razorpayService } from '../services/razorpayService';
@@ -388,5 +389,191 @@ export const subscriptionController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
+
+  // GET /api/v1/subscription/programs (Real-time dynamic programs for mobile app)
+  getProgramSchemes: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const category = req.query.category as string;
+      let programs = ProgramSchemesCollection.read();
+
+      // Filter by active status
+      programs = programs.filter(p => p.status !== 'archived');
+
+      if (category) {
+        programs = programs.filter(p => p.category.toLowerCase() === category.toLowerCase());
+      }
+
+      return res.status(200).json({
+        success: true,
+        count: programs.length,
+        data: programs,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // GET /api/v1/subscription/programs/:id
+  getProgramSchemeById: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const programs = ProgramSchemesCollection.read();
+      const program = programs.find(p => p.id === id);
+
+      if (!program) {
+        return res.status(404).json({
+          success: false,
+          message: `Program scheme with ID ${id} not found`,
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: program,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ADMIN: POST /api/v1/subscription/admin/programs (Create or upsert program scheme with tiers & modules)
+  adminSaveProgramScheme: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const {
+        id,
+        title,
+        hindiTitle,
+        subtitle,
+        category,
+        badge,
+        color,
+        overview,
+        whoIsItFor,
+        duration,
+        unlockedModules,
+        tiers,
+        modules,
+        deliverables,
+        faculty,
+        faqs,
+        status = 'active',
+      } = req.body;
+
+      if (!id || !title || !category || !Array.isArray(tiers)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields: id, title, category, and tiers array are required',
+        });
+      }
+
+      const existing = ProgramSchemesCollection.read();
+      const existingIdx = existing.findIndex(p => p.id === id);
+
+      const programRecord = {
+        id,
+        title,
+        hindiTitle: hindiTitle || title,
+        subtitle: subtitle || '',
+        category,
+        badge: badge || 'NEW',
+        color: color || '#EC4899',
+        rating: req.body.rating || 4.9,
+        reviewsCount: req.body.reviewsCount || 100,
+        enrolledCount: req.body.enrolledCount || '500+ Moms',
+        overview: overview || '',
+        whoIsItFor: whoIsItFor || '',
+        duration: duration || '3 Months',
+        unlockedModules: Array.isArray(unlockedModules) ? unlockedModules : ['activities', 'diet'],
+        tiers,
+        modules: modules || [],
+        deliverables: deliverables || [],
+        faculty: faculty || [],
+        faqs: faqs || [],
+        status: status as 'active' | 'draft' | 'archived',
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (existingIdx >= 0) {
+        existing[existingIdx] = {
+          ...existing[existingIdx],
+          ...programRecord,
+        };
+      } else {
+        existing.push({
+          ...programRecord,
+          createdAt: new Date().toISOString(),
+        } as any);
+      }
+
+      ProgramSchemesCollection.write(existing);
+
+      return res.status(200).json({
+        success: true,
+        message: existingIdx >= 0 ? 'Program scheme updated successfully' : 'New program scheme created successfully',
+        data: programRecord,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ADMIN: PUT /api/v1/subscription/admin/programs/:id
+  adminUpdateProgramScheme: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      const existing = ProgramSchemesCollection.read();
+      const existingIdx = existing.findIndex(p => p.id === id);
+
+      if (existingIdx < 0) {
+        return res.status(404).json({
+          success: false,
+          message: `Program with ID ${id} not found`,
+        });
+      }
+
+      existing[existingIdx] = {
+        ...existing[existingIdx],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+
+      ProgramSchemesCollection.write(existing);
+
+      return res.status(200).json({
+        success: true,
+        message: `Program scheme ${id} updated successfully`,
+        data: existing[existingIdx],
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ADMIN: DELETE /api/v1/subscription/admin/programs/:id
+  adminDeleteProgramScheme: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const existing = ProgramSchemesCollection.read();
+      const filtered = existing.filter(p => p.id !== id);
+
+      if (filtered.length === existing.length) {
+        return res.status(404).json({
+          success: false,
+          message: `Program scheme with ID ${id} not found`,
+        });
+      }
+
+      ProgramSchemesCollection.write(filtered);
+
+      return res.status(200).json({
+        success: true,
+        message: `Program scheme ${id} deleted successfully`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

@@ -679,3 +679,31 @@ export const PROGRAMS_DATA: Record<string, ProgramDetail> = {
     ],
   },
 };
+
+// Dynamic cache of programs synchronized with backend
+let dynamicProgramsCache: Record<string, ProgramDetail> = { ...PROGRAMS_DATA };
+
+export const fetchDynamicPrograms = async (): Promise<Record<string, ProgramDetail>> => {
+  try {
+    const { api } = await import('~/shared/api');
+    const res = await api.get('/api/v1/subscription/programs');
+    if (res.data?.success && Array.isArray(res.data.data)) {
+      const serverPrograms: any[] = res.data.data;
+      serverPrograms.forEach((p) => {
+        const local = PROGRAMS_DATA[p.id];
+        dynamicProgramsCache[p.id] = {
+          ...(local || {}),
+          ...p,
+          image: local?.image || require('../../../assets/programs/garbh_sanskar.jpg'),
+        };
+      });
+    }
+  } catch (error) {
+    console.warn('[ProgramsData] Backend fetch skipped, using local data:', error);
+  }
+  return dynamicProgramsCache;
+};
+
+export const getProgramById = (id: string): ProgramDetail => {
+  return dynamicProgramsCache[id] || PROGRAMS_DATA[id] || PROGRAMS_DATA['garbh_sanskar'];
+};

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AstroBaby — Razorpay Standard Checkout</title>
+  <!-- Razorpay Standard Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #FFF1F2 0%, #F5F3FF 50%, #EFF6FF 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #FFFFFF;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(236, 72, 153, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 480px;
+      padding: 36px 32px;
+      border: 1px solid #FCE7F3;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: #FDF2F8;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .brand-text h1 {
+      font-size: 20px;
+      color: #1E1B4B;
+      font-weight: 800;
+    }
+    .brand-text p {
+      font-size: 13px;
+      color: #6B7280;
+    }
+    .product-box {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .product-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1E1B4B;
+    }
+    .product-badge {
+      background: #DCFCE7;
+      color: #15803D;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+    .product-desc {
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-top: 1px dashed #CBD5E1;
+      padding-top: 12px;
+    }
+    .price-label {
+      font-size: 14px;
+      color: #475569;
+      font-weight: 600;
+    }
+    .price-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: #EC4899;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-group input:focus, .input-group select:focus {
+      border-color: #EC4899;
+    }
+    .btn-pay {
+      width: 100%;
+      background: #EC4899;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-pay:hover {
+      background: #DB2777;
+    }
+    .btn-pay:active {
+      transform: scale(0.99);
+    }
+    .btn-pay:disabled {
+      background: #9CA3AF;
+      cursor: not-allowed;
+    }
+    .guarantee {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #6B7280;
+    }
+    .alert-box {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      display: none;
+      line-height: 1.4;
+    }
+    .alert-success {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      color: #15803D;
+    }
+    .alert-error {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #B91C1C;
+    }
+    .alert-info {
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      color: #1D4ED8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">🌸</div>
+      <div class="brand-text">
+        <h1>AstroBaby Garbh Sanskar</h1>
+        <p>Vedic & Scientific Maternal Care</p>
+      </div>
+    </div>
+
+    <!-- Product Plan Box -->
+    <div class="product-box">
+      <div class="product-row">
+        <span class="product-name" id="displayPlanName">Utkarsh Complete Journey</span>
+        <span class="product-badge">POPULAR</span>
+      </div>
+      <p class="product-desc" id="displayPlanDesc">
+        Full pregnancy journey till delivery. Includes daily Vedic shlokas, live yoga, trimester Ayurvedic diet, and 1-on-1 Gynecologist consultations.
+      </p>
+      <div class="price-row">
+        <span class="price-label">Total Payable Amount</span>
+        <span class="price-val" id="displayAmount">₹2,499</span>
+      </div>
+    </div>
+
+    <!-- User Details Form -->
+    <div class="input-group">
+      <label for="planSelect">Choose Program Scheme</label>
+      <select id="planSelect" onchange="handlePlanChange()">
+        <option value="2499" data-name="Utkarsh Complete Journey" data-desc="Full pregnancy journey till delivery with all Vedic modules and doctor consults.">Garbh Sanskar Utkarsh (Full) — ₹2,499</option>
+        <option value="1499" data-name="Aadhar Foundation Plan" data-desc="3-Month core Garbh Sanskar foundation plan with daily activities.">Garbh Sanskar Aadhar (3 Months) — ₹1,499</option>
+        <option value="7999" data-name="Beej Sanskar Complete" data-desc="90-Day couple preconception fertility detox & hormonal harmony.">Beej Sanskar (Fertility 90 Days) — ₹7,999</option>
+        <option value="3999" data-name="Garbhdhaan Auspicious Planning" data-desc="6-Month Shubh Muhurat and pre-pregnancy medical clearance.">Garbhdhaan Sanskar (Planning) — ₹3,999</option>
+        <option value="3499" data-name="Bal Sanskar 1-Year" data-desc="Namkaran, Annaprashan ceremonies & baby developmental milestones.">Bal Sanskar (Newborn 0-2 yrs) — ₹3,499</option>
+        <option value="100" data-name="Test Plan (₹1.00)" data-desc="Minimum standard Razorpay checkout test order (100 paise).">Razorpay Test Mode — ₹1.00</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label for="userName">Full Name</label>
+      <input type="text" id="userName" placeholder="e.g. Priya Sharma" value="Priya Sharma" />
+    </div>
+
+    <div class="input-group">
+      <label for="userPhone">Phone Number</label>
+      <input type="tel" id="userPhone" placeholder="10-digit mobile number" value="9876543210" />
+    </div>
+
+    <div class="input-group">
+      <label for="userEmail">Email Address</label>
+      <input type="email" id="userEmail" placeholder="e.g. priya@example.com" value="priya@astrobaby.app" />
+    </div>
+
+    <!-- Pay Button -->
+    <button class="btn-pay" id="payButton" onclick="initiateCheckout()">
+      <span>🔒 Pay with Razorpay</span>
+    </button>
+
+    <div class="guarantee">
+      <span>🛡️ 256-bit Encrypted • Secured by Razorpay</span>
+    </div>
+
+    <!-- Status Alert Messages -->
+    <div class="alert-box alert-success" id="successBox"></div>
+    <div class="alert-box alert-error" id="errorBox"></div>
+    <div class="alert-box alert-info" id="infoBox"></div>
+  </div>
+
+  <script>
+    function handlePlanChange() {
+      const select = document.getElementById('planSelect');
+      const selected = select.options[select.selectedIndex];
+      const amount = selected.value;
+      const name = selected.getAttribute('data-name');
+      const desc = selected.getAttribute('data-desc');
+
+      document.getElementById('displayPlanName').innerText = name;
+      document.getElementById('displayPlanDesc').innerText = desc;
+      document.getElementById('displayAmount').innerText = '₹' + Number(amount).toLocaleString('en-IN');
+    }
+
+    function showMessage(type, message) {
+      document.getElementById('successBox').style.display = 'none';
+      document.getElementById('errorBox').style.display = 'none';
+      document.getElementById('infoBox').style.display = 'none';
+
+      const box = document.getElementById(type + 'Box');
+      if (box) {
+        box.innerHTML = message;
+        box.style.display = 'block';
+      }
+    }
+
+    async function initiateCheckout() {
+      const payButton = document.getElementById('payButton');
+      const select = document.getElementById('planSelect');
+      const amountInRupees = Number(select.value);
+      const planName = select.options[select.selectedIndex].getAttribute('data-name');
+      const name = document.getElementById('userName').value.trim() || 'Parent';
+      const phone = document.getElementById('userPhone').value.trim() || '9876543210';
+      const email = document.getElementById('userEmail').value.trim() || 'parent@astrobaby.app';
+
+      // Minimum amount: 100 paise = 1 Rupee
+      const amountInPaise = amountInRupees * 100;
+
+      payButton.disabled = true;
+      payButton.innerText = 'Creating Order...';
+      showMessage('info', '⏳ Communicating with Razorpay order API...');
+
+      try {
+        // STEP 1: Call Backend to Create Order
+        const orderResponse = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: amountInPaise,
+            currency: 'INR',
+            receipt: 'rcpt_' + Date.now(),
+            notes: {
+              planName: planName,
+              customerName: name,
+              customerPhone: phone,
+            }
+          }),
+        });
+
+        const orderData = await orderResponse.json();
+
+        if (!orderResponse.ok || !orderData.order_id) {
+          throw new Error(orderData.error || 'Failed to create order on backend');
+        }
+
+        payButton.innerText = 'Opening Razorpay...';
+
+        // STEP 2: Configure Razorpay Standard Checkout Options
+        const options = {
+          key: orderData.key_id, // Razorpay Key ID
+          amount: orderData.amount, // in paise
+          currency: orderData.currency || 'INR',
+          name: 'AstroBaby Garbh Sanskar',
+          description: planName,
+          order_id: orderData.order_id, // Order ID from backend
+          prefill: {
+            name: name,
+            email: email,
+            contact: phone,
+          },
+          theme: {
+            color: '#EC4899', // AstroBaby primary pink
+          },
+          // Callback on successful payment in modal
+          handler: async function (response) {
+            payButton.innerText = 'Verifying Signature...';
+            showMessage('info', '🔐 Verifying payment cryptographic signature on backend...');
+
+            try {
+              // STEP 3: Send payment details to Backend to Verify Signature
+              const verifyResponse = await fetch('/api/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyResponse.json();
+
+              if (verifyResponse.ok && verifyData.success) {
+                showMessage(
+                  'success',
+                  '🎉 <strong>Payment Successful & Verified!</strong><br/>' +
+                  'Payment ID: <code>' + response.razorpay_payment_id + '</code><br/>' +
+                  'Order ID: <code>' + response.razorpay_order_id + '</code><br/>' +
+                  'Your subscription has been activated.'
+                );
+                payButton.innerText = '✓ Payment Complete';
+                payButton.disabled = false;
+              } else {
+                showMessage(
+                  'error',
+                  '❌ <strong>Signature Verification Failed:</strong> ' + (verifyData.error || 'Invalid signature')
+                );
+                payButton.disabled = false;
+                payButton.innerText = '🔒 Pay with Razorpay';
+              }
+            } catch (err) {
+              showMessage('error', '❌ Network error during verification: ' + err.message);
+              payButton.disabled = false;
+              payButton.innerText = '🔒 Pay with Razorpay';
+            }
+          },
+          // Modal dismissal handling
+          modal: {
+            ondismiss: function () {
+              payButton.disabled = false;
+              payButton.innerText = '🔒 Pay with Razorpay';
+              showMessage('error', '⚠️ Payment cancelled by user.');
+            },
+          },
+        };
+
+        // Open Razorpay Standard Web Checkout Modal
+        const rzp = new Razorpay(options);
+
+        // Handle payment failure event
+        rzp.on('payment.failed', function (resp) {
+          console.error('[Razorpay Failed Event]:', resp.error);
+          showMessage(
+            'error',
+            '❌ <strong>Payment Failed:</strong> ' + (resp.error.description || resp.error.reason) + '<br/>Code: ' + resp.error.code
+          );
+          payButton.disabled = false;
+          payButton.innerText = '🔒 Pay with Razorpay';
+        });
+
+        rzp.open();
+
+      } catch (err) {
+        console.error('[Checkout Error]:', err);
+        showMessage('error', '❌ <strong>Error:</strong> ' + err.message);
+        payButton.disabled = false;
+        payButton.innerText = '🔒 Pay with Razorpay';
+      }
+    }
+  </script>
+</body>
+</html>

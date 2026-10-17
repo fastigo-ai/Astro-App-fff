@@ -29,6 +29,7 @@ import {
 } from 'lucide-react-native';
 import { api } from '~/shared/api';
 import { useAuthStore } from '~/store/useAuthStore';
+import { ModuleAccessGate } from '~/shared/components/ModuleAccessGate';
 
 interface KickRecord {
   id: string;

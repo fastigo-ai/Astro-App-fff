@@ -8,30 +8,40 @@ import { rateLimiter } from './middlewares/rateLimiter';
 import swaggerUi from 'swagger-ui-express';
 // import swaggerSpec from './utils/swagger';
 
+import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 import authRoutes from './routes/authRoutes';
 import activityRoutes from './routes/activityRoutes';
 import profileRoutes from './routes/profileRoutes';
 import bumpRoutes from './routes/bumpRoutes';
 import subscriptionRoutes from './routes/subscriptionRoutes';
 import momInteractionsRoutes from './routes/momInteractionsRoutes';
+import paymentRoutes from './routes/paymentRoutes';
 
 const app: Application = express();
 
-// 1. Security & Headers
-app.use(helmet());
+// 1. Security & Headers (Allow Razorpay checkout.js & iframe)
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors());
 
 // 2. Request Parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. Logging
+// 3. Static Files (Standard Web Checkout Demo)
+app.use(express.static(path.join(__dirname, '../public')));
+
+// 4. Logging
 app.use(morgan('combined'));
 
-// 4. Rate Limiting (Atomic Token Bucket via Redis)
-// app.use(rateLimiter); // Disabled temporarily for easy dev testing
-
 // 5. Routes
+app.use('/api', paymentRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/activities', activityRoutes);
 app.use('/api/v1/profile', profileRoutes);
