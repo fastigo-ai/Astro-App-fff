@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Modal, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Modal, Linking, Image as RNImage, Alert } from 'react-native';
+import ImagePicker from 'react-native-image-crop-picker';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +19,7 @@ import {
   MessageCircle,
   Mail,
   Phone,
+  Camera,
   X
 } from 'lucide-react-native';
 
@@ -72,6 +74,32 @@ export const ProfileScreen = () => {
 
   const isHindi = i18n.language?.startsWith('hi');
 
+  const handlePickAvatar = async () => {
+    try {
+      const image = await ImagePicker.openPicker({
+        width: 400,
+        height: 400,
+        cropping: true,
+        cropperCircleOverlay: true,
+        includeBase64: true,
+        compressImageQuality: 0.8,
+      });
+
+      if (image && (image.path || (image as any).data)) {
+        const uri = (image as any).data ? `data:${image.mime};base64,${(image as any).data}` : image.path;
+        await useAuthStore.getState().setUserAvatar(uri);
+        Alert.alert(
+          isHindi ? 'फ़ोटो अपडेट हुई! 🌸' : 'Profile Photo Saved! 🌸',
+          isHindi ? 'आपकी प्रोफ़ाइल फ़ोटो सफलतापूर्वक सुरक्षित कर दी गई है।' : 'Your beautiful profile picture has been updated.'
+        );
+      }
+    } catch (err: any) {
+      if (err?.message !== 'User cancelled image selection') {
+        console.warn('Avatar pick error:', err);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -79,12 +107,21 @@ export const ProfileScreen = () => {
         {/* Header Section (Dreamy Aesthetic) */}
         <View style={[styles.headerCanvas, { paddingTop: insets.top + 20 }]}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
+            {user?.avatar ? (
+              <RNImage source={{ uri: user.avatar }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarText}>{initials}</Text>
+              </View>
+            )}
             {/* Edit avatar button */}
-            <TouchableOpacity style={styles.editAvatarBadge}>
-              <Text style={styles.editAvatarText}>Edit</Text>
+            <TouchableOpacity 
+              style={styles.editAvatarBadge}
+              onPress={handlePickAvatar}
+              activeOpacity={0.8}
+            >
+              <Camera size={11} color="#FFFFFF" style={{ marginRight: 3 }} />
+              <Text style={styles.editAvatarText}>{isHindi ? 'फ़ोटो बदलें' : 'Edit'}</Text>
             </TouchableOpacity>
           </View>
           
@@ -186,7 +223,14 @@ export const ProfileScreen = () => {
                 icon={<MessageCircle size={22} color="#10B981" />} 
                 title={t('profile.chatWithUs')} 
                 subtitle={t('profile.chatWithUsSub')} 
-                onPress={() => setContactModalVisible(true)}
+                onPress={() => {
+                  const parent = navigation.getParent();
+                  if (parent) {
+                    (parent as any).navigate('SupportChat');
+                  } else {
+                    (navigation as any).navigate('SupportChat');
+                  }
+                }}
               />
               <SettingItem 
                 icon={<HelpCircle size={22} color="#4B5563" />} 
@@ -315,26 +359,35 @@ const styles = StyleSheet.create({
     color: '#92400E',
     fontWeight: '700',
   },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 2,
+    borderColor: '#FCE7F3',
+  },
   editAvatarBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: -10,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
+    bottom: -2,
+    right: -8,
+    backgroundColor: '#EC4899',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    shadowColor: '#EC4899',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   editAvatarText: {
     fontSize: 10,
-    fontWeight: '600',
-    color: '#4B5563',
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   profileName: {
     fontSize: 22,

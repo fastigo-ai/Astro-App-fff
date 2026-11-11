@@ -17,7 +17,7 @@ export const globalErrorHandler = (
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid request data',
-        details: err.errors,
+        details: (err as any).issues || (err as any).errors || [],
       },
       requestId,
     });

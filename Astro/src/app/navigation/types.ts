@@ -20,11 +20,13 @@ export type MainTabParamList = {
 
 export type AppStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
+  WelcomeCourseSelection: undefined;
+  CoursePreview: { courseId?: string } | undefined;
   LifeStage: undefined;
   IntroVideo: undefined;
   LanguageSelect: undefined;
   ProfileSetup: undefined;
-  Pricing: undefined;
+  Pricing: { selectedMonth?: number; remainingMonths?: number } | undefined;
   Course: undefined;
   Garbhadhaan: undefined;
   ProfileSettings: undefined;
@@ -42,6 +44,15 @@ export type AppStackParamList = {
   KickCounter: undefined;
   MoodTherapy: undefined;
   GarbhSamvad: undefined;
+  Kundli: undefined;
+  BalSanskar: undefined;
+  LiveSessions: undefined;
+  ReferEarn: undefined;
+  MedicalProfile: undefined;
+  SupportChat: undefined;
+  PregnancySafety: undefined;
+  WeightTracker: undefined;
+  DadiNuskha: undefined;
 };
 
 export type RootStackParamList = {

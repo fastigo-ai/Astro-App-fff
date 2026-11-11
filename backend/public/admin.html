@@ -560,6 +560,47 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+
+    /* SUPPORT CHAT MODAL STYLES */
+    .chat-bubble {
+      max-width: 82%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      position: relative;
+      word-break: break-word;
+    }
+    .chat-bubble.user {
+      align-self: flex-start;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+    .chat-bubble.admin {
+      align-self: flex-end;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(168, 85, 247, 0.22));
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-bubble-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 5px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .chat-bubble.user .chat-bubble-header { color: #38bdf8; }
+    .chat-bubble.admin .chat-bubble-header { color: #c084fc; }
+    .chat-time {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
   </style>
 </head>
 <body>
@@ -660,12 +701,24 @@
         </div>
         <div class="stat-icon">🚚</div>
       </div>
+
+      <div class="stat-card" style="cursor: pointer;" onclick="switchTab('tab-support')">
+        <div>
+          <div class="stat-label">Support Tickets</div>
+          <div class="stat-value" id="stat-tickets" style="color: #38bdf8;">--</div>
+          <div class="stat-sub" id="stat-open-tickets">Live customer chats</div>
+        </div>
+        <div class="stat-icon">💬</div>
+      </div>
     </section>
 
     <!-- NAVIGATION TABS -->
     <nav class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('tab-users')">
         👥 Users & Subscriptions
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-support')">
+        💬 Support & Live Chat
       </button>
       <button class="tab-btn" onclick="switchTab('tab-schemes')">
         📦 Course Programs & Modules
@@ -718,6 +771,56 @@
             </thead>
             <tbody id="users-table-body">
               <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SUPPORT & LIVE CHAT -->
+    <div id="tab-support" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>Customer Support Tickets & Real-Time Chat</span>
+            <span class="badge badge-purple" id="support-count-badge">0 Tickets</span>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="support-search" class="search-input" placeholder="Search phone, name, subject..." oninput="filterSupportTickets()">
+            <select id="support-filter-category" class="search-input" style="width: 140px;" onchange="filterSupportTickets()">
+              <option value="">All Categories</option>
+              <option value="payment">💳 Payment</option>
+              <option value="medical">🩺 Medical</option>
+              <option value="classes">🎥 Classes</option>
+              <option value="general">💬 General</option>
+            </select>
+            <select id="support-filter-status" class="search-input" style="width: 130px;" onchange="filterSupportTickets()">
+              <option value="">All Statuses</option>
+              <option value="open">🔵 Open</option>
+              <option value="in_progress">🟡 In Progress</option>
+              <option value="resolved">🟢 Resolved</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="loadSupportTickets()">
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>User Name</th>
+                <th>Phone</th>
+                <th>Category</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="support-table-body">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading support tickets...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1233,6 +1336,64 @@
     </div>
   </div>
 
+  <!-- MODAL: SUPPORT TICKET CHAT & ADMIN REPLY -->
+  <div class="modal-overlay" id="support-chat-modal">
+    <div class="modal" style="max-width: 760px; height: 86vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 22px;">💬</span>
+          <div>
+            <div class="modal-title" id="chat-ticket-subject">Support Ticket</div>
+            <div style="font-size: 12px; color: var(--text-dim);" id="chat-ticket-subtitle">Ticket #...</div>
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeSupportChatModal()">&times;</button>
+      </div>
+
+      <!-- Ticket Meta Bar -->
+      <div style="padding: 12px 20px; background: var(--surface-card); border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px;">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <div><strong style="color: var(--text-muted);">Category:</strong> <span id="chat-meta-category" class="badge">general</span></div>
+          <div><strong style="color: var(--text-muted);">Priority:</strong> <span id="chat-meta-priority" class="badge">normal</span></div>
+          <div><strong style="color: var(--text-muted);">Assigned:</strong> <span id="chat-meta-admin" style="color: #cbd5e1;">Unassigned</span></div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <label style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Status:</label>
+          <select id="chat-status-select" class="form-control" style="width: 140px; padding: 4px 8px; font-size: 12px;" onchange="onStatusSelectChange()">
+            <option value="open">🔵 Open</option>
+            <option value="in_progress">🟡 In Progress</option>
+            <option value="resolved">🟢 Resolved</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="modal-body" id="chat-messages-container" style="flex: 1; overflow-y: auto; padding: 20px; background: #0c111d; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Dynamically rendered chat bubbles -->
+      </div>
+
+      <!-- Reply Box -->
+      <div class="modal-footer" style="flex-direction: column; align-items: stretch; gap: 10px; background: var(--surface); border-top: 1px solid var(--border); padding: 14px 20px;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label class="form-label" style="margin: 0; white-space: nowrap; font-size: 11px;">Admin Role / Identity:</label>
+          <select id="chat-admin-persona" class="form-control" style="padding: 5px 10px; font-size: 12px;">
+            <option value="AstroBaby Support Team">🎧 AstroBaby Support Team</option>
+            <option value="Dr. Meenakshi Sharma (Ayurvedic Obstetrician)">👩‍⚕️ Dr. Meenakshi Sharma (Ayurvedic Obstetrician)</option>
+            <option value="Acharya Vidyadhar (Vedic Health Scholar)">🕉️ Acharya Vidyadhar (Vedic Health Scholar)</option>
+            <option value="Billing & Subscriptions Desk">💳 Billing & Subscriptions Desk</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <textarea id="chat-reply-input" class="form-control" rows="2" placeholder="Write admin reply to user... (Press Cmd+Enter or Enter to send)" style="resize: none;" onkeydown="handleChatKeyDown(event)"></textarea>
+          <button class="btn btn-primary" id="chat-send-btn" onclick="submitAdminReply()" style="min-width: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <span>Reply</span>
+            <span style="font-size: 14px;">✉️</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-box"></div>
 
   <!-- JAVASCRIPT LOGIC -->
@@ -1243,6 +1404,8 @@
     let currentClasses = [];
     let currentDispatches = [];
     let currentPayments = [];
+    let currentSupportTickets = [];
+    let activeChatTicket = null;
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1269,7 +1432,8 @@
           loadCoupons(),
           loadClasses(),
           loadDispatches(),
-          loadPayments()
+          loadPayments(),
+          loadSupportTickets()
         ]);
         showToast('Real-time data refreshed');
       } catch (e) {
@@ -1290,6 +1454,10 @@
         document.getElementById('stat-coupons').innerText = json.data.totalCoupons || 0;
         document.getElementById('stat-classes').innerText = json.data.upcomingClasses || 0;
         document.getElementById('stat-dispatches').innerText = json.data.activeDispatches || 0;
+        if (document.getElementById('stat-tickets')) {
+          document.getElementById('stat-tickets').innerText = json.data.totalSupportTickets || 0;
+          document.getElementById('stat-open-tickets').innerText = `${json.data.openSupportTickets || 0} Open requests`;
+        }
       }
     }
 
@@ -1814,6 +1982,271 @@
       if (data.success) {
         showToast('Notification broadcasted to mobile app users!');
         closeBroadcastModal();
+      }
+    }
+
+    // ==========================================
+    // SUPPORT & LIVE CHAT SYSTEM
+    // ==========================================
+    async function loadSupportTickets() {
+      try {
+        const res = await fetch('/api/v1/admin/support/tickets');
+        const json = await res.json();
+        if (json.success && json.data) {
+          currentSupportTickets = json.data;
+          const badge = document.getElementById('support-count-badge');
+          if (badge) badge.innerText = `${currentSupportTickets.length} Tickets`;
+          filterSupportTickets();
+        }
+      } catch (err) {
+        console.error('Failed to load support tickets:', err);
+      }
+    }
+
+    function filterSupportTickets() {
+      const searchInput = document.getElementById('support-search');
+      const catSelect = document.getElementById('support-filter-category');
+      const statSelect = document.getElementById('support-filter-status');
+
+      const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      const cat = catSelect ? catSelect.value : '';
+      const stat = statSelect ? statSelect.value : '';
+
+      const filtered = currentSupportTickets.filter(t => {
+        const matchQuery = !query ||
+          (t.userName && t.userName.toLowerCase().includes(query)) ||
+          (t.userPhone && t.userPhone.includes(query)) ||
+          (t.subject && t.subject.toLowerCase().includes(query)) ||
+          (t._id && t._id.toLowerCase().includes(query));
+        const matchCat = !cat || t.category === cat;
+        const matchStat = !stat || t.status === stat;
+        return matchQuery && matchCat && matchStat;
+      });
+
+      renderSupportTickets(filtered);
+    }
+
+    function getCategoryBadge(cat) {
+      switch (cat) {
+        case 'payment': return '<span class="badge badge-pink">💳 Payment</span>';
+        case 'medical': return '<span class="badge badge-danger">🩺 Medical</span>';
+        case 'classes': return '<span class="badge badge-primary">🎥 Classes</span>';
+        case 'general':
+        default:
+          return '<span class="badge badge-purple">💬 General</span>';
+      }
+    }
+
+    function getStatusBadge(status) {
+      switch (status) {
+        case 'open': return '<span class="badge badge-primary">🔵 Open</span>';
+        case 'in_progress': return '<span class="badge badge-warning">🟡 In Progress</span>';
+        case 'resolved': return '<span class="badge badge-success">🟢 Resolved</span>';
+        default: return `<span class="badge">${status}</span>`;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderSupportTickets(tickets) {
+      const tbody = document.getElementById('support-table-body');
+      if (!tbody) return;
+
+      if (!tickets || !tickets.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">No support tickets found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = tickets.map(t => {
+        const lastUpdate = t.updatedAt ? new Date(t.updatedAt).toLocaleString() : new Date(t.createdAt).toLocaleString();
+        const msgCount = (t.messages || []).length;
+        const prioTag = t.priority === 'urgent'
+          ? '<span class="badge badge-danger" style="margin-top: 3px; font-size: 9px;">URGENT</span>'
+          : t.priority === 'high'
+            ? '<span class="badge badge-warning" style="margin-top: 3px; font-size: 9px;">HIGH PRIORITY</span>'
+            : '';
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: #fff;">${escapeHtml(t.userName || 'Astro Parent')}</div>
+              <div style="font-size: 11px; color: var(--text-dim);">${msgCount} message${msgCount === 1 ? '' : 's'}</div>
+            </td>
+            <td><div class="code-pill">${escapeHtml(t.userPhone || '')}</div></td>
+            <td>${getCategoryBadge(t.category)}</td>
+            <td>
+              <div style="font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(t.subject)}</div>
+              ${prioTag}
+            </td>
+            <td>${getStatusBadge(t.status)}</td>
+            <td style="font-size: 11px; color: var(--text-dim);">${lastUpdate}</td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="openSupportChatModal('${t._id}')">
+                View & Reply 💬
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function openSupportChatModal(ticketId) {
+      try {
+        const res = await fetch(`/api/v1/support/tickets/${ticketId}`);
+        const json = await res.json();
+        if (!json.success || !json.data) {
+          showToast('Could not load ticket details', 'danger');
+          return;
+        }
+        activeChatTicket = json.data;
+        renderChatModalContent();
+        document.getElementById('support-chat-modal').classList.add('open');
+        setTimeout(() => {
+          const container = document.getElementById('chat-messages-container');
+          if (container) container.scrollTop = container.scrollHeight;
+          const input = document.getElementById('chat-reply-input');
+          if (input) input.focus();
+        }, 120);
+      } catch (err) {
+        console.error(err);
+        showToast('Error opening ticket chat', 'danger');
+      }
+    }
+
+    function closeSupportChatModal() {
+      document.getElementById('support-chat-modal').classList.remove('open');
+      activeChatTicket = null;
+    }
+
+    function renderChatModalContent() {
+      if (!activeChatTicket) return;
+      const t = activeChatTicket;
+
+      document.getElementById('chat-ticket-subject').innerText = t.subject || 'Support Ticket';
+      document.getElementById('chat-ticket-subtitle').innerText = `${t.userName || 'Parent'} (${t.userPhone}) • Ticket #${t._id}`;
+
+      const catEl = document.getElementById('chat-meta-category');
+      if (catEl) {
+        catEl.className = 'badge';
+        catEl.innerHTML = getCategoryBadge(t.category);
+      }
+
+      const priorityEl = document.getElementById('chat-meta-priority');
+      if (priorityEl) {
+        priorityEl.innerText = (t.priority || 'normal').toUpperCase();
+        priorityEl.className = `badge ${t.priority === 'urgent' ? 'badge-danger' : t.priority === 'high' ? 'badge-warning' : 'badge-primary'}`;
+      }
+
+      const adminEl = document.getElementById('chat-meta-admin');
+      if (adminEl) adminEl.innerText = t.assignedAdmin || 'Unassigned';
+
+      const statusSelect = document.getElementById('chat-status-select');
+      if (statusSelect) statusSelect.value = t.status || 'open';
+
+      const container = document.getElementById('chat-messages-container');
+      const messages = t.messages || [];
+
+      if (messages.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-dim); margin-top: 40px;">No messages in this ticket yet.</div>';
+        return;
+      }
+
+      container.innerHTML = messages.map(m => {
+        const isAdmin = m.sender === 'admin';
+        const timeStr = m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        return `
+          <div class="chat-bubble ${isAdmin ? 'admin' : 'user'}">
+            <div class="chat-bubble-header">
+              <span>${isAdmin ? '🛡️ ' : '👤 '}${escapeHtml(m.senderName || (isAdmin ? 'AstroBaby Team' : 'User'))}</span>
+              <span class="chat-time">${timeStr}</span>
+            </div>
+            <div style="white-space: pre-wrap;">${escapeHtml(m.text)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function onStatusSelectChange() {
+      if (!activeChatTicket) return;
+      const newStatus = document.getElementById('chat-status-select').value;
+      try {
+        const res = await fetch(`/api/v1/admin/support/tickets/${activeChatTicket._id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Status updated to ${newStatus}`);
+          activeChatTicket.status = newStatus;
+          loadSupportTickets();
+          loadStats();
+        } else {
+          showToast(json.error || 'Failed to update status', 'danger');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to update status', 'danger');
+      }
+    }
+
+    function handleChatKeyDown(event) {
+      if ((event.key === 'Enter' && (event.ctrlKey || event.metaKey)) || (event.key === 'Enter' && !event.shiftKey)) {
+        event.preventDefault();
+        submitAdminReply();
+      }
+    }
+
+    async function submitAdminReply() {
+      if (!activeChatTicket) return;
+      const input = document.getElementById('chat-reply-input');
+      const text = (input.value || '').trim();
+      const persona = document.getElementById('chat-admin-persona').value;
+
+      if (!text) {
+        input.focus();
+        return;
+      }
+
+      const sendBtn = document.getElementById('chat-send-btn');
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/v1/admin/support/tickets/${activeChatTicket._id}/reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            adminName: persona,
+            assignedAdmin: persona,
+          }),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          input.value = '';
+          activeChatTicket = json.data;
+          renderChatModalContent();
+          const container = document.getElementById('chat-messages-container');
+          if (container) container.scrollTop = container.scrollHeight;
+          showToast('Admin reply sent to user!');
+          loadSupportTickets();
+          loadStats();
+        } else {
+          showToast(json.error || 'Failed to send reply', 'danger');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Error sending reply', 'danger');
+      } finally {
+        sendBtn.disabled = false;
       }
     }
 

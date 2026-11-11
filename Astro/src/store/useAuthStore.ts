@@ -10,6 +10,7 @@ export interface User {
   name: string;
   phone: string;
   lmp_date?: string;
+  avatar?: string;
 }
 
 export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'none';
@@ -39,8 +40,10 @@ interface AuthState {
   subscribedPrograms: string[];
   activeSubscriptions: Record<string, any>;
   babyKicks: number;
+  isDemoActive: boolean;
   
   // Actions
+  activateDemo: (month?: number) => Promise<void>;
   setHasLanguage: (val: boolean) => void;
   setHasProfile: (val: boolean, data?: { name: string; dob: string; city: string; state: string }) => void;
   setHasLifeStage: (val: boolean, stageId?: string, extraData?: any) => void;
@@ -58,6 +61,7 @@ interface AuthState {
   isProgramSubscribed: (programId: string) => boolean;
   isModuleUnlocked: (moduleId: string) => boolean;
   subscribeToProgram: (programId: string, planDetails: any) => Promise<void>;
+  setUserAvatar: (avatarUri: string) => Promise<void>;
 }
 
 const RATE_LIMIT_COUNT = 3;
@@ -79,6 +83,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   subscribedPrograms: [],
   activeSubscriptions: {},
   babyKicks: 0,
+  isDemoActive: false,
+
+  activateDemo: async (month = 2) => {
+    await AsyncStorage.setItem('@garbhcompanion/has_seen_pricing', 'true');
+    await AsyncStorage.setItem('@garbhcompanion/has_seen_intro', 'true');
+    await AsyncStorage.setItem('@garbhcompanion/is_demo_active', 'true');
+    await AsyncStorage.setItem('@garbhcompanion/subscription_status', 'trial');
+
+    const confirmedMonth = month;
+    const remainingMonths = Math.max(1, 10 - confirmedMonth);
+    const existing = get().journeyData || { stage: 'pregnant' as const };
+    const jData: JourneyData = {
+      ...existing,
+      stage: 'pregnant',
+      confirmed_month: confirmedMonth,
+      remaining_months: remainingMonths,
+    };
+
+    await AsyncStorage.setItem('@garbhcompanion/life_stage_extra', JSON.stringify(jData));
+
+    set({
+      hasSeenPricing: true,
+      hasSeenIntro: true,
+      isDemoActive: true,
+      subscriptionStatus: 'trial',
+      journeyData: jData,
+    });
+  },
 
   setHasLanguage: async (val: boolean) => {
     if (val) {
@@ -148,6 +180,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const hasLife = await AsyncStorage.getItem('@garbhcompanion/has_life_stage');
     const hasPricing = await AsyncStorage.getItem('@garbhcompanion/has_seen_pricing');
     const hasIntro = await AsyncStorage.getItem('@garbhcompanion/has_seen_intro');
+    const isDemo = await AsyncStorage.getItem('@garbhcompanion/is_demo_active');
     const storedSub = await AsyncStorage.getItem('@garbhcompanion/subscription_status');
     const hasSession = await AsyncStorage.getItem('@mock_session');
     const token = await AsyncStorage.getItem('@jwt_token');
@@ -168,6 +201,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const jData: JourneyData | null = extraData ? { stage: (stageId as any) || 'pregnant', ...extraData } : null;
     
+    const storedAvatar = await AsyncStorage.getItem('@garbhcompanion/user_avatar');
     const storedPrograms = await AsyncStorage.getItem('@garbhcompanion/subscribed_programs');
     const storedActiveSubs = await AsyncStorage.getItem('@garbhcompanion/active_subscriptions');
     let parsedPrograms: string[] = [];
@@ -189,13 +223,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: '1', 
           name: profileData?.name || 'New Mom', 
           phone: '',
-          lmp_date: extraData?.lmp_date 
+          lmp_date: extraData?.lmp_date,
+          avatar: storedAvatar || undefined,
         },
         hasLanguage: !!hasLang,
         hasProfile: !!hasProf,
         hasLifeStage: !!hasLife,
         hasSeenPricing: !!hasPricing,
         hasSeenIntro: !!hasIntro,
+        isDemoActive: isDemo === 'true',
         journeyData: jData,
         subscriptionStatus: (storedSub as any) || 'none',
         subscribedPrograms: parsedPrograms,
@@ -204,12 +240,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } else {
       set({ 
         status: 'idle', 
-        user: null, 
+        user: storedAvatar ? { id: '1', name: profileData?.name || 'New Mom', phone: '', avatar: storedAvatar } : null, 
+        isDemoActive: isDemo === 'true',
         subscribedPrograms: parsedPrograms,
         activeSubscriptions: parsedActiveSubs,
         subscriptionStatus: (storedSub as any) || 'none' 
       });
     }
+  },
+
+  setUserAvatar: async (avatarUri: string) => {
+    await AsyncStorage.setItem('@garbhcompanion/user_avatar', avatarUri);
+    set((state) => ({
+      user: state.user
+        ? { ...state.user, avatar: avatarUri }
+        : { id: '1', name: 'New Mom', phone: '', avatar: avatarUri }
+    }));
+    try {
+      await api.put('/api/v1/profile/avatar', { avatar: avatarUri }).catch(() => {});
+    } catch (e) {}
   },
 
   sendOtp: async (phone: string) => {
@@ -311,6 +360,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await AsyncStorage.removeItem('@garbhcompanion/life_stage_extra');
     await AsyncStorage.removeItem('@garbhcompanion/has_seen_pricing');
     await AsyncStorage.removeItem('@garbhcompanion/has_seen_intro');
+    await AsyncStorage.removeItem('@garbhcompanion/is_demo_active');
     await AsyncStorage.removeItem('@garbhcompanion/subscription_status');
     set({ 
       status: 'idle', 
@@ -322,6 +372,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       hasLifeStage: false, 
       hasSeenPricing: false, 
       hasSeenIntro: false,
+      isDemoActive: false,
       journeyData: null 
     });
   },
@@ -348,18 +399,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   isProgramSubscribed: (programId: string) => {
-    const { subscriptionStatus, subscribedPrograms } = get();
-    // Default garbh_sanskar is active if general subscriptionStatus is active
-    if (programId === 'garbh_sanskar' && subscriptionStatus === 'active') {
+    const { subscriptionStatus, subscribedPrograms, isDemoActive } = get();
+    // Default garbh_sanskar is active if general subscriptionStatus is active or demo is active
+    if (programId === 'garbh_sanskar' && (subscriptionStatus === 'active' || subscriptionStatus === 'trial' || isDemoActive)) {
       return true;
     }
     return subscribedPrograms.includes(programId);
   },
 
   isModuleUnlocked: (moduleId: string) => {
-    const { subscriptionStatus, subscribedPrograms, activeSubscriptions } = get();
-    // If full Garbhsanskar subscription is active, default modules are unlocked
-    if (subscriptionStatus === 'active') return true;
+    const { subscriptionStatus, subscribedPrograms, activeSubscriptions, isDemoActive } = get();
+    // If full Garbhsanskar subscription is active or demo is active, default modules are unlocked
+    if (subscriptionStatus === 'active' || subscriptionStatus === 'trial' || isDemoActive) return true;
 
     // Check specific module against all active program subscriptions
     for (const progId of subscribedPrograms) {

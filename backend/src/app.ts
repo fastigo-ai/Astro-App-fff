@@ -21,6 +21,8 @@ import subscriptionRoutes from './routes/subscriptionRoutes';
 import momInteractionsRoutes from './routes/momInteractionsRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
+import krishnaBusinessRoutes from './routes/krishnaBusinessRoutes';
+import supportRoutes from './routes/supportRoutes';
 
 const app: Application = express();
 
@@ -50,6 +52,8 @@ app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/bump', bumpRoutes);
 app.use('/api/v1/subscription', subscriptionRoutes);
 app.use('/api/v1/mom', momInteractionsRoutes);
+app.use('/api/v1/krishna', krishnaBusinessRoutes);
+app.use('/api/v1/support', supportRoutes);
 
 // Admin Dashboard UI Route
 app.get('/admin', (req, res) => {
@@ -70,6 +74,7 @@ app.get('/', (req, res) => {
       bump: '/api/v1/bump',
       subscription: '/api/v1/subscription',
       mom: '/api/v1/mom',
+      support: '/api/v1/support',
     },
   });
 });

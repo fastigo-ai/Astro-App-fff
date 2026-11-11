@@ -83,6 +83,35 @@ export class JsonCollection<T extends { id?: string; _id?: string }> {
     const items = await this.find(query);
     return items[0] || null;
   }
+
+  async update(id: string, update: Partial<T>): Promise<T | null> {
+    const items = this.read();
+    const index = items.findIndex((item: any) => item._id === id || item.id === id);
+    if (index >= 0) {
+      items[index] = {
+        ...items[index],
+        ...update,
+        updatedAt: new Date().toISOString(),
+      };
+      this.write(items);
+      return items[index];
+    }
+    return null;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const items = this.read();
+    const filtered = items.filter((item: any) => item._id !== id && item.id !== id);
+    if (filtered.length !== items.length) {
+      this.write(filtered);
+      return true;
+    }
+    return false;
+  }
+
+  async deleteById(id: string): Promise<boolean> {
+    return this.delete(id);
+  }
 }
 
 export interface IUserJourney {
@@ -96,7 +125,8 @@ export interface IUserJourney {
   remaining_months?: number;
   planning_timeline?: string;
   subscription_tier?: 'full' | 'half' | 'trial';
-  subscription_status?: 'active' | 'trial' | 'none';
+  subscription_status?: 'active' | 'trial' | 'none' | 'expired';
+  last_subscribed_program?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -106,12 +136,18 @@ export interface ISubscriptionRecord {
   userId?: string;
   phone?: string;
   planId: string;
+  programId?: string;
   tier: 'full' | 'half'; // Utkarsh vs Aadhar
   planName: string;
   amount: number;
   currency: string;
   durationMonths: number;
   calculatedForMonth?: number;
+  paymentMode?: 'full' | 'emi';
+  totalInstallments?: number;
+  paidInstallments?: number;
+  nextInstallmentDue?: string;
+  unlockedModules?: string[];
   status: 'active' | 'expired' | 'cancelled';
   paymentId?: string;
   orderId?: string;
@@ -141,6 +177,7 @@ export interface IKickSession {
   _id?: string;
   userId?: string;
   phone?: string;
+  babyId?: string;
   totalKicks: number;
   durationSeconds: number;
   targetKicks: number;
@@ -283,6 +320,145 @@ export interface IBroadcastNotification {
   sentAt: string;
 }
 
+export interface IKundliRecord {
+  _id?: string;
+  id?: string;
+  userId: string;
+  motherName: string;
+  fatherName: string;
+  motherDob: string;
+  fatherDob: string;
+  placeOfBirth: string;
+  conceptionDate?: string;
+  expectedDeliveryDate?: string;
+  gotra?: string;
+  questions?: string;
+  status: 'pending' | 'in_review' | 'ready';
+  kundliPdfUrl?: string;
+  astrologerNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IBalSanskarRecord {
+  _id?: string;
+  id?: string;
+  userId: string;
+  babyName: string;
+  gender: 'boy' | 'girl' | 'prefer_not_to_say';
+  dateOfBirth: string;
+  currentAgeMonths: number;
+  completedActivities: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IPreconceiveRecord {
+  _id?: string;
+  id?: string;
+  userId: string;
+  planningTimeline: string;
+  cycleLengthDays?: number;
+  lastPeriodDate?: string;
+  ovulationWindowStart?: string;
+  ovulationWindowEnd?: string;
+  counsellingSlot?: string;
+  dietPlan?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IReferralRecord {
+  _id?: string;
+  id?: string;
+  userId: string;
+  referralCode: string;
+  referredUsers: {
+    userId: string;
+    phone: string;
+    joinedAt: string;
+    subscribed: boolean;
+    rewardEarned: number;
+  }[];
+  totalCoinsEarned: number;
+  freeMonthsUnlocked: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IMedicalProfileRecord {
+  _id?: string;
+  id?: string;
+  userId: string;
+  doctorName?: string;
+  hospitalName?: string;
+  doctorPhone?: string;
+  bloodGroup?: string;
+  medicalConditions?: string[];
+  allergies?: string[];
+  reports?: { title: string; url: string; date: string }[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IActivityTrackingRecord {
+  _id?: string;
+  id?: string;
+  userId: string;
+  activityId: string;
+  type: 'video' | 'audio' | 'mantra' | 'exercise';
+  title: string;
+  durationSeconds: number;
+  watchedSeconds: number;
+  completed: boolean;
+  score?: number;
+  date: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IFaqRecord {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+  language?: string;
+}
+
+export interface IDoctorRecord {
+  id: string;
+  name: string;
+  qualification: string;
+  specialization: string;
+  experienceYears: number;
+  imageUrl: string;
+  bio: string;
+  availableDays: string[];
+}
+
+export interface ISupportTicketMessage {
+  id: string;
+  sender: 'user' | 'admin';
+  senderName: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface ISupportTicket {
+  _id: string;
+  userId: string;
+  userPhone: string;
+  userName: string;
+  category: 'payment' | 'medical' | 'classes' | 'general';
+  subject: string;
+  status: 'open' | 'in_progress' | 'resolved';
+  priority: 'normal' | 'high' | 'urgent';
+  messages: Array<{ id: string; sender: 'user' | 'admin'; senderName: string; text: string; createdAt: string }>;
+  assignedAdmin?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const UserJourneysCollection = new JsonCollection<IUserJourney>('user_journeys');
 export const SubscriptionsCollection = new JsonCollection<ISubscriptionRecord>('subscriptions');
 export const PaymentsCollection = new JsonCollection<IPaymentRecord>('payments');
@@ -295,6 +471,15 @@ export const LiveClassesCollection = new JsonCollection<ILiveClass>('live_classe
 export const CourseLessonsCollection = new JsonCollection<ICourseLesson>('course_lessons');
 export const KitDispatchesCollection = new JsonCollection<IKitDispatch>('kit_dispatches');
 export const BroadcastNotificationsCollection = new JsonCollection<IBroadcastNotification>('broadcast_notifications');
+export const KundliCollection = new JsonCollection<IKundliRecord>('kundli');
+export const BalSanskarCollection = new JsonCollection<IBalSanskarRecord>('bal_sanskar');
+export const PreconceiveCollection = new JsonCollection<IPreconceiveRecord>('preconceive');
+export const ReferralsCollection = new JsonCollection<IReferralRecord>('referrals');
+export const MedicalProfilesCollection = new JsonCollection<IMedicalProfileRecord>('medical_profiles');
+export const ActivityTrackingCollection = new JsonCollection<IActivityTrackingRecord>('activity_tracking');
+export const FaqsCollection = new JsonCollection<IFaqRecord>('faqs');
+export const DoctorsCollection = new JsonCollection<IDoctorRecord>('doctors');
+export const SupportTicketsCollection = new JsonCollection<ISupportTicket>('support_tickets');
 
 // Auto-seed default 6 programs if empty
 export const seedDefaultPrograms = () => {
@@ -627,6 +812,34 @@ export const seedDefaultPrograms = () => {
         courier: 'BlueDart Express',
         trackingNumber: 'BD982736412IN',
         status: 'out_for_delivery',
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }
+
+  // Seed default support tickets if empty
+  if (SupportTicketsCollection.read().length === 0) {
+    SupportTicketsCollection.write([
+      {
+        _id: 'ticket_demo_01',
+        userId: 'usr_demo_01',
+        userPhone: '9366128220',
+        userName: 'Astro Parent',
+        category: 'payment',
+        subject: 'Clarification regarding Utkarsh Scheme EMI Schedule',
+        status: 'open',
+        priority: 'high',
+        messages: [
+          {
+            id: 'msg_demo_01',
+            sender: 'user',
+            senderName: 'Astro Parent',
+            text: 'Hi Team, I completed my first installment for Utkarsh Garbh Sanskar. When is the next EMI due?',
+            createdAt: new Date().toISOString(),
+          },
+        ],
+        assignedAdmin: null,
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
     ]);

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image as RNImage, Alert } from 'react-native';
+import ImagePicker from 'react-native-image-crop-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   CreditCard,
   Lock,
+  Camera,
 } from 'lucide-react-native';
 import { useAuthStore } from '~/store/useAuthStore';
 import { PROGRAMS_DATA } from '~/features/course/data/programsData';
@@ -18,11 +20,14 @@ import { PROGRAMS_DATA } from '~/features/course/data/programsData';
 const { width } = Dimensions.get('window');
 
 const MENU_ITEMS = [
-  { icon: '👩', title: 'Details of Pregnant Woman', color: '#FF9A9E' },
-  { icon: '👨', title: 'Details of Husband', color: '#A18CD1' },
-  { icon: '👨‍⚕️', title: 'Details of your Doctor', color: '#84FAB0' },
-  { icon: '🔔', title: 'Allow Notification', color: '#FCCB90' },
-  { icon: '🗑️', title: 'Delete My Account', color: '#ff758c' },
+  { id: 'doctor', icon: '👨‍⚕️', title: 'Details of your Doctor', color: '#84FAB0' },
+  { id: 'refer', icon: '🎁', title: 'Refer & Earn (Gift ₹500 & Free Months)', color: '#FF7B89' },
+  { id: 'kundli', icon: '✨', title: 'My Garbh Kundli & Horoscope', color: '#A18CD1' },
+  { id: 'live', icon: '📹', title: 'Live Doctor Masterclasses', color: '#EF4444' },
+  { id: 'mother', icon: '👩', title: 'Details of Pregnant Woman', color: '#FF9A9E' },
+  { id: 'husband', icon: '👨', title: 'Details of Husband', color: '#6BAE98' },
+  { id: 'notify', icon: '🔔', title: 'Allow Notifications', color: '#FCCB90' },
+  { id: 'delete', icon: '🗑️', title: 'Delete My Account', color: '#ff758c' },
 ];
 
 export const ProfileSettingsScreen = () => {
@@ -48,6 +53,29 @@ export const ProfileSettingsScreen = () => {
     ? new Date(primarySub.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
     : '15 May 2027';
 
+  const handlePickAvatar = async () => {
+    try {
+      const image = await ImagePicker.openPicker({
+        width: 400,
+        height: 400,
+        cropping: true,
+        cropperCircleOverlay: true,
+        includeBase64: true,
+        compressImageQuality: 0.8,
+      });
+
+      if (image && (image.path || (image as any).data)) {
+        const uri = (image as any).data ? `data:${image.mime};base64,${(image as any).data}` : image.path;
+        await useAuthStore.getState().setUserAvatar(uri);
+        Alert.alert('Profile Photo Saved! 🌸', 'Your profile picture has been updated.');
+      }
+    } catch (err: any) {
+      if (err?.message !== 'User cancelled image selection') {
+        console.warn('Avatar pick error:', err);
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -63,11 +91,19 @@ export const ProfileSettingsScreen = () => {
         {/* Profile Info Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatarEmoji}>👶</Text>
-            </View>
-            <TouchableOpacity style={styles.editBadge}>
-              <Text style={styles.editIcon}>✏️</Text>
+            {user?.avatar ? (
+              <RNImage source={{ uri: user.avatar }} style={styles.avatarImageReal} />
+            ) : (
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarEmoji}>👶</Text>
+              </View>
+            )}
+            <TouchableOpacity 
+              style={styles.editBadge}
+              onPress={handlePickAvatar}
+              activeOpacity={0.8}
+            >
+              <Camera size={12} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
           
@@ -141,6 +177,17 @@ export const ProfileSettingsScreen = () => {
                 styles.menuItem, 
                 index === MENU_ITEMS.length - 1 && { borderBottomWidth: 0 }
               ]}
+              onPress={() => {
+                if (item.id === 'doctor' || item.id === 'mother' || item.id === 'husband') {
+                  navigation.navigate('MedicalProfile');
+                } else if (item.id === 'refer') {
+                  navigation.navigate('ReferEarn');
+                } else if (item.id === 'kundli') {
+                  navigation.navigate('Kundli');
+                } else if (item.id === 'live') {
+                  navigation.navigate('LiveSessions');
+                }
+              }}
             >
               <View style={[styles.menuIconContainer, { backgroundColor: item.color + '30' }]}>
                 <Text style={styles.menuIcon}>{item.icon}</Text>
@@ -205,6 +252,13 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#F472B6',
   },
+  avatarImageReal: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 3,
+    borderColor: '#EC4899',
+  },
   avatarEmoji: {
     fontSize: 42,
   },
@@ -212,14 +266,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EC4899',
     width: 28,
     height: 28,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    elevation: 3,
   },
   editIcon: {
     fontSize: 12,

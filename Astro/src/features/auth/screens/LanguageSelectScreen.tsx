@@ -43,11 +43,13 @@ export const LanguageSelectScreen: React.FC<Props> = ({ navigation }) => {
         console.warn('Backend language sync optional warning:', e);
       }
       
-      // 2. Complete step locally
-      setHasLanguage(true);
+      // 2. Complete step locally and navigate
+      await setHasLanguage(true);
+      navigation.navigate('ProfileSetup');
     } catch (error) {
       console.error('Failed to save language:', error);
-      setHasLanguage(true);
+      await setHasLanguage(true);
+      navigation.navigate('ProfileSetup');
     } finally {
       setIsLoading(false);
     }

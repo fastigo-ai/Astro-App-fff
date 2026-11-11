@@ -4,7 +4,7 @@ import { theme } from '~/shared/theme';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
-import { Footprints, Bell } from 'lucide-react-native';
+import { Footprints, Bell, Sparkles } from 'lucide-react-native';
 import { useAuthStore } from '~/store/useAuthStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -32,6 +32,23 @@ export const DashboardHeader: React.FC = () => {
 
       {/* Right Side: Interactive Actions (Minimalist Icons) */}
       <View style={styles.rightContainer}>
+        {/* Krishna Coming Subscription Paywall Button */}
+        <TouchableOpacity
+          style={styles.plansButton}
+          onPress={() => {
+            const parent = navigation.getParent();
+            if (parent) {
+              (parent as any).navigate('Pricing');
+            } else {
+              (navigation as any).navigate('Pricing');
+            }
+          }}
+          activeOpacity={0.8}
+        >
+          <Sparkles size={13} color="#3A083E" />
+          <Text style={styles.plansButtonText}>👑 Plans</Text>
+        </TouchableOpacity>
+
         {/* Baby Kick Counter */}
         <TouchableOpacity
           style={styles.kickButton}
@@ -100,6 +117,27 @@ const styles = StyleSheet.create({
   iconButton: {
     position: 'relative',
     padding: 2,
+  },
+  plansButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FECC00', // Krishna Coming signature gold
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  plansButtonText: {
+    color: '#3A083E',
+    fontWeight: '900',
+    fontSize: 12,
   },
   kickButton: {
     flexDirection: 'row',

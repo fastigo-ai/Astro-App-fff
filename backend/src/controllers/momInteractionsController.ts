@@ -12,11 +12,12 @@ export const momInteractionsController = {
       const user = req.user;
       const phone = user?.phone || req.body.phone || '9366128220';
       const userId = user?.id || 'usr_123';
-      const { totalKicks, durationSeconds, targetKicks, completed, notes, kickTimestamps } = req.body;
+      const { totalKicks, durationSeconds, targetKicks, completed, notes, kickTimestamps, babyId } = req.body;
 
       const record = await KickSessionsCollection.insert({
         userId,
         phone,
+        babyId: babyId || 'Baby 1',
         totalKicks: Number(totalKicks) || 0,
         durationSeconds: Number(durationSeconds) || 0,
         targetKicks: Number(targetKicks) || 10,

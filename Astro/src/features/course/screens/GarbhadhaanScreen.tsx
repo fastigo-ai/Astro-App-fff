@@ -9,6 +9,8 @@ import {
   SafeAreaView,
   Dimensions,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { ArrowLeft } from 'lucide-react-native';
 import {
   CourseFeatureGrid,
   CourseFeature,
@@ -31,10 +33,28 @@ const FEATURES_DATA: CourseFeature[] = [
 ];
 
 export const GarbhadhaanScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const [selectedFeature, setSelectedFeature] = useState<CourseFeature | null>(null);
+
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('WelcomeCourseSelection');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Top Header */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+          <ArrowLeft size={22} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Garbhadhaan (Pre-Pregnancy)</Text>
+        <View style={{ width: 36 }} />
+      </View>
+
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         
         {/* Scrollable Top Banner */}
@@ -406,5 +426,23 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#3b4371',
     letterSpacing: 2,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  backBtn: {
+    padding: 6,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#1F2937',
   },
 });

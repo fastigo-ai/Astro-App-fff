@@ -11,6 +11,8 @@ import {
   Platform,
   Modal,
   Linking,
+  TextInput,
+  Image as RNImage,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +35,11 @@ import {
   Award,
   Lock,
   CreditCard,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  CheckCircle2,
+  Headphones,
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -115,7 +122,7 @@ const getWombMilestone = (month: number, isHindi: boolean) => {
   };
 };
 
-export const PricingScreen: React.FC<Props> = ({ navigation }) => {
+export const PricingScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t, i18n } = useTranslation();
   const isHindi = i18n.language?.startsWith('hi') ?? false;
 
@@ -125,9 +132,12 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
   const user = useAuthStore(state => state.user);
 
   const stage = journeyData?.stage || 'pregnant';
-  const initialMonth = journeyData?.confirmed_month || 4;
+  const paramMonth = route?.params?.selectedMonth;
+  const initialMonth = paramMonth && paramMonth >= 1 && paramMonth <= 9 ? paramMonth : (journeyData?.confirmed_month || 4);
 
   const [selectedTier, setSelectedTier] = useState<'full' | 'half'>('full');
+  const [activeTabTier, setActiveTabTier] = useState<'utkarsh' | 'aadhar' | 'yagyansh'>('utkarsh');
+  const [selectedPlanVariant, setSelectedPlanVariant] = useState<'A' | 'B'>('A');
   const [currentMonth, setCurrentMonth] = useState(initialMonth);
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,11 +145,62 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [subscribedPlan, setSubscribedPlan] = useState<PlanItem | null>(null);
 
+  // Sync route month if navigation updates with new params
+  useEffect(() => {
+    if (paramMonth && paramMonth >= 1 && paramMonth <= 9 && paramMonth !== currentMonth) {
+      setCurrentMonth(paramMonth);
+    }
+  }, [paramMonth]);
+
   // Razorpay Checkout State
   const [showRazorpayModal, setShowRazorpayModal] = useState(false);
   const [isProcessingRazorpay, setIsProcessingRazorpay] = useState(false);
   const [razorpayOrder, setRazorpayOrder] = useState<any>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
+
+  // Krishna Coming Business & Urgency Additions
+  const [countdownSeconds, setCountdownSeconds] = useState(894);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; message: string } | null>(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdownSeconds(prev => (prev > 0 ? prev - 1 : 899));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    try {
+      setIsVerifyingCoupon(true);
+      const res = await api.post('/api/v1/krishna/coupon/check', {
+        code: couponInput.trim(),
+        planPrice: activePlan?.calculatedPrice || 4999,
+      });
+      if (res.data?.success) {
+        setAppliedCoupon({
+          code: res.data.code,
+          discount: res.data.discountAmount,
+          message: res.data.message,
+        });
+        Alert.alert('Coupon Applied', res.data.message);
+      }
+    } catch (e: any) {
+      const msg = e.response?.data?.message || 'Invalid coupon code. Try KRISHNA50 or GARBHMITRA';
+      Alert.alert('Coupon Error', msg);
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
 
   // Fetch dynamic plans from backend
   const fetchPlans = async (monthToFetch: number) => {
@@ -232,17 +293,77 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
   const currentTrimester = currentMonth <= 3 ? 1 : currentMonth <= 6 ? 2 : 3;
   const wombMilestone = getWombMilestone(currentMonth, isHindi);
 
-  const handleSubscribe = async () => {
-    if (!activePlan) return;
+  // Image 1 Pricing & Tier Calculation
+  const getTierPricing = () => {
+    let monthlyRate = 3000;
+    let tierName = 'Utkarsh (Full till Delivery)';
+    let tierInclusions = [
+      'Complete Coverage till Delivery (Month 1 to 9)',
+      'Daily Vedic Shlokas, Stotras & Sanskar Rituals',
+      'Safe Pregnancy Yoga & Meditation with Certified Gurus',
+      'Trimester-wise Personalized Ayurvedic Diet & Nutrition Chart',
+      'Monthly 1-on-1 Gynecologist & Ayurvedic Doctor consultations',
+      'Garbh Samvad & 432Hz Classical Raagas Therapy',
+      'Baby Brain Stimulation & IQ Kit',
+      '24/7 Maternal Medical & Astrological Consultation Chat',
+    ];
 
+    if (activeTabTier === 'aadhar') {
+      monthlyRate = 2000;
+      tierName = 'Aadhar (Essential Foundation)';
+      tierInclusions = [
+        'Trimester Daily Activity & Sanskar Routine',
+        'Vedic Shlokas, Stotras & Relaxing Instrumental Raagas',
+        'Recorded Prenatal Yoga & Guided Relaxation Sessions',
+        'Standard Ayurvedic Pregnancy Diet Guidelines',
+        'Weekly Live Group Q&A with Senior Gynaecologists',
+        'Kick Counter, Mood Therapy & Baby Bump Tracker Tools',
+      ];
+    } else if (activeTabTier === 'yagyansh') {
+      monthlyRate = 1333;
+      tierName = 'Yagyansh (Vedic Rituals & Astrology)';
+      tierInclusions = [
+        'Vedic Mantra Vrushti & Personalized Isht Devta Chants',
+        'Garbh Kundli & Astrological Muhurat Check',
+        'Daily Shanti Prarthana & Mindful Breathing Sessions',
+        'Santan Gopal Hawan Vidhi & Puja Protocols',
+      ];
+    }
+
+    // Plan A: 9 Months full duration
+    const planABase = monthlyRate * 9;
+    const planAGst = Math.round(planABase * 0.18);
+    const planATotal = planABase + planAGst;
+
+    // Plan B: remainingMonths duration
+    const planBBase = monthlyRate * remainingMonths;
+    const planBGst = Math.round(planBBase * 0.18);
+    const planBTotal = planBBase + planBGst;
+
+    return {
+      monthlyRate,
+      tierName,
+      inclusions: tierInclusions,
+      planA: { base: planABase, gst: planAGst, total: planATotal, monthlyRate },
+      planB: { base: planBBase, gst: planBGst, total: planBTotal, monthlyRate },
+    };
+  };
+
+  const pricingCalculations = getTierPricing();
+  const selectedPlanDetails = selectedPlanVariant === 'A' ? pricingCalculations.planA : pricingCalculations.planB;
+  const couponDiscount = appliedCoupon?.discount || 0;
+  const finalPayablePrice = Math.max(999, selectedPlanDetails.total - couponDiscount);
+  const emiDownpayment = Math.ceil(finalPayablePrice / 3);
+
+  const handleSubscribe = async () => {
     try {
       setIsSubscribing(true);
 
       // 1. Create Razorpay order from backend
       const res = await api.post('/api/v1/subscription/razorpay/create-order', {
-        planId: activePlan.id,
-        tier: activePlan.tier,
-        amount: activePlan.calculatedPrice,
+        planId: `${activeTabTier}_plan_${selectedPlanVariant}`,
+        tier: activeTabTier,
+        amount: finalPayablePrice,
         month: currentMonth,
         phone: user?.phone || '',
       }).catch(err => {
@@ -252,9 +373,9 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
             success: true,
             data: {
               orderId: `order_${Date.now()}`,
-              amount: activePlan.calculatedPrice,
+              amount: finalPayablePrice,
               currency: 'INR',
-              keyId: '' // keyId from backend — do NOT hardcode
+              keyId: ''
             }
           }
         };
@@ -265,9 +386,9 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
       } else {
         setRazorpayOrder({
           orderId: `order_${Date.now()}`,
-          amount: activePlan.calculatedPrice,
+          amount: finalPayablePrice,
           currency: 'INR',
-          keyId: '' // keyId must come from backend — do NOT hardcode
+          keyId: ''
         });
       }
 
@@ -277,9 +398,9 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
       console.error('Subscription initiate error:', error);
       setRazorpayOrder({
         orderId: `order_${Date.now()}`,
-        amount: activePlan.calculatedPrice,
+        amount: finalPayablePrice,
         currency: 'INR',
-        keyId: '' // keyId must come from backend — do NOT hardcode
+        keyId: ''
       });
       setShowRazorpayModal(true);
     } finally {
@@ -354,9 +475,11 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
   const handleFinishJourney = async () => {
     setShowSuccessModal(false);
     await setHasSeenPricing(true);
-    // Explicit requirement: After celebration welcome message -> video gets played -> then home screen
-    await useAuthStore.getState().setHasSeenIntro(false);
-    (navigation as any).navigate('IntroVideo');
+    await useAuthStore.getState().setHasSeenIntro(true);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'MainTabs' }],
+    });
   };
 
   const handleSkip = async () => {
@@ -367,290 +490,319 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
       await setSubscriptionStatus('trial');
     }
     await setHasSeenPricing(true);
-    // Explicit requirement: If user selects skip trial -> video gets played -> then home screen
-    await useAuthStore.getState().setHasSeenIntro(false);
-    (navigation as any).navigate('IntroVideo');
+    await useAuthStore.getState().setHasSeenIntro(true);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'MainTabs' }],
+    });
   };
 
-  // Helper to give each feature a colourful, warm mother-baby icon badge
-  const renderFeatureItem = (feature: string, index: number) => {
-    let icon = <Check size={16} color="#059669" strokeWidth={2.5} />;
-    let bg = '#DCFCE7';
-    let title = '';
-    let description = feature;
-
-    const lower = feature.toLowerCase();
-    if (lower.includes('garbh samvad') || lower.includes('womb bonding') || lower.includes('raagas') || lower.includes('संवाद')) {
-      icon = <Music size={16} color="#E11D48" strokeWidth={2.5} />;
-      bg = '#FFE4E6';
-      title = isHindi ? 'गर्भ संवाद और शास्त्रीय संगीत 🎵' : 'Garbh Samvad & Classical Raagas 🎵';
-    } else if (lower.includes('brain') || lower.includes('stimulation') || lower.includes('puzzles') || lower.includes('बुद्धि')) {
-      icon = <Sparkles size={16} color="#7C3AED" strokeWidth={2.5} />;
-      bg = '#F3E8FF';
-      title = isHindi ? 'शिशु मस्तिष्क एवं आईक्यू विकास 🧠' : 'Baby Brain Stimulation & IQ Kit 🧠';
-    } else if (lower.includes('yoga') || lower.includes('meditation') || lower.includes('योग')) {
-      icon = <Sun size={16} color="#EA580C" strokeWidth={2.5} />;
-      bg = '#FFEDD5';
-      title = isHindi ? 'गर्भिणी योग व ध्यान (आसान प्रसव) 🧘‍♀️' : 'Safe Pregnancy Yoga & Meditation 🧘‍♀️';
-    } else if (lower.includes('doctor') || lower.includes('gynecologist') || lower.includes('डॉक्टर') || lower.includes('vaidya')) {
-      icon = <ShieldCheck size={16} color="#0284C7" strokeWidth={2.5} />;
-      bg = '#E0F2FE';
-      title = isHindi ? '1-on-1 स्त्री रोग विशेषज्ञ व डॉक्टर परामर्श 👩‍⚕️' : '1-on-1 Gynecologist & Doctor Calls 👩‍⚕️';
-    } else if (lower.includes('diet') || lower.includes('nutrition') || lower.includes('आहार')) {
-      icon = <Heart size={16} color="#059669" strokeWidth={2.5} />;
-      bg = '#D1FAE5';
-      title = isHindi ? 'माह-अनुसार आयुर्वेदिक सात्विक आहार 🥗' : 'Trimester Ayurvedic Nutrition Chart 🥗';
-    } else if (lower.includes('shlokas') || lower.includes('activities') || lower.includes('mantras') || lower.includes('श्लोक')) {
-      icon = <Star size={16} color="#D97706" strokeWidth={2.5} />;
-      bg = '#FEF3C7';
-      title = isHindi ? 'दैनिक वैदिक श्लोक एवं संस्कार क्रियाएं 🕉️' : 'Daily Vedic Shlokas & Rituals 🕉️';
-    } else if (lower.includes('chat') || lower.includes('consultation') || lower.includes('astrological') || lower.includes('परामर्श')) {
-      icon = <Smile size={16} color="#0D9488" strokeWidth={2.5} />;
-      bg = '#CCFBF1';
-      title = isHindi ? '24/7 विशेषज्ञ परामर्श एवं मार्गदर्शन 💬' : '24/7 Maternal & Astrology Chat 💬';
-    } else if (lower.includes('coverage') || lower.includes('months till delivery') || lower.includes('प्रसव तक')) {
-      icon = <Calendar size={16} color="#E11D48" strokeWidth={2.5} />;
-      bg = '#FFE4E6';
-      title = isHindi ? 'प्रसव तक संपूर्ण सुरक्षा 🌸' : 'Complete Coverage Till Delivery 🌸';
+  const handleClose = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      handleSkip();
     }
-
-    return (
-      <View key={index} style={styles.featureItemRow}>
-        <View style={[styles.featureIconBubble, { backgroundColor: bg }]}>
-          {icon}
-        </View>
-        <View style={styles.featureTextWrapper}>
-          {title ? <Text style={styles.featureItemBoldTitle}>{title}</Text> : null}
-          <Text style={styles.featureItemText}>{description}</Text>
-        </View>
-      </View>
-    );
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Soft decorative background circles */}
-      <View style={styles.bgBlobRose} pointerEvents="none" />
-      <View style={styles.bgBlobGold} pointerEvents="none" />
-      <View style={styles.bgBlobLavender} pointerEvents="none" />
-
-      {/* Top Header with Close Button */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.8}>
-          <Text style={styles.skipButtonText}>✕</Text>
+      {/* Top Header Bar matching Image 1 */}
+      <View style={styles.topHeaderBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={handleClose} activeOpacity={0.8}>
+          <ChevronLeft size={26} color="#1F2937" />
+        </TouchableOpacity>
+        <View style={styles.titleCenterRow}>
+          <Text style={styles.mainTitleSerif}>Garbh Sanskar</Text>
+          <View style={styles.coursePricingPillRow}>
+            <Text style={styles.courseWord}>Course</Text>
+            <View style={styles.pricingPillBadge}>
+              <Text style={styles.pricingPillText}>PRICING</Text>
+            </View>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.chatHelpHeaderBtn}
+          onPress={() => navigation.navigate('SupportChat')}
+          activeOpacity={0.8}
+        >
+          <Headphones size={20} color="#BE185D" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-
-        {/* Title & Trust Header */}
-        <View style={styles.titleSection}>
-          <View style={styles.trustPill}>
-            <Text style={styles.trustHeartIcon}>💖</Text>
-            <Text style={styles.trustPillText}>{t('subscription.trustTag')}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Banner with couple & Special Offer Ribbon (Image 1) */}
+        <View style={styles.bannerCardContainer}>
+          <RNImage
+            source={require('../../../assets/images/family_collage.png')}
+            style={styles.bannerCardImage}
+            resizeMode="cover"
+          />
+          {/* Special Offer Ribbon Badge */}
+          <View style={styles.specialOfferRibbon}>
+            <Text style={styles.specialOfferRibbonTop}>SPECIAL OFFER</Text>
+            <View style={styles.specialOfferPercentRow}>
+              <Text style={styles.uptoText}>UPTO </Text>
+              <Text style={styles.percentText}>40%</Text>
+              <Text style={styles.offText}> OFF*</Text>
+            </View>
+            <Text style={styles.variesText}>Discount varies plan to plan</Text>
           </View>
-          <Text style={styles.mainTitle}>{t('subscription.title')}</Text>
-          <Text style={styles.mainSubtitle}>
-            {stage === 'pregnant'
-              ? t('subscription.subtitlePregnant', { month: currentMonth, remaining: remainingMonths })
-              : t('subscription.subtitlePlanning')}
+        </View>
+
+        {/* Gray Demo Class Notice Box */}
+        <View style={styles.demoNoticeBar}>
+          <Text style={styles.demoNoticeText}>
+            To avail special offer attend free demo class 'Miraculous Pregnancy'
+          </Text>
+          <View style={styles.demoNoticeContactRow}>
+            <Text style={styles.demoHelplineText}>Helpline: +91-9109129438</Text>
+            <TouchableOpacity onPress={() => Linking.openURL('tel:+919109129438')}>
+              <Text style={styles.demoClickHereText}>Click here</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Current Month Tag with Stepper */}
+        <View style={styles.currentMonthRow}>
+          <Text style={styles.currentMonthLabel}>
+            Your current pregnancy month - <Text style={styles.currentMonthValue}>{currentMonth}</Text>
+          </Text>
+          <View style={styles.miniMonthStepper}>
+            <TouchableOpacity
+              style={styles.miniStepperBtn}
+              onPress={() => setCurrentMonth(prev => Math.max(1, prev - 1))}
+              disabled={currentMonth <= 1}
+            >
+              <Minus size={13} color={currentMonth <= 1 ? '#D1D5DB' : '#BE123C'} />
+            </TouchableOpacity>
+            <Text style={styles.miniMonthNumberText}>M{currentMonth}</Text>
+            <TouchableOpacity
+              style={styles.miniStepperBtn}
+              onPress={() => setCurrentMonth(prev => Math.min(9, prev + 1))}
+              disabled={currentMonth >= 9}
+            >
+              <Plus size={13} color={currentMonth >= 9 ? '#D1D5DB' : '#BE123C'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* PLANS Section Segmented Control */}
+        <View style={styles.plansSectionHeader}>
+          <View style={styles.plansDividerLine} />
+          <Text style={styles.plansSectionTitle}>PLANS</Text>
+          <View style={styles.plansDividerLine} />
+        </View>
+
+        <View style={styles.segmentedTabsRow}>
+          <TouchableOpacity
+            style={[styles.segmentedTab, activeTabTier === 'utkarsh' && styles.segmentedTabUtkarshActive]}
+            onPress={() => setActiveTabTier('utkarsh')}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.segmentedTabText, activeTabTier === 'utkarsh' && styles.segmentedTabTextActive]}>
+              UTKARSH
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.segmentedTab, activeTabTier === 'aadhar' && styles.segmentedTabAadharActive]}
+            onPress={() => setActiveTabTier('aadhar')}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.segmentedTabText, activeTabTier === 'aadhar' && styles.segmentedTabTextActive]}>
+              AADHAR
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.segmentedTab, activeTabTier === 'yagyansh' && styles.segmentedTabYagyanshActive]}
+            onPress={() => setActiveTabTier('yagyansh')}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.segmentedTabText, activeTabTier === 'yagyansh' && styles.segmentedTabTextActive]}>
+              YAGYANSH
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Plan Cards: PLAN A vs PLAN B */}
+        {/* PLAN A: Month 1 till delivery */}
+        <TouchableOpacity
+          style={[styles.planCardRadio, selectedPlanVariant === 'A' && styles.planCardRadioSelected]}
+          onPress={() => setSelectedPlanVariant('A')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.planCardHeaderRow}>
+            <View style={styles.radioRowLeft}>
+              <View style={[styles.radioCircle, selectedPlanVariant === 'A' && styles.radioCircleChecked]}>
+                {selectedPlanVariant === 'A' && <Check size={14} color="#10B981" strokeWidth={3} />}
+              </View>
+              <View style={styles.planTitleContainer}>
+                <Text style={styles.planVariantLetter}>PLAN A</Text>
+                <Text style={styles.planDurationSubtitle}>(Pregnancy month 1 till delivery)</Text>
+              </View>
+            </View>
+            <View style={styles.planPriceCol}>
+              <Text style={styles.planMainPriceText}>₹ {pricingCalculations.planA.base}</Text>
+              <Text style={styles.planGstSubText}>+ ₹ {pricingCalculations.planA.gst} (GST)</Text>
+            </View>
+          </View>
+
+          <Text style={styles.planCardDescriptionText}>
+            Complete 360° Garbha Sanskar course through which you can give birth to a Healthy, Intelligent and Cultured child and calm yourself down.
+          </Text>
+
+          <View style={styles.monthBreakdownTag}>
+            <Text style={styles.monthBreakdownText}>
+              ₹ {pricingCalculations.planA.monthlyRate} x 9 Months (+18% GST)
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* PLAN B: Month {currentMonth} till delivery */}
+        <TouchableOpacity
+          style={[styles.planCardRadio, selectedPlanVariant === 'B' && styles.planCardRadioSelected]}
+          onPress={() => setSelectedPlanVariant('B')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.planCardHeaderRow}>
+            <View style={styles.radioRowLeft}>
+              <View style={[styles.radioCircle, selectedPlanVariant === 'B' && styles.radioCircleChecked]}>
+                {selectedPlanVariant === 'B' && <Check size={14} color="#10B981" strokeWidth={3} />}
+              </View>
+              <View style={styles.planTitleContainer}>
+                <Text style={styles.planVariantLetter}>PLAN B</Text>
+                <Text style={styles.planDurationSubtitle}>(Pregnancy month {currentMonth} till delivery)</Text>
+              </View>
+            </View>
+            <View style={styles.planPriceCol}>
+              <Text style={styles.planMainPriceText}>₹ {pricingCalculations.planB.base}</Text>
+              <Text style={styles.planGstSubText}>+ ₹ {pricingCalculations.planB.gst} (GST)</Text>
+            </View>
+          </View>
+
+          <Text style={styles.planCardDescriptionText}>
+            Complete 360° Garbha Sanskar course tailored for your remaining {remainingMonths} months to ensure blissful, cultured pregnancy till delivery.
+          </Text>
+
+          <View style={styles.monthBreakdownTag}>
+            <Text style={styles.monthBreakdownText}>
+              ₹ {pricingCalculations.planB.monthlyRate} x {remainingMonths} Months (+18% GST)
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Selected Tier Features Breakdown & Dropbox */}
+        <View style={styles.featuresSectionBox}>
+          <Text style={styles.featuresSectionBoxTitle}>
+            🌸 {pricingCalculations.tierName} Highlights:
+          </Text>
+
+          {pricingCalculations.inclusions.slice(0, 4).map((feature, idx) => (
+            <View key={idx} style={styles.featureItemRowClean}>
+              <CheckCircle2 size={16} color="#059669" strokeWidth={2.4} />
+              <Text style={styles.featureItemTextClean}>{feature}</Text>
+            </View>
+          ))}
+
+          {pricingCalculations.inclusions.length > 4 && (
+            <View style={styles.dropboxWrapper}>
+              <TouchableOpacity
+                style={styles.dropboxToggleBtn}
+                onPress={() => setShowAllFeatures(prev => !prev)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.dropboxToggleBtnText}>
+                  {showAllFeatures
+                    ? 'Hide Extra Inclusions ⌃'
+                    : `View All ${pricingCalculations.inclusions.length - 4} More Inclusions ⌄`}
+                </Text>
+              </TouchableOpacity>
+
+              {showAllFeatures && (
+                <View style={styles.dropboxItemsContainer}>
+                  {pricingCalculations.inclusions.slice(4).map((feature, idx) => (
+                    <View key={idx} style={styles.featureItemRowClean}>
+                      <CheckCircle2 size={16} color="#059669" strokeWidth={2.4} />
+                      <Text style={styles.featureItemTextClean}>{feature}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Easy Installment / Downpayment Option */}
+        <View style={styles.installmentBannerCard}>
+          <Text style={styles.installmentTitle}>💳 Easy Installment / Downpayment Option</Text>
+          <Text style={styles.installmentSub}>
+            Pay only ₹{emiDownpayment} today, remaining in 2 easy monthly installments.
           </Text>
         </View>
 
-        {/* Maternal & Baby Womb Bond Interactive Card */}
-        {stage === 'pregnant' && (
-          <View style={styles.wombBondCard}>
-            {/* Header row */}
-            <View style={styles.wombBondHeader}>
-              <View style={styles.wombBondHeaderLeft}>
-                <View style={styles.motherBabyIconCircle}>
-                  <Text style={{ fontSize: 18 }}>🤰</Text>
-                </View>
-                <View>
-                  <Text style={styles.wombBondTitle}>{t('subscription.babyConnection')}</Text>
-                  <Text style={styles.wombBondSub}>
-                    {isHindi
-                      ? `त्रैमासिक ${currentTrimester} • माह ${currentMonth}`
-                      : `Trimester ${currentTrimester} • Month ${currentMonth}`}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.remainingPillBadge}>
-                <Text style={styles.remainingPillText}>
-                  {t('subscription.monthsRemainingBadge', { months: remainingMonths })}
-                </Text>
-              </View>
-            </View>
-
-            {/* Emotional milestone banner */}
-            <View style={styles.wombMilestoneBox}>
-              <Text style={styles.wombMilestoneText}>
-                {wombMilestone.text}
-              </Text>
-            </View>
-
-            {/* Month Adjuster Stepper */}
-            <View style={styles.monthAdjustRow}>
-              <Text style={styles.monthAdjustLabel}>{t('subscription.adjustMonth')}</Text>
-
-              <View style={styles.monthStepperWrapper}>
-                <TouchableOpacity
-                  style={[styles.stepperCircleBtn, currentMonth <= 1 && styles.stepperBtnDisabled]}
-                  onPress={() => setCurrentMonth(prev => Math.max(1, prev - 1))}
-                  disabled={currentMonth <= 1}
-                  activeOpacity={0.7}
-                >
-                  <Minus size={16} color={currentMonth <= 1 ? '#D1D5DB' : '#E11D48'} strokeWidth={2.5} />
-                </TouchableOpacity>
-
-                <View style={styles.monthPillCenter}>
-                  <Text style={styles.monthPillCenterText}>
-                    {isHindi ? `माह ${currentMonth}` : `Month ${currentMonth}`}
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.stepperCircleBtn, currentMonth >= 9 && styles.stepperBtnDisabled]}
-                  onPress={() => setCurrentMonth(prev => Math.min(9, prev + 1))}
-                  disabled={currentMonth >= 9}
-                  activeOpacity={0.7}
-                >
-                  <Plus size={16} color={currentMonth >= 9 ? '#D1D5DB' : '#E11D48'} strokeWidth={2.5} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* 2-Option Segmented Plan Selector: Utkarsh (Full) vs Aadhar (Half) */}
-        <View style={styles.segmentedSelector}>
+        {/* Coupon Code Input */}
+        <View style={styles.couponContainerRow}>
+          <TextInput
+            style={styles.couponTextInput}
+            placeholder="Enter Coupon (e.g. KRISHNA50 or ASTRO40)"
+            placeholderTextColor="#9CA3AF"
+            value={couponInput}
+            onChangeText={setCouponInput}
+            autoCapitalize="characters"
+          />
           <TouchableOpacity
-            style={[styles.segmentBtn, selectedTier === 'full' && styles.segmentBtnActiveFull]}
-            onPress={() => setSelectedTier('full')}
-            activeOpacity={0.85}
+            style={styles.applyCouponButton}
+            onPress={handleApplyCoupon}
+            disabled={isVerifyingCoupon}
           >
-            <Text style={[styles.segmentBtnText, selectedTier === 'full' && styles.segmentBtnTextActive]}>
-              🌟 {t('subscription.utkarshTab')}
-            </Text>
-            {selectedTier === 'full' && (
-              <View style={styles.miniBadgeGold}>
-                <Text style={styles.miniBadgeGoldText}>👑 BEST</Text>
-              </View>
+            {isVerifyingCoupon ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.applyCouponButtonText}>Apply</Text>
             )}
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.segmentBtn, selectedTier === 'half' && styles.segmentBtnActiveHalf]}
-            onPress={() => setSelectedTier('half')}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.segmentBtnText, selectedTier === 'half' && styles.segmentBtnTextActive]}>
-              🌱 {t('subscription.aadharTab')}
-            </Text>
-          </TouchableOpacity>
         </View>
+        {appliedCoupon && (
+          <Text style={styles.couponDiscountSuccess}>
+            ✓ {appliedCoupon.message} (-₹{appliedCoupon.discount})
+          </Text>
+        )}
 
-        {isLoading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator size="large" color="#FF4D6D" />
-            <Text style={styles.loadingText}>
-              {isHindi ? 'शिशु के लिए पावन योजना तैयार हो रही है...' : 'Crafting blessed plan for your baby...'}
+        {/* Start Garbhsanskar Journey CTA */}
+        <TouchableOpacity
+          style={styles.mainStartJourneyBtn}
+          onPress={handleSubscribe}
+          disabled={isSubscribing}
+          activeOpacity={0.88}
+        >
+          {isSubscribing ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Text style={styles.mainStartJourneyBtnText}>
+              🌸 Start Garbhsanskar Journey (₹{finalPayablePrice}) →
             </Text>
-          </View>
-        ) : activePlan ? (
-          /* Active Plan Main Card */
-          <View style={[styles.planCard, selectedTier === 'full' ? styles.planCardFull : styles.planCardHalf]}>
-            {/* Top Ribbon Badge */}
-            <View style={styles.planCardTopRibbon}>
-              <View style={[styles.badgePill, selectedTier === 'full' ? styles.badgePillGold : styles.badgePillEmerald]}>
-                <Sparkles size={13} color={selectedTier === 'full' ? '#B45309' : '#047857'} />
-                <Text style={[styles.badgePillText, selectedTier === 'full' ? styles.badgeTextGold : styles.badgeTextEmerald]}>
-                  {selectedTier === 'full' ? t('subscription.recommended') : t('subscription.essentials')}
-                </Text>
-              </View>
-
-              <Text style={styles.planCardName}>{activePlan.name}</Text>
-              <Text style={styles.planCardTagline}>{activePlan.tagline}</Text>
-            </View>
-
-            {/* Dynamic Price Box */}
-            <View style={styles.pricingContainer}>
-              <View style={styles.priceRow}>
-                <Text style={styles.currencySymbol}>₹</Text>
-                <Text style={styles.calculatedPriceNumber}>{activePlan.calculatedPrice}</Text>
-                <Text style={styles.originalPriceStrikethrough}>₹{activePlan.originalPrice}</Text>
-                <View style={styles.discountBadge}>
-                  <Text style={styles.discountBadgeText}>
-                    {t('subscription.save', { percent: activePlan.discountPercent })}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.durationRow}>
-                <Text style={styles.durationText}>
-                  {activePlan.duration} • <Text style={styles.monthlyRateHighlight}>{activePlan.monthlyRate}</Text>
-                </Text>
-              </View>
-
-              <View style={styles.dailyCostPill}>
-                <Text style={styles.dailyCostText}>
-                  {t('subscription.dailyCost')}
-                </Text>
-              </View>
-
-              <Text style={styles.highlightTextNote}>
-                ✨ {activePlan.highlightText}
-              </Text>
-            </View>
-
-            {/* Features Checklist with Colorful Category Icons */}
-            <View style={styles.featuresSection}>
-              <View style={styles.featuresHeaderRow}>
-                <Text style={styles.lotusIcon}>🪷</Text>
-                <Text style={styles.featuresSectionTitle}>{t('subscription.everythingIncluded')}</Text>
-              </View>
-
-              {activePlan.features.map((feature, idx) => renderFeatureItem(feature, idx))}
-            </View>
-
-            {/* Subscribe CTA Button with Radiant Warm Theme */}
-            <TouchableOpacity
-              style={[
-                styles.subscribeBtn,
-                selectedTier === 'full' ? styles.subscribeBtnFull : styles.subscribeBtnHalf,
-                isSubscribing && { opacity: 0.7 }
-              ]}
-              onPress={handleSubscribe}
-              disabled={isSubscribing}
-              activeOpacity={0.88}
-            >
-              {isSubscribing ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <View style={styles.btnInnerRow}>
-                  <Text style={styles.subscribeBtnText}>
-                    {t('subscription.subscribeNow', { price: `₹${activePlan.calculatedPrice}` })}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            {/* Security Guarantee Note */}
-            <View style={styles.guaranteeRow}>
-              <ShieldCheck size={16} color="#059669" />
-              <Text style={styles.guaranteeText}>
-                {t('subscription.guarantee')}
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        {/* Skip for now Free Trial Button */}
-        <TouchableOpacity style={styles.skipLink} onPress={handleSkip} activeOpacity={0.7}>
-          <Text style={styles.skipLinkText}>{t('subscription.skipForNow')}</Text>
+          )}
         </TouchableOpacity>
 
+        {/* Live Support Link */}
+        <TouchableOpacity
+          style={styles.helpdeskLinkRow}
+          onPress={() => navigation.navigate('SupportChat')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.helpdeskLinkText}>
+            Need help choosing? <Text style={{ color: '#E11D48', fontWeight: '800' }}>💬 Chat with Counselor</Text> or call Helpline
+          </Text>
+        </TouchableOpacity>
+
+        {/* Skip for now Free Trial Button */}
+        <TouchableOpacity style={styles.skipTrialBtn} onPress={handleSkip} activeOpacity={0.7}>
+          <Text style={styles.skipTrialBtnText}>Continue with Free Demo for now →</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
 
       {/* Sacred Mother-Baby Celebration Success Modal */}
@@ -811,7 +963,7 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.razorpayMethodTitle}>UPI (Instant & Zero Fee)</Text>
                   <Text style={styles.razorpayMethodSubtitle}>Google Pay, PhonePe, Paytm, BHIM</Text>
                 </View>
-                <View style={[styles.radioCircle, selectedPaymentMethod === 'upi' && styles.radioCircleSelected]}>
+                <View style={[styles.razorpayRadioCircle, selectedPaymentMethod === 'upi' && styles.razorpayRadioCircleSelected]}>
                   {selectedPaymentMethod === 'upi' && <View style={styles.radioDot} />}
                 </View>
               </TouchableOpacity>
@@ -832,7 +984,7 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.razorpayMethodTitle}>Credit / Debit Cards</Text>
                   <Text style={styles.razorpayMethodSubtitle}>Visa, MasterCard, RuPay, Maestro</Text>
                 </View>
-                <View style={[styles.radioCircle, selectedPaymentMethod === 'card' && styles.radioCircleSelected]}>
+                <View style={[styles.razorpayRadioCircle, selectedPaymentMethod === 'card' && styles.razorpayRadioCircleSelected]}>
                   {selectedPaymentMethod === 'card' && <View style={styles.radioDot} />}
                 </View>
               </TouchableOpacity>
@@ -853,7 +1005,7 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.razorpayMethodTitle}>Net Banking</Text>
                   <Text style={styles.razorpayMethodSubtitle}>HDFC, ICICI, SBI, Axis & all banks</Text>
                 </View>
-                <View style={[styles.radioCircle, selectedPaymentMethod === 'netbanking' && styles.radioCircleSelected]}>
+                <View style={[styles.razorpayRadioCircle, selectedPaymentMethod === 'netbanking' && styles.razorpayRadioCircleSelected]}>
                   {selectedPaymentMethod === 'netbanking' && <View style={styles.radioDot} />}
                 </View>
               </TouchableOpacity>
@@ -913,540 +1065,506 @@ export const PricingScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFF8FA', // Warm maternal blush cream
+    backgroundColor: '#FFFFFF', // Clean, crisp, light aesthetic matching Image 1
   },
-  // Floating soft ambient glowing decor
-  bgBlobRose: {
-    position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: '#FFE4E6',
-    opacity: 0.7,
-  },
-  bgBlobGold: {
-    position: 'absolute',
-    top: 140,
-    left: -80,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: '#FEF3C7',
-    opacity: 0.5,
-  },
-  bgBlobLavender: {
-    position: 'absolute',
-    bottom: 40,
-    right: -60,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: '#EDE9FE',
-    opacity: 0.5,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 10 : 16,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  skipButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
-    shadowColor: '#E11D48',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  skipButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#9F1239',
-  },
-  container: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  titleSection: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  trustPill: {
+  topHeaderBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFE4E6',
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 10,
-    gap: 6,
-    shadowColor: '#E11D48',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  trustHeartIcon: {
-    fontSize: 13,
-  },
-  trustPillText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: '#9F1239',
-  },
-  mainTitle: {
-    fontSize: 25,
-    fontWeight: '900',
-    color: '#4C0519',
-    textAlign: 'center',
-    marginBottom: 6,
-    letterSpacing: -0.3,
-  },
-  mainSubtitle: {
-    fontSize: 13.5,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 8,
-  },
-
-  // Womb Bond Card
-  wombBondCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 16,
-    marginBottom: 18,
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
-    shadowColor: '#FB7185',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  wombBondHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  wombBondHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  motherBabyIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFE4E6',
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  wombBondTitle: {
-    fontSize: 14.5,
-    fontWeight: '800',
-    color: '#831843',
-  },
-  wombBondSub: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#BE185D',
-  },
-  remainingPillBadge: {
-    backgroundColor: '#FFF1F2',
-    borderWidth: 1,
-    borderColor: '#FDA4AF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-  },
-  remainingPillText: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-  wombMilestoneBox: {
-    backgroundColor: '#FFF5F7',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    marginBottom: 12,
-    borderLeftWidth: 3.5,
-    borderLeftColor: '#FF4D6D',
-  },
-  wombMilestoneText: {
-    fontSize: 13,
-    color: '#9F1239',
-    fontWeight: '600',
-    lineHeight: 18,
-  },
-  monthAdjustRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#FFF1F2',
-  },
-  monthAdjustLabel: {
-    fontSize: 13,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  monthStepperWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepperCircleBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFE4E6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperBtnDisabled: {
     backgroundColor: '#F3F4F6',
   },
-  monthPillCenter: {
+  titleCenterRow: {
+    alignItems: 'center',
+  },
+  mainTitleSerif: {
+    fontSize: 21,
+    fontWeight: '900',
+    color: '#881337', // Refined deep rose serif
+    letterSpacing: -0.2,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  coursePricingPillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  courseWord: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  pricingPillBadge: {
+    backgroundColor: '#BE123C', // Coral/rose rounded badge from Image 1
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  pricingPillText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  chatHelpHeaderBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#FFF1F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+
+  // Banner matching Image 1 couple & ribbon
+  bannerCardContainer: {
+    marginTop: 12,
+    borderRadius: 18,
+    overflow: 'hidden',
+    height: 200,
+    position: 'relative',
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FFE4E6',
+  },
+  bannerCardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  specialOfferRibbon: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderRadius: 12,
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
     borderWidth: 1,
     borderColor: '#FECDD3',
   },
-  monthPillCenterText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-
-  // Segmented Plan Selector
-  segmentedSelector: {
-    flexDirection: 'row',
-    backgroundColor: '#FCE7F3',
-    borderRadius: 18,
-    padding: 4,
-    marginBottom: 18,
-  },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    flexDirection: 'row',
-    gap: 6,
-  },
-  segmentBtnActiveFull: {
-    backgroundColor: '#FF4D6D',
-    shadowColor: '#FF4D6D',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  segmentBtnActiveHalf: {
-    backgroundColor: '#059669',
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  segmentBtnText: {
-    fontSize: 14.5,
-    fontWeight: '600',
-    color: '#9F1239',
-  },
-  segmentBtnTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-  },
-  miniBadgeGold: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  miniBadgeGoldText: {
-    fontSize: 9.5,
+  specialOfferRibbonTop: {
+    fontSize: 10,
     fontWeight: '900',
-    color: '#B45309',
-  },
-
-  loadingBox: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#E11D48',
-    fontWeight: '600',
-  },
-
-  // Plan Card
-  planCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 26,
-    padding: 22,
-    marginBottom: 20,
-    shadowColor: '#E11D48',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 6,
-  },
-  planCardFull: {
-    borderWidth: 2,
-    borderColor: '#FDA4AF',
-  },
-  planCardHalf: {
-    borderWidth: 2,
-    borderColor: '#6EE7B7',
-  },
-  planCardTopRibbon: {
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  badgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
-    marginBottom: 10,
-  },
-  badgePillGold: {
-    backgroundColor: '#FEF3C7',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  badgeTextGold: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#B45309',
+    color: '#DC2626',
     letterSpacing: 0.5,
   },
-  badgePillEmerald: {
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
+  specialOfferPercentRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
-  badgeTextEmerald: {
+  uptoText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#047857',
-    letterSpacing: 0.5,
-  },
-  badgePillText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  planCardName: {
-    fontSize: 24,
-    fontWeight: '900',
     color: '#1F2937',
-    marginBottom: 4,
   },
-  planCardTagline: {
-    fontSize: 13.5,
+  percentText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#DC2626',
+  },
+  offText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#DC2626',
+  },
+  variesText: {
+    fontSize: 9.5,
     color: '#6B7280',
     fontWeight: '500',
   },
 
-  // Price Section
-  pricingContainer: {
-    backgroundColor: '#FFF5F7',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 18,
+  // Soft Gray Demo Notice Box matching Image 1
+  demoNoticeBar: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FFE4E6',
+    borderColor: '#E5E7EB',
   },
-  priceRow: {
+  demoNoticeText: {
+    fontSize: 12,
+    color: '#374151',
+    textAlign: 'center',
+    fontWeight: '500',
+    lineHeight: 17,
+  },
+  demoNoticeContactRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
-    marginBottom: 4,
-  },
-  currencySymbol: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-  calculatedPriceNumber: {
-    fontSize: 40,
-    fontWeight: '900',
-    color: '#E11D48',
-  },
-  originalPriceStrikethrough: {
-    fontSize: 18,
-    color: '#9CA3AF',
-    textDecorationLine: 'line-through',
-    marginLeft: 4,
-  },
-  discountBadge: {
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginLeft: 6,
-  },
-  discountBadgeText: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    color: '#15803D',
-  },
-  durationRow: {
-    marginBottom: 4,
-  },
-  durationText: {
-    fontSize: 13.5,
-    color: '#4B5563',
-    fontWeight: '600',
-  },
-  monthlyRateHighlight: {
-    color: '#E11D48',
-    fontWeight: '800',
-  },
-  dailyCostPill: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
+    alignItems: 'center',
+    gap: 8,
     marginTop: 4,
-    marginBottom: 6,
   },
-  dailyCostText: {
+  demoHelplineText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#92400E',
+    color: '#1F2937',
   },
-  highlightTextNote: {
-    fontSize: 12.5,
-    color: '#059669',
-    fontWeight: '700',
+  demoClickHereText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#2563EB',
+    textDecorationLine: 'underline',
   },
 
-  // Features Section
-  featuresSection: {
-    marginBottom: 20,
-    gap: 12,
+  // Month Stepper Tag
+  currentMonthRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    paddingHorizontal: 4,
   },
-  featuresHeaderRow: {
+  currentMonthLabel: {
+    fontSize: 13.5,
+    color: '#374151',
+    fontWeight: '600',
+  },
+  currentMonthValue: {
+    fontWeight: '900',
+    color: '#BE123C',
+  },
+  miniMonthStepper: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 4,
+    backgroundColor: '#F9FAFB',
+    padding: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  lotusIcon: {
-    fontSize: 16,
+  miniStepperBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
   },
-  featuresSectionTitle: {
-    fontSize: 14,
+  miniMonthNumberText: {
+    fontSize: 12,
     fontWeight: '800',
-    color: '#4C0519',
+    color: '#111827',
+    paddingHorizontal: 4,
   },
-  featureItemRow: {
+
+  // Plans Section Header
+  plansSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 14,
+  },
+  plansDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  plansSectionTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#4B5563',
+    paddingHorizontal: 12,
+    letterSpacing: 0.8,
+  },
+
+  // 3 Segmented Pill Tabs matching Image 1
+  segmentedTabsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  segmentedTab: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  segmentedTabUtkarshActive: {
+    backgroundColor: '#FB7185', // Soft coral rose matching Image 1
+    borderColor: '#E11D48',
+  },
+  segmentedTabAadharActive: {
+    backgroundColor: '#818CF8',
+    borderColor: '#6366F1',
+  },
+  segmentedTabYagyanshActive: {
+    backgroundColor: '#34D399',
+    borderColor: '#059669',
+  },
+  segmentedTabText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#4B5563',
+    letterSpacing: 0.4,
+  },
+  segmentedTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '900',
+  },
+
+  // Plan Cards matching Image 1
+  planCardRadio: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+  },
+  planCardRadioSelected: {
+    borderColor: '#FB7185', // Coral border when selected
+    backgroundColor: '#FFFDFD',
+    shadowColor: '#FB7185',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  planCardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  radioRowLeft: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-  },
-  featureIconBubble: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  featureTextWrapper: {
     flex: 1,
   },
-  featureItemBoldTitle: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 2,
+  radioCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#9CA3AF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
   },
-  featureItemText: {
-    fontSize: 13,
+  radioCircleChecked: {
+    borderColor: '#10B981',
+    backgroundColor: '#ECFDF5',
+  },
+  planTitleContainer: {
+    flex: 1,
+  },
+  planVariantLetter: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  planDurationSubtitle: {
+    fontSize: 11,
+    color: '#6B7280',
+    marginTop: 1,
+    fontWeight: '500',
+  },
+  planPriceCol: {
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+  planMainPriceText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  planGstSubText: {
+    fontSize: 10.5,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  planCardDescriptionText: {
+    fontSize: 12,
     color: '#4B5563',
     lineHeight: 18,
+    marginTop: 10,
+  },
+  monthBreakdownTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  monthBreakdownText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#92400E',
   },
 
-  // CTA Button
-  subscribeBtn: {
-    borderRadius: 18,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 6,
-    marginBottom: 12,
+  // Clean Features & Dropbox
+  featuresSectionBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 14,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  subscribeBtnFull: {
-    backgroundColor: '#FF4D6D',
-    shadowColor: '#FF4D6D',
-  },
-  subscribeBtnHalf: {
-    backgroundColor: '#059669',
-    shadowColor: '#059669',
-  },
-  btnInnerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  subscribeBtnText: {
-    fontSize: 16.5,
+  featuresSectionBoxTitle: {
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.2,
+    color: '#1F2937',
+    marginBottom: 10,
   },
-  guaranteeRow: {
+  featureItemRowClean: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 8,
+    gap: 8,
+    paddingVertical: 4,
   },
-  guaranteeText: {
+  featureItemTextClean: {
+    fontSize: 12.5,
+    color: '#374151',
+    flex: 1,
+    fontWeight: '500',
+  },
+  dropboxWrapper: {
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingTop: 8,
+  },
+  dropboxToggleBtn: {
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  dropboxToggleBtnText: {
     fontSize: 12,
-    color: '#059669',
+    fontWeight: '800',
+    color: '#BE123C',
+  },
+  dropboxItemsContainer: {
+    marginTop: 6,
+    gap: 4,
+  },
+
+  // Easy Installment / Downpayment Option
+  installmentBannerCard: {
+    backgroundColor: '#FFF5F5',
+    borderRadius: 14,
+    padding: 12,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  installmentTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#9F1239',
+  },
+  installmentSub: {
+    fontSize: 11.5,
+    color: '#BE123C',
+    marginTop: 2,
+  },
+
+  // Coupon Code Row
+  couponContainerRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  couponTextInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: '#111827',
     fontWeight: '600',
+  },
+  applyCouponButton: {
+    backgroundColor: '#F59E0B',
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  applyCouponButtonText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  couponDiscountSuccess: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16A34A',
+    marginBottom: 6,
+  },
+
+  // Start Garbhsanskar Journey CTA Button
+  mainStartJourneyBtn: {
+    backgroundColor: '#BE123C', // Deep refined rose CTA button
+    borderRadius: 16,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#BE123C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+    marginTop: 8,
+  },
+  mainStartJourneyBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '900',
+  },
+
+  // Support link & Skip link
+  helpdeskLinkRow: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  helpdeskLinkText: {
+    fontSize: 12.5,
+    color: '#4B5563',
     textAlign: 'center',
   },
-  skipLink: {
+  skipTrialBtn: {
+    paddingVertical: 8,
     alignItems: 'center',
-    paddingVertical: 10,
   },
-  skipLinkText: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: '#9F1239',
+  skipTrialBtnText: {
+    fontSize: 12.5,
+    color: '#6B7280',
     textDecorationLine: 'underline',
+    fontWeight: '600',
   },
 
   // Sacred Celebration Modal Styles
@@ -1805,7 +1923,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontWeight: '600',
   },
-  radioCircle: {
+  razorpayRadioCircle: {
     width: 22,
     height: 22,
     borderRadius: 11,
@@ -1815,7 +1933,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 10,
   },
-  radioCircleSelected: {
+  razorpayRadioCircleSelected: {
     borderColor: '#2563EB',
   },
   radioDot: {

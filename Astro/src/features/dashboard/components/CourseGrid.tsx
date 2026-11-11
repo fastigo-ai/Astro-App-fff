@@ -154,7 +154,17 @@ export const CourseGrid = () => {
                 <TouchableOpacity 
                   style={[styles.card, isSubscribed && { borderColor: '#BBF7D0', borderWidth: 2 }]} 
                   activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Course', { courseId: item.id })}
+                  onPress={() => {
+                    if (item.id === 'bal_sanskar') {
+                      navigation.navigate('BalSanskar');
+                    } else if (item.id === 'consultations') {
+                      navigation.navigate('LiveSessions');
+                    } else if (item.id === 'garbhdhaan_sanskar') {
+                      navigation.navigate('Garbhadhaan');
+                    } else {
+                      navigation.navigate('Course', { courseId: item.id });
+                    }
+                  }}
                 >
                   <View style={styles.imageContainer}>
                     <RNImage 

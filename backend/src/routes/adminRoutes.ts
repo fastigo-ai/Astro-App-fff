@@ -11,7 +11,11 @@ import {
   LiveClassesCollection,
   KitDispatchesCollection,
   BroadcastNotificationsCollection,
+  SupportTicketsCollection,
+  ISupportTicket,
+  ISupportTicketMessage,
 } from '../services/dbStore';
+import { supportController } from '../controllers/supportController';
 
 const router = Router();
 
@@ -28,9 +32,11 @@ router.get('/stats', async (req: Request, res: Response) => {
     const coupons = CouponsCollection.read();
     const classes = LiveClassesCollection.read();
     const dispatches = KitDispatchesCollection.read();
+    const tickets = SupportTicketsCollection.read();
 
     const activeSubs = subscriptions.filter(s => s.status === 'active');
     const totalRevenue = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const openTickets = tickets.filter(t => t.status === 'open');
 
     return res.status(200).json({
       success: true,
@@ -44,6 +50,8 @@ router.get('/stats', async (req: Request, res: Response) => {
         activeDispatches: dispatches.filter(d => d.status !== 'delivered').length,
         totalKicksLogged: kicks.reduce((sum, k) => sum + (k.totalKicks || 0), 0),
         totalMoodLogs: moods.length,
+        totalSupportTickets: tickets.length,
+        openSupportTickets: openTickets.length,
       },
     });
   } catch (error: any) {
@@ -233,7 +241,7 @@ router.post('/coupons', async (req: Request, res: Response) => {
 // DELETE /api/v1/admin/coupons/:id
 router.delete('/coupons/:id', async (req: Request, res: Response) => {
   try {
-    await CouponsCollection.delete(req.params.id);
+    await CouponsCollection.delete(req.params.id as string);
     return res.status(200).json({ success: true, message: 'Coupon deleted' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -340,7 +348,7 @@ router.post('/classes', async (req: Request, res: Response) => {
 // DELETE /api/v1/admin/classes/:id
 router.delete('/classes/:id', async (req: Request, res: Response) => {
   try {
-    await LiveClassesCollection.delete(req.params.id);
+    await LiveClassesCollection.delete(req.params.id as string);
     return res.status(200).json({ success: true, message: 'Class deleted' });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -392,7 +400,7 @@ router.post('/dispatches', async (req: Request, res: Response) => {
 // PUT /api/v1/admin/dispatches/:id (Update shipping status)
 router.put('/dispatches/:id', async (req: Request, res: Response) => {
   try {
-    const updated = await KitDispatchesCollection.update(req.params.id, {
+    const updated = await KitDispatchesCollection.update(req.params.id as string, {
       ...req.body,
       updatedAt: new Date().toISOString(),
     });
@@ -441,5 +449,18 @@ router.post('/broadcasts', async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// ==========================================
+// 5. ROLE-BASED CUSTOMER SUPPORT & LIVE CHAT
+// ==========================================
+
+// GET /api/v1/admin/support/tickets (List all tickets with optional status & category filter)
+router.get('/support/tickets', supportController.adminListTickets);
+
+// POST /api/v1/admin/support/tickets/:id/reply (Role-based admin reply, set status in_progress)
+router.post('/support/tickets/:id/reply', supportController.adminReplyTicket);
+
+// PUT /api/v1/admin/support/tickets/:id/status (Admin updates status)
+router.put('/support/tickets/:id/status', supportController.adminUpdateStatus);
 
 export default router;

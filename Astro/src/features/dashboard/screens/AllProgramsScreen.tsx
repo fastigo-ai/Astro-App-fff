@@ -57,6 +57,26 @@ const COURSES = [
     image: require('../../../assets/programs/infant_care.jpg'), 
   },
   {
+    id: 'garbh_kundli',
+    title: 'Garbh Kundli & Jyotish',
+    subtitle: 'Planetary Alignment for Baby',
+    description: 'Personalized womb horoscope, birth Nakshatra guidance, and Vedic astrologer consultations for noble progeny.',
+    badge: 'VEDIC JYOTISH',
+    price: '₹999',
+    color: '#8B5CF6',
+    image: require('../../../assets/programs/consultations.jpg'),
+  },
+  {
+    id: 'live_sessions',
+    title: 'Live Doctor Masterclasses',
+    subtitle: 'Weekly Interactive Webinars',
+    description: 'Live Zoom sessions with Ayurvedic Gynecologists, Garbh Sanskar mentors, and Q&A consultations.',
+    badge: 'LIVE WEBINAR',
+    price: 'Included',
+    color: '#EF4444',
+    image: require('../../../assets/programs/infant_care.jpg'),
+  },
+  {
     id: 'consultations',
     title: 'A La Carte Consults',
     subtitle: 'Targeted Guidance',
@@ -96,7 +116,19 @@ export const AllProgramsScreen = () => { // force refresh
               key={item.id}
               style={[styles.card, isSubscribed && { borderColor: '#BBF7D0', borderWidth: 2 }]} 
               activeOpacity={0.9}
-              onPress={() => navigation.navigate('Course', { courseId: item.id })}
+              onPress={() => {
+                if (item.id === 'garbh_kundli') {
+                  navigation.navigate('Kundli');
+                } else if (item.id === 'bal_sanskar') {
+                  navigation.navigate('BalSanskar');
+                } else if (item.id === 'live_sessions' || item.id === 'consultations') {
+                  navigation.navigate('LiveSessions');
+                } else if (item.id === 'garbhdhaan_sanskar') {
+                  navigation.navigate('Garbhadhaan');
+                } else {
+                  navigation.navigate('Course', { courseId: item.id });
+                }
+              }}
             >
               <View style={styles.imageContainer}>
                 <RNImage 

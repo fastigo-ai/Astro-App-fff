@@ -9,36 +9,51 @@ import {
   Vibration,
   Alert,
   Platform,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  ArrowLeft, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Heart, 
-  CheckCircle2, 
-  Clock, 
-  Info, 
-  Sparkles,
+import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
+import {
+  ChevronLeft,
+  X,
+  Plus,
+  Minus,
+  Clock,
   Calendar,
-  ChevronRight
+  CheckCircle2,
+  Info,
+  Sparkles,
+  RotateCcw,
+  Play,
+  Pause,
+  HelpCircle,
+  Activity,
+  Heart,
+  Lightbulb,
+  FileText,
+  ShieldCheck,
+  AlertCircle,
+  Flame,
 } from 'lucide-react-native';
 import { api } from '~/shared/api';
 import { useAuthStore } from '~/store/useAuthStore';
-import { ModuleAccessGate } from '~/shared/components/ModuleAccessGate';
+
+const { width } = Dimensions.get('window');
 
 interface KickRecord {
   id: string;
+  babyId: 'baby1' | 'baby2';
   timeStr: string;
-  intervalFromLast?: string;
+  timestamp: number;
 }
 
 interface CompletedSession {
   id: string;
+  babyId: 'baby1' | 'baby2';
   date: string;
   totalKicks: number;
   durationSeconds: number;
@@ -48,24 +63,94 @@ interface CompletedSession {
 const STORAGE_KEY = '@astrobaby_kick_sessions';
 const TARGET_KICKS = 10;
 
+// Cute Footprint Icon with + in center matching Image 2
+const BabyFootprintWithPlus = ({ size = 68, color = '#38BDF8' }: { size?: number; color?: string }) => (
+  <Svg width={size} height={size * 1.15} viewBox="0 0 60 70" fill="none">
+    {/* 5 Toes */}
+    <Circle cx="16" cy="11" r="7" fill={color} />
+    <Circle cx="29" cy="9" r="5.2" fill={color} />
+    <Circle cx="39" cy="12" r="4.2" fill={color} />
+    <Circle cx="47" cy="17" r="3.6" fill={color} />
+    <Circle cx="53" cy="23" r="3" fill={color} />
+    {/* Foot Sole */}
+    <Path
+      d="M17 24 C33 21 48 26 46 42 C44 55 38 66 28 66 C18 66 12 56 13 44 C13 35 12 27 17 24 Z"
+      fill={color}
+    />
+    {/* Plus sign in center */}
+    <Rect x="26.5" y="38" width="5" height="15" rx="2.5" fill="#FFFFFF" />
+    <Rect x="21.5" y="43" width="15" height="5" rx="2.5" fill="#FFFFFF" />
+  </Svg>
+);
+
+// Twin Babies Womb Illustration for Modal (matching Image 1)
+const TwinWombGraphic = () => (
+  <View style={styles.twinGraphicContainer}>
+    <Svg width={140} height={140} viewBox="0 0 140 140" fill="none">
+      {/* Womb outline */}
+      <Path
+        d="M70 12 C35 12 18 42 18 78 C18 108 42 128 70 128 C98 128 122 108 122 78 C122 42 105 12 70 12 Z"
+        fill="#FFE4E6"
+        stroke="#FDA4AF"
+        strokeWidth="3.5"
+      />
+      {/* Placenta wall */}
+      <Path
+        d="M26 60 C38 45 68 40 114 60"
+        stroke="#F43F5E"
+        strokeWidth="3"
+        strokeDasharray="4 4"
+      />
+      {/* Umbilical cords */}
+      <Path d="M70 45 C60 65 52 75 48 85" stroke="#E11D48" strokeWidth="2.5" />
+      <Path d="M70 45 C80 65 88 75 92 85" stroke="#E11D48" strokeWidth="2.5" />
+      {/* Baby 1 shape */}
+      <Circle cx="48" cy="85" r="16" fill="#FBCFE8" stroke="#F472B6" strokeWidth="2" />
+      <Circle cx="44" cy="82" r="3" fill="#BE185D" />
+      {/* Baby 2 shape */}
+      <Circle cx="92" cy="85" r="16" fill="#BAE6FD" stroke="#38BDF8" strokeWidth="2" />
+      <Circle cx="96" cy="82" r="3" fill="#0284C7" />
+    </Svg>
+    <View style={styles.twinBadgeOverlay}>
+      <Text style={styles.twinBadgeText}>Baby 1 💖 Baby 2</Text>
+    </View>
+  </View>
+);
+
 export const KickCounterScreen = () => {
   const navigation = useNavigation();
   const { t, i18n } = useTranslation();
   const isHindi = i18n.language === 'hi';
   const user = useAuthStore(state => state.user);
 
-  // Session state
-  const [isActive, setIsActive] = useState(false);
+  // Active top tab
+  const [activeTab, setActiveTab] = useState<'counter' | 'records' | 'tips'>('counter');
+
+  // Baby selector (Single or Twin tracking)
+  const [selectedBaby, setSelectedBaby] = useState<'baby1' | 'baby2'>('baby1');
+  const [showTwinModal, setShowTwinModal] = useState(false);
+
+  // Separate session state for Baby 1 and Baby 2
+  const [baby1Kicks, setBaby1Kicks] = useState<KickRecord[]>([]);
+  const [baby2Kicks, setBaby2Kicks] = useState<KickRecord[]>([]);
   const [seconds, setSeconds] = useState(0);
-  const [kicks, setKicks] = useState<KickRecord[]>([]);
+  const [isActive, setIsActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+
+  // Historical records
   const [history, setHistory] = useState<CompletedSession[]>([]);
-  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [recordFilter, setRecordFilter] = useState<'all' | 'baby1' | 'baby2'>('all');
+
+  // FAQ Accordion State
+  const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(null);
 
   // Animations
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
+
+  // Active kicks for selected baby
+  const currentKicks = selectedBaby === 'baby1' ? baby1Kicks : baby2Kicks;
 
   // Load history on mount
   useEffect(() => {
@@ -87,19 +172,19 @@ export const KickCounterScreen = () => {
     };
   }, [isActive]);
 
-  // Pulse animation when active
+  // Subtle pulsing animation when timer is running
   useEffect(() => {
     if (isActive) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.15,
-            duration: 1000,
+            toValue: 1.08,
+            duration: 900,
             useNativeDriver: true,
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 1000,
+            duration: 900,
             useNativeDriver: true,
           }),
         ])
@@ -115,15 +200,22 @@ export const KickCounterScreen = () => {
       if (stored) {
         setHistory(JSON.parse(stored));
       }
-      // Also try fetching latest from backend
+
+      // Fetch from backend API
       try {
         const res = await api.get('/api/v1/mom/kicks', {
-          params: { phone: user?.phone || '9366128220' }
+          params: { phone: user?.phone || '9366128220' },
         });
         if (res.data?.data && Array.isArray(res.data.data)) {
           const formatted: CompletedSession[] = res.data.data.map((item: any) => ({
             id: item._id || item.id,
-            date: new Date(item.createdAt).toLocaleDateString(),
+            babyId: item.babyId === 'Baby 2' ? 'baby2' : 'baby1',
+            date: new Date(item.createdAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
             totalKicks: item.totalKicks,
             durationSeconds: item.durationSeconds,
             completed: item.completed,
@@ -132,107 +224,104 @@ export const KickCounterScreen = () => {
           await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(formatted));
         }
       } catch (backendErr) {
-        // Backend optional offline fallback
+        // Safe offline fallback
       }
     } catch (e) {
       console.warn('Error loading kick sessions:', e);
     }
   };
 
-  const handleStartPause = () => {
-    if (isFinished) {
-      resetSession();
-      setIsActive(true);
-      return;
-    }
-    setIsActive(!isActive);
+  // Format seconds to 0:00:00 (Hours:Minutes:Seconds matching Image 2)
+  const formatTimerHMS = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const resetSession = () => {
-    setIsActive(false);
-    setSeconds(0);
-    setKicks([]);
-    setIsFinished(false);
-  };
-
-  const formatTime = (totalSecs: number) => {
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const safeVibrate = (pattern: number | number[] = 40) => {
+  const safeVibrate = () => {
     try {
-      if (Platform.OS === 'ios') {
-        Vibration.vibrate(pattern);
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        Vibration.vibrate(50);
       }
     } catch (e) {}
   };
 
-  const handleRecordKick = () => {
-    // If timer was stopped, start it
+  // Record a Kick
+  const handleCountKick = () => {
     if (!isActive) {
       setIsActive(true);
     }
 
-    // Trigger gentle maternal haptic vibration
-    safeVibrate(40);
+    safeVibrate();
 
-    // Button press bounce animation
+    // Button bounce animation
     Animated.sequence([
       Animated.timing(buttonScale, {
-        toValue: 0.9,
-        duration: 80,
+        toValue: 0.92,
+        duration: 70,
         useNativeDriver: true,
       }),
       Animated.spring(buttonScale, {
         toValue: 1,
-        friction: 3,
+        friction: 4,
         tension: 40,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Floating heart effect
+    // Floating animation
     floatAnim.setValue(0);
     Animated.timing(floatAnim, {
       toValue: 1,
-      duration: 700,
+      duration: 650,
       useNativeDriver: true,
     }).start();
 
-    const now = new Date();
-    const timeStr = formatTime(seconds);
-    let intervalStr: string | undefined;
+    const newKick: KickRecord = {
+      id: `kick_${Date.now()}`,
+      babyId: selectedBaby,
+      timeStr: formatTimerHMS(seconds),
+      timestamp: Date.now(),
+    };
 
-    if (kicks.length > 0) {
-      const prevSeconds = seconds;
-      intervalStr = `+${formatTime(seconds)}`;
-    }
-
-    const updated = [
-      {
-        id: `kick_${Date.now()}`,
-        timeStr,
-        intervalFromLast: intervalStr,
-      },
-      ...kicks,
-    ];
-
-    setKicks(updated);
-
-    // If target reached (10 kicks)
-    if (updated.length >= TARGET_KICKS && !isFinished) {
-      setIsFinished(true);
-      setIsActive(false);
-      saveSession(updated.length, seconds, true);
+    if (selectedBaby === 'baby1') {
+      const next = [newKick, ...baby1Kicks];
+      setBaby1Kicks(next);
+      if (next.length >= TARGET_KICKS && !isFinished) {
+        handleTargetReached('Baby 1', next.length);
+      }
+    } else {
+      const next = [newKick, ...baby2Kicks];
+      setBaby2Kicks(next);
+      if (next.length >= TARGET_KICKS && !isFinished) {
+        handleTargetReached('Baby 2', next.length);
+      }
     }
   };
 
-  const saveSession = async (total: number, duration: number, completed: boolean) => {
+  const handleTargetReached = (babyLabel: string, count: number) => {
+    setIsFinished(true);
+    setIsActive(false);
+    saveSession(selectedBaby, count, seconds, true);
+    Alert.alert(
+      isHindi ? '🌸 10 किक्स पूरी हुईं!' : `🌸 10 Kicks Counted for ${babyLabel}!`,
+      isHindi
+        ? `आपके शिशु ने ${formatTimerHMS(seconds)} में 10 हलचलें पूरी कीं। सत्र इतिहास में सुरक्षित हो गया है।`
+        : `Baby completed 10 sacred movements in ${formatTimerHMS(seconds)}. Session automatically saved.`
+    );
+  };
+
+  const saveSession = async (
+    baby: 'baby1' | 'baby2',
+    total: number,
+    duration: number,
+    completed: boolean
+  ) => {
     const newSession: CompletedSession = {
       id: `session_${Date.now()}`,
-      date: new Date().toLocaleDateString(isHindi ? 'hi-IN' : 'en-US', {
+      babyId: baby,
+      date: new Date().toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -243,311 +332,682 @@ export const KickCounterScreen = () => {
       completed,
     };
 
-    const newHistory = [newSession, ...history];
-    setHistory(newHistory);
+    const updated = [newSession, ...history];
+    setHistory(updated);
 
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
-      // Sync to backend
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       await api.post('/api/v1/mom/kicks', {
         phone: user?.phone || '9366128220',
+        babyId: baby === 'baby1' ? 'Baby 1' : 'Baby 2',
         totalKicks: total,
         durationSeconds: duration,
         targetKicks: TARGET_KICKS,
         completed,
-        kickTimestamps: kicks.map(k => k.timeStr),
+        kickTimestamps: (baby === 'baby1' ? baby1Kicks : baby2Kicks).map(k => k.timeStr),
       });
     } catch (e) {
-      console.warn('Saved locally, backend sync will retry:', e);
+      console.warn('Backend sync queued:', e);
     }
   };
 
-  const handleManualSave = () => {
-    if (kicks.length === 0) {
-      Alert.alert(
-        isHindi ? 'कोई किक नहीं' : 'No Kicks Recorded',
-        isHindi ? 'सत्र सहेजने से पहले कम से कम एक किक दर्ज करें।' : 'Please record at least one kick before saving.'
-      );
-      return;
-    }
-    saveSession(kicks.length, seconds, kicks.length >= TARGET_KICKS);
-    resetSession();
+  const handleReset = () => {
     Alert.alert(
-      isHindi ? 'सफलतापूर्वक सहेजा गया 🌸' : 'Session Saved 🌸',
-      isHindi ? 'आपका किक काउंट इतिहास में सुरक्षित है।' : 'Your kick session has been saved to your health diary.'
+      isHindi ? 'काउंटर रीसेट करें?' : 'Reset Kick Counter?',
+      isHindi
+        ? 'क्या आप इस सत्र का समय और किक काउंट रीसेट करना चाहते हैं?'
+        : 'Do you want to reset current elapsed time and kicks?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: () => {
+            setIsActive(false);
+            setSeconds(0);
+            setIsFinished(false);
+            if (selectedBaby === 'baby1') {
+              setBaby1Kicks([]);
+            } else {
+              setBaby2Kicks([]);
+            }
+          },
+        },
+      ]
     );
   };
 
-  const progress = Math.min(1, kicks.length / TARGET_KICKS);
+  const handleManualSave = () => {
+    if (currentKicks.length === 0) {
+      Alert.alert(
+        isHindi ? 'कोई किक दर्ज नहीं' : 'No Kicks Recorded',
+        isHindi ? 'सहेजने से पहले कम से कम एक किक दर्ज करें।' : 'Please record at least one kick before saving.'
+      );
+      return;
+    }
+    saveSession(selectedBaby, currentKicks.length, seconds, currentKicks.length >= TARGET_KICKS);
+    Alert.alert(
+      isHindi ? 'सत्र सहेजा गया 🌸' : 'Session Saved 🌸',
+      isHindi ? 'आपका किक काउंट इतिहास में सुरक्षित है।' : 'Your kick session has been saved to Records.'
+    );
+  };
+
+  // Filtered records for Records Tab
+  const filteredHistory = history.filter(item => {
+    if (recordFilter === 'all') return true;
+    return item.babyId === recordFilter;
+  });
+
+  // Calculate statistics
+  const totalSessions = history.length;
+  const completedSessions = history.filter(s => s.completed).length;
+  const avgSeconds =
+    history.length > 0
+      ? Math.round(history.reduce((acc, cur) => acc + cur.durationSeconds, 0) / history.length)
+      : 0;
+
+  // FAQs exact data from Images 3 & 4
+  const faqs = [
+    {
+      q: 'How often should I count kicks?',
+      a: 'Most doctors and gynaecologists recommend counting kicks once or twice a day, especially during the 3rd trimester (from week 28 onward). Ideally, track after a meal when baby is naturally more active, aiming for 10 movements within 2 hours.',
+    },
+    {
+      q: 'Can I view past records?',
+      a: "Yes! Tap the 'Records' tab at the top of this screen. You will see a complete log of all your previous sessions, kick counts, elapsed durations, and completion milestones.",
+    },
+    {
+      q: 'Does it count twins separately?',
+      a: "Yes! Use the 'Baby 1' and 'Baby 2' toggle pills right above the footprint counter to record independent kick counts and session durations for each baby.",
+    },
+    {
+      q: "What if baby makes 10 kicks but I feel something's wrong?",
+      a: 'Always trust your maternal intuition. If movements feel noticeably weaker, erratic, significantly reduced, or different from your baby’s established daily pattern, contact your gynaecologist or visit your maternity hospital immediately without delay.',
+    },
+    {
+      q: "How to encourage baby's movement if inactive?",
+      a: 'Try drinking a cold glass of water or fresh fruit juice, having a light nutritious snack, gently rubbing your belly while talking to baby, playing 432Hz Garbh Samvad music, or lying down quietly on your left side.',
+    },
+    {
+      q: "Does this replace doctor's advice?",
+      a: 'No. This kick counter is designed for personal awareness, maternal bonding, and daily routine tracking. It is not intended to replace medical advice, clinical evaluations, or diagnostic non-stress tests (NST).',
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
+      {/* Top Header Bar matching Images */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <ArrowLeft size={22} color="#1F2937" />
+          <ChevronLeft size={26} color="#1F2937" />
         </TouchableOpacity>
-        <View style={styles.headerTitleBox}>
-          <Text style={styles.headerTitle}>
-            {isHindi ? 'शिशु स्पंदन काउंटर' : 'Baby Kick Counter'}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {isHindi ? 'नन्ही हलचलों को महसूस करें' : 'Feel every tiny flutter'}
-          </Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.infoBtn}
-          onPress={() => setShowInfoModal(!showInfoModal)}
+        <Text style={styles.headerTitle}>Fetal Kick Counter</Text>
+        <TouchableOpacity
+          style={styles.twinHelpHeaderBtn}
+          onPress={() => setShowTwinModal(true)}
+          activeOpacity={0.8}
         >
-          <Info size={20} color="#E11D48" />
+          <Info size={20} color="#0284C7" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Medical Guide Banner */}
-        {showInfoModal && (
-          <View style={styles.infoCard}>
-            <View style={styles.infoCardHeader}>
-              <Sparkles size={18} color="#D97706" />
-              <Text style={styles.infoCardTitle}>
-                {isHindi ? 'डॉक्टर का मार्गदर्शन' : 'Doctor Guidance'}
-              </Text>
-            </View>
-            <Text style={styles.infoCardText}>
-              {isHindi
-                ? 'गर्भावस्था के 28वें सप्ताह के बाद शिशु की हलचल गिनना आवश्यक है। भोजन के बाद शांत बैठकर 2 घंटे के भीतर 10 किक्स सामान्य और स्वस्थ मानी जाती हैं।'
-                : 'Counting kicks is recommended from Week 28. Resting on your left side after a meal or snack is ideal. Reaching 10 movements within 2 hours indicates healthy fetal activity.'}
+      {/* Top 3 Tabs matching Image 2: [ Counter ] | [ Records ] | [ Tips ] */}
+      <View style={styles.tabsRow}>
+        <TouchableOpacity
+          style={[styles.tabItem, activeTab === 'counter' && styles.tabItemActive]}
+          onPress={() => setActiveTab('counter')}
+          activeOpacity={0.85}
+        >
+          <Text style={{ fontSize: 16 }}>🐾</Text>
+          <Text style={[styles.tabLabel, activeTab === 'counter' && styles.tabLabelActive]}>
+            Counter
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabItem, activeTab === 'records' && styles.tabItemActive]}
+          onPress={() => setActiveTab('records')}
+          activeOpacity={0.85}
+        >
+          <FileText size={17} color={activeTab === 'records' ? '#0284C7' : '#6B7280'} />
+          <Text style={[styles.tabLabel, activeTab === 'records' && styles.tabLabelActive]}>
+            Records
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabItem, activeTab === 'tips' && styles.tabItemActive]}
+          onPress={() => setActiveTab('tips')}
+          activeOpacity={0.85}
+        >
+          <Lightbulb size={17} color={activeTab === 'tips' ? '#0284C7' : '#6B7280'} />
+          <Text style={[styles.tabLabel, activeTab === 'tips' && styles.tabLabelActive]}>
+            Tips
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* TAB 1: COUNTER */}
+      {activeTab === 'counter' && (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Twin Reminder Notification Box (Image 2) */}
+          <TouchableOpacity
+            style={styles.twinNoticeBanner}
+            onPress={() => setShowTwinModal(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.twinNoticeText}>
+              Remember To Records Kicks For Both Babies
             </Text>
-          </View>
-        )}
+          </TouchableOpacity>
 
-        {/* Milestone Celebration Card */}
-        {isFinished && (
-          <View style={styles.celebrationCard}>
-            <Text style={styles.celebrationEmoji}>👼✨</Text>
-            <Text style={styles.celebrationTitle}>
-              {isHindi ? 'बधाई हो मम्मा! 10 किक्स पूरी हुईं' : 'Wonderful! 10 Kicks Counted'}
-            </Text>
-            <Text style={styles.celebrationSub}>
-              {isHindi
-                ? `आपके शिशु ने ${formatTime(seconds)} में 10 हलचलें पूरी कीं। शिशु स्वस्थ व सक्रिय है!`
-                : `Baby completed 10 movements in ${formatTime(seconds)}. Your baby is active and healthy!`}
-            </Text>
-          </View>
-        )}
-
-        {/* Timer & Target Section */}
-        <View style={styles.statsCard}>
-          <View style={styles.statCol}>
-            <Text style={styles.statLabel}>{isHindi ? 'समय बीता' : 'Elapsed Time'}</Text>
-            <View style={styles.timerRow}>
-              <Clock size={16} color="#E11D48" style={{ marginRight: 6 }} />
-              <Text style={styles.timerValue}>{formatTime(seconds)}</Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.statCol}>
-            <Text style={styles.statLabel}>{isHindi ? 'लक्ष्य (10 किक्स)' : 'Target (10 Kicks)'}</Text>
-            <Text style={styles.kicksCount}>
-              {kicks.length} <Text style={styles.targetTotal}>/ {TARGET_KICKS}</Text>
-            </Text>
-          </View>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
-        </View>
-
-        {/* Main Big Animated Kick Tap Button */}
-        <View style={styles.buttonCenterArea}>
-          {/* Animated Pulsing Ring */}
-          <Animated.View
-            style={[
-              styles.pulseRing,
-              {
-                transform: [{ scale: pulseAnim }],
-                opacity: isActive ? 0.35 : 0.1,
-              },
-            ]}
-          />
-
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+          {/* Baby 1 / Baby 2 Segmented Pill Selector (Image 2) */}
+          <View style={styles.babySelectorRow}>
             <TouchableOpacity
-              style={styles.bigKickButton}
-              activeOpacity={0.9}
-              onPress={handleRecordKick}
+              style={[
+                styles.babyPillBtn,
+                selectedBaby === 'baby1' && styles.babyPillBtnActive,
+              ]}
+              onPress={() => setSelectedBaby('baby1')}
+              activeOpacity={0.88}
             >
-              <View style={styles.innerKickCircle}>
-                <Heart size={44} color="#FFF" fill="#FFF" />
-                <Text style={styles.tapPrompt}>
-                  {isHindi ? 'किक महसूस हुई?' : 'Felt a Kick?'}
-                </Text>
-                <Text style={styles.tapSub}>
-                  {isHindi ? 'यहाँ टैप करें' : 'TAP HERE'}
+              <Text
+                style={[
+                  styles.babyPillText,
+                  selectedBaby === 'baby1' && styles.babyPillTextActive,
+                ]}
+              >
+                Baby 1
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.babyPillBtn,
+                selectedBaby === 'baby2' && styles.babyPillBtnActive,
+              ]}
+              onPress={() => setSelectedBaby('baby2')}
+              activeOpacity={0.88}
+            >
+              <Text
+                style={[
+                  styles.babyPillText,
+                  selectedBaby === 'baby2' && styles.babyPillTextActive,
+                ]}
+              >
+                Baby 2
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Central Circular Dial with Concentric Ring & Footprint (Image 2) */}
+          <View style={styles.centralDialWrapper}>
+            {/* Concentric Segmented Outer Rings */}
+            <View style={styles.outerRingRing1}>
+              <View style={styles.outerRingRing2}>
+                <Animated.View
+                  style={[
+                    styles.footprintCircleButton,
+                    {
+                      transform: [{ scale: buttonScale }],
+                    },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={styles.footprintTouchable}
+                    activeOpacity={0.85}
+                    onPress={handleCountKick}
+                  >
+                    <BabyFootprintWithPlus
+                      size={68}
+                      color={selectedBaby === 'baby1' ? '#38BDF8' : '#EC4899'}
+                    />
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            </View>
+
+            {/* Floating +1 Kick Sparkle Animation */}
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.floatingSparkle,
+                {
+                  opacity: floatAnim.interpolate({
+                    inputRange: [0, 0.4, 1],
+                    outputRange: [0, 1, 0],
+                  }),
+                  transform: [
+                    {
+                      translateY: floatAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, -55],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Text style={styles.floatingSparkleText}>
+                +1 Kick {selectedBaby === 'baby1' ? '🐾' : '💖'}
+              </Text>
+            </Animated.View>
+          </View>
+
+          {/* Two Stat Cards Side-by-Side (Image 2) */}
+          <View style={styles.statCardsRow}>
+            {/* Left Card: Kicks Counted */}
+            <View style={styles.statCard}>
+              <Text style={styles.statCardLabel}>Kicks Counted</Text>
+              <Text style={styles.statCardValue}>{currentKicks.length}</Text>
+            </View>
+
+            {/* Right Card: Duration */}
+            <View style={styles.statCard}>
+              <Text style={styles.statCardLabel}>Duration</Text>
+              <Text style={styles.statCardValue}>{formatTimerHMS(seconds)}</Text>
+            </View>
+          </View>
+
+          {/* Primary Action Button: [ 🐾 Count A Kick ] (Image 2) */}
+          <TouchableOpacity
+            style={styles.mainCountKickBtn}
+            onPress={handleCountKick}
+            activeOpacity={0.88}
+          >
+            <View style={styles.mainCountKickBtnInner}>
+              <Text style={{ fontSize: 18 }}>🐾</Text>
+              <Text style={styles.mainCountKickBtnText}>Count A Kick</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Secondary Controls: Pause / Reset / Save */}
+          <View style={styles.controlsRow}>
+            <TouchableOpacity
+              style={[styles.smallControlBtn, isActive ? styles.pauseBtn : styles.playBtn]}
+              onPress={() => setIsActive(!isActive)}
+            >
+              {isActive ? (
+                <>
+                  <Pause size={15} color="#FFFFFF" />
+                  <Text style={styles.smallControlText}>Pause</Text>
+                </>
+              ) : (
+                <>
+                  <Play size={15} color="#FFFFFF" fill="#FFFFFF" />
+                  <Text style={styles.smallControlText}>
+                    {seconds === 0 ? 'Start' : 'Resume'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.secondarySmallBtn} onPress={handleReset}>
+              <RotateCcw size={15} color="#6B7280" />
+              <Text style={styles.secondarySmallText}>Reset</Text>
+            </TouchableOpacity>
+
+            {currentKicks.length > 0 && (
+              <TouchableOpacity style={styles.saveSmallBtn} onPress={handleManualSave}>
+                <CheckCircle2 size={15} color="#0284C7" />
+                <Text style={styles.saveSmallText}>Save</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Section: How to Use This Kick Counter (Image 2 & 3) */}
+          <View style={styles.howToSection}>
+            <Text style={styles.howToSectionTitle}>How to Use This Kick Counter</Text>
+            <Text style={styles.howToSectionSub}>
+              Steps To Check Your Baby's Movement Patterns
+            </Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.howToCardsScroll}
+            >
+              {/* Card 1 */}
+              <View style={styles.howToCard}>
+                <View style={styles.howToNumberBadge}>
+                  <Text style={styles.howToNumberText}>1</Text>
+                </View>
+                <View style={styles.howToAvatarPlaceholder}>
+                  <Text style={{ fontSize: 36 }}>🤰</Text>
+                </View>
+                <Text style={styles.howToCardTitle}>Using This Tool Every Day</Text>
+                <Text style={styles.howToCardText}>
+                  Helps you learn your baby's normal movement pattern and how long it usually takes to feel 10 movements.
                 </Text>
               </View>
-            </TouchableOpacity>
-          </Animated.View>
 
-          {/* Floating Heart Effect */}
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.floatingHeart,
-              {
-                opacity: floatAnim.interpolate({
-                  inputRange: [0, 0.5, 1],
-                  outputRange: [0, 1, 0],
-                }),
-                transform: [
-                  {
-                    translateY: floatAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, -70],
-                    }),
-                  },
-                  {
-                    scale: floatAnim.interpolate({
-                      inputRange: [0, 0.5, 1],
-                      outputRange: [0.8, 1.4, 1],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <Text style={styles.floatingText}>+1 Kick 💖</Text>
-          </Animated.View>
-        </View>
-
-        {/* Controls: Play/Pause, Reset, Save */}
-        <View style={styles.controlRow}>
-          <TouchableOpacity 
-            style={[styles.controlBtn, isActive ? styles.pauseBtn : styles.playBtn]}
-            onPress={handleStartPause}
-          >
-            {isActive ? (
-              <>
-                <Pause size={18} color="#FFF" />
-                <Text style={styles.controlBtnText}>{isHindi ? 'रोकें' : 'Pause'}</Text>
-              </>
-            ) : (
-              <>
-                <Play size={18} color="#FFF" fill="#FFF" />
-                <Text style={styles.controlBtnText}>
-                  {seconds === 0 ? (isHindi ? 'प्रारंभ' : 'Start') : (isHindi ? 'जारी रखें' : 'Resume')}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.secondaryControlBtn}
-            onPress={resetSession}
-          >
-            <RotateCcw size={16} color="#6B7280" />
-            <Text style={styles.secondaryBtnText}>{isHindi ? 'रीसेट' : 'Reset'}</Text>
-          </TouchableOpacity>
-
-          {kicks.length > 0 && !isFinished && (
-            <TouchableOpacity 
-              style={styles.saveControlBtn}
-              onPress={handleManualSave}
-            >
-              <CheckCircle2 size={16} color="#059669" />
-              <Text style={styles.saveBtnText}>{isHindi ? 'सहेजें' : 'Save'}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Current Session Kick Stream */}
-        {kicks.length > 0 && (
-          <View style={styles.sectionBox}>
-            <Text style={styles.sectionHeaderTitle}>
-              {isHindi ? 'इस सत्र की हलचलें' : 'Current Session Timeline'}
-            </Text>
-            <View style={styles.kickStream}>
-              {kicks.map((k, idx) => (
-                <View key={k.id} style={styles.kickItem}>
-                  <View style={styles.kickIndexPill}>
-                    <Text style={styles.kickIndexText}>#{kicks.length - idx}</Text>
-                  </View>
-                  <Text style={styles.kickTime}>{k.timeStr}</Text>
-                  <Text style={styles.kickInterval}>
-                    {idx === kicks.length - 1 ? (isHindi ? 'शुरुआत' : 'First flutter') : k.intervalFromLast}
-                  </Text>
+              {/* Card 2 */}
+              <View style={styles.howToCard}>
+                <View style={styles.howToNumberBadge}>
+                  <Text style={styles.howToNumberText}>2</Text>
                 </View>
-              ))}
+                <View style={styles.howToAvatarPlaceholder}>
+                  <Text style={{ fontSize: 36 }}>⏰</Text>
+                </View>
+                <Text style={styles.howToCardTitle}>Pick the Same Time</Text>
+                <Text style={styles.howToCardText}>
+                  Choose a time when baby is usually active - usually after meals, evening, or relaxing quietly.
+                </Text>
+              </View>
+
+              {/* Card 3 */}
+              <View style={styles.howToCard}>
+                <View style={styles.howToNumberBadge}>
+                  <Text style={styles.howToNumberText}>3</Text>
+                </View>
+                <View style={styles.howToAvatarPlaceholder}>
+                  <Text style={{ fontSize: 36 }}>🛋️</Text>
+                </View>
+                <Text style={styles.howToCardTitle}>Get Comfortable</Text>
+                <Text style={styles.howToCardText}>
+                  Lie on your left side or sit comfortably with your feet propped up and hands on your belly.
+                </Text>
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Section: Frequently Asked Questions (Image 3 & 4) */}
+          <View style={styles.faqSection}>
+            <Text style={styles.faqSectionTitle}>Frequently Asked Questions</Text>
+
+            {faqs.map((faq, index) => {
+              const isExpanded = expandedFaqIndex === index;
+              return (
+                <View key={index} style={styles.faqAccordionCard}>
+                  <TouchableOpacity
+                    style={styles.faqQuestionRow}
+                    onPress={() => setExpandedFaqIndex(isExpanded ? null : index)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.faqQuestionText}>{faq.q}</Text>
+                    <View style={styles.faqPlusIconBox}>
+                      {isExpanded ? (
+                        <Minus size={16} color="#0F172A" strokeWidth={2.4} />
+                      ) : (
+                        <Plus size={16} color="#0F172A" strokeWidth={2.4} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+
+                  {isExpanded && (
+                    <View style={styles.faqAnswerContainer}>
+                      <Text style={styles.faqAnswerText}>{faq.a}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
+
+      {/* TAB 2: RECORDS */}
+      {activeTab === 'records' && (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Filter Chips */}
+          <View style={styles.recordsFilterRow}>
+            {(['all', 'baby1', 'baby2'] as const).map(filter => (
+              <TouchableOpacity
+                key={filter}
+                style={[
+                  styles.recordsFilterChip,
+                  recordFilter === filter && styles.recordsFilterChipActive,
+                ]}
+                onPress={() => setRecordFilter(filter)}
+              >
+                <Text
+                  style={[
+                    styles.recordsFilterChipText,
+                    recordFilter === filter && styles.recordsFilterChipTextActive,
+                  ]}
+                >
+                  {filter === 'all'
+                    ? 'All Records'
+                    : filter === 'baby1'
+                    ? 'Baby 1'
+                    : 'Baby 2'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Summary Overview Cards */}
+          <View style={styles.recordsOverviewRow}>
+            <View style={styles.recordsOverviewCard}>
+              <Text style={styles.overviewNumber}>{totalSessions}</Text>
+              <Text style={styles.overviewLabel}>Sessions</Text>
+            </View>
+            <View style={styles.recordsOverviewCard}>
+              <Text style={styles.overviewNumber}>
+                {avgSeconds > 0 ? `${Math.ceil(avgSeconds / 60)}m` : '--'}
+              </Text>
+              <Text style={styles.overviewLabel}>Avg Time</Text>
+            </View>
+            <View style={styles.recordsOverviewCard}>
+              <Text style={[styles.overviewNumber, { color: '#059669' }]}>
+                {completedSessions}
+              </Text>
+              <Text style={styles.overviewLabel}>Completed</Text>
             </View>
           </View>
-        )}
 
-        {/* Past Sessions History */}
-        <View style={styles.sectionBox}>
-          <View style={styles.historyHeader}>
-            <Calendar size={18} color="#E11D48" />
-            <Text style={styles.sectionHeaderTitle}>
-              {isHindi ? 'पिछले सत्र (इतिहास)' : 'Past Kick History'}
-            </Text>
-          </View>
+          {/* History List */}
+          <Text style={styles.recordsListTitle}>Past Kick Sessions Log</Text>
 
-          {history.length === 0 ? (
-            <View style={styles.emptyHistory}>
-              <Text style={styles.emptyEmoji}>🌸</Text>
-              <Text style={styles.emptyTitle}>
-                {isHindi ? 'अभी कोई पिछला सत्र नहीं है' : 'No recorded sessions yet'}
-              </Text>
-              <Text style={styles.emptySubtitle}>
-                {isHindi 
-                  ? 'जब शिशु हलचल करे, बड़ा दिल बटन दबाकर रिकॉर्ड करना शुरू करें।'
-                  : 'Start tracking above when you feel baby’s gentle kicks.'}
+          {filteredHistory.length === 0 ? (
+            <View style={styles.emptyStateBox}>
+              <Text style={{ fontSize: 44, marginBottom: 10 }}>👣</Text>
+              <Text style={styles.emptyStateTitle}>No Kick Sessions Recorded Yet</Text>
+              <Text style={styles.emptyStateSub}>
+                Switch to the Counter tab and tap "Count A Kick" to record your baby's daily movements.
               </Text>
             </View>
           ) : (
-            history.slice(0, 5).map((session) => (
-              <View key={session.id} style={styles.historyCard}>
-                <View style={styles.historyLeft}>
-                  <View style={[
-                    styles.historyIconBox, 
-                    { backgroundColor: session.completed ? '#ECFDF5' : '#FFF7ED' }
-                  ]}>
-                    <Heart 
-                      size={18} 
-                      color={session.completed ? '#059669' : '#D97706'} 
-                      fill={session.completed ? '#059669' : '#D97706'} 
-                    />
+            filteredHistory.map(session => (
+              <View key={session.id} style={styles.sessionHistoryCard}>
+                <View style={styles.sessionHeaderRow}>
+                  <View style={styles.sessionDateBox}>
+                    <Calendar size={14} color="#64748B" />
+                    <Text style={styles.sessionDateText}>{session.date}</Text>
                   </View>
-                  <View>
-                    <Text style={styles.historyDate}>{session.date}</Text>
-                    <Text style={styles.historyDetails}>
-                      {session.totalKicks} {isHindi ? 'किक्स' : 'kicks'} • {formatTime(session.durationSeconds)}
+                  <View
+                    style={[
+                      styles.babyTagBadge,
+                      session.babyId === 'baby2' && styles.baby2TagBadge,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.babyTagText,
+                        session.babyId === 'baby2' && styles.baby2TagText,
+                      ]}
+                    >
+                      {session.babyId === 'baby1' ? 'Baby 1' : 'Baby 2'}
                     </Text>
                   </View>
                 </View>
-                {session.completed && (
-                  <View style={styles.completedBadge}>
-                    <Text style={styles.completedBadgeText}>
-                      {isHindi ? 'पूर्ण ✓' : 'Done ✓'}
+
+                <View style={styles.sessionStatsRow}>
+                  <View>
+                    <Text style={styles.sessionKicksCount}>
+                      {session.totalKicks}{' '}
+                      <Text style={{ fontSize: 13, color: '#64748B' }}>/ 10 Kicks</Text>
+                    </Text>
+                    <Text style={styles.sessionDurationText}>
+                      Duration: {formatTimerHMS(session.durationSeconds)}
                     </Text>
                   </View>
-                )}
+
+                  <View
+                    style={[
+                      styles.statusPillBadge,
+                      session.completed ? styles.statusPillCompleted : styles.statusPillPartial,
+                    ]}
+                  >
+                    <CheckCircle2
+                      size={13}
+                      color={session.completed ? '#059669' : '#D97706'}
+                    />
+                    <Text
+                      style={[
+                        styles.statusPillText,
+                        session.completed ? styles.statusPillTextCompleted : styles.statusPillTextPartial,
+                      ]}
+                    >
+                      {session.completed ? 'Goal Met' : 'Partial'}
+                    </Text>
+                  </View>
+                </View>
               </View>
             ))
           )}
-        </View>
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
+
+      {/* TAB 3: TIPS & DOCTOR GUIDELINES */}
+      {activeTab === 'tips' && (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Trimester Movement Milestones */}
+          <View style={styles.tipCard}>
+            <View style={styles.tipCardHeader}>
+              <Sparkles size={18} color="#0284C7" />
+              <Text style={styles.tipCardTitle}>Fetal Movement Milestones</Text>
+            </View>
+            <View style={styles.milestoneItem}>
+              <Text style={styles.milestoneWeek}>Weeks 16 - 22 (First Flutters):</Text>
+              <Text style={styles.milestoneText}>
+                Gentle butterflies, bubbling, or goldfish-swishing sensations known as "quickening".
+              </Text>
+            </View>
+            <View style={styles.milestoneItem}>
+              <Text style={styles.milestoneWeek}>Weeks 24 - 28 (Regular Kicks):</Text>
+              <Text style={styles.milestoneText}>
+                Distinct kicks, jabs, and gymnastics as baby's bones harden and reflexes sharpen.
+              </Text>
+            </View>
+            <View style={styles.milestoneItem}>
+              <Text style={styles.milestoneWeek}>Weeks 28 - 36 (Count 10 Protocol):</Text>
+              <Text style={styles.milestoneText}>
+                Baby has an established sleep-wake cycle. 10 movements within 2 hours indicates a happy baby.
+              </Text>
+            </View>
+            <View style={styles.milestoneItem}>
+              <Text style={styles.milestoneWeek}>Weeks 36+ (Full Term Stretches):</Text>
+              <Text style={styles.milestoneText}>
+                Less somersaulting due to limited womb space, but strong rolls, nudges, and elbow stretches.
+              </Text>
+            </View>
+          </View>
+
+          {/* Red Flag Warning Signs */}
+          <View style={[styles.tipCard, { borderColor: '#FECDD3', backgroundColor: '#FFF5F5' }]}>
+            <View style={styles.tipCardHeader}>
+              <AlertCircle size={18} color="#E11D48" />
+              <Text style={[styles.tipCardTitle, { color: '#BE123C' }]}>
+                When to Call Your Doctor Immediately
+              </Text>
+            </View>
+            <Text style={styles.redFlagBullet}>
+              • You don't feel at least 10 movements within 2 hours of quiet rest on your left side.
+            </Text>
+            <Text style={styles.redFlagBullet}>
+              • Noticeable or persistent reduction in baby's usual daily activity for 2 consecutive days.
+            </Text>
+            <Text style={styles.redFlagBullet}>
+              • Baby does not respond to food, cold water, music, or tummy nudging.
+            </Text>
+            <Text style={styles.redFlagBullet}>
+              • Accompanied by cramps, fluid leakage, dizziness, or contractions.
+            </Text>
+          </View>
+
+          {/* Garbh Sanskar Bond Tip */}
+          <View style={styles.tipCard}>
+            <View style={styles.tipCardHeader}>
+              <Heart size={18} color="#D946EF" />
+              <Text style={styles.tipCardTitle}>Garbh Samvad (Womb Bonding)</Text>
+            </View>
+            <Text style={styles.tipCardText}>
+              Every kick is a response to your love. Speak affectionately, recite positive mantras, play 432Hz Raagas, and gently stroke your belly when baby kicks to build neural responsiveness and emotional security.
+            </Text>
+          </View>
+
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
+
+      {/* TWIN BABIES TRACKING MODAL matching Image 1 */}
+      <Modal
+        visible={showTwinModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowTwinModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.twinModalCard}>
+            {/* Close Button Top Right */}
+            <TouchableOpacity
+              style={styles.modalCloseCircleBtn}
+              onPress={() => setShowTwinModal(false)}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <X size={18} color="#4B5563" />
+            </TouchableOpacity>
+
+            {/* Modal Title */}
+            <Text style={styles.twinModalTitle}>Kick Tracking For Twin Babies</Text>
+            <Text style={styles.twinModalSubtitle}>
+              Twins Make It A Bit More Complex. Here's How To Do It Right.
+            </Text>
+
+            {/* Illustration Graphic */}
+            <TwinWombGraphic />
+
+            {/* Instruction Card Box */}
+            <View style={styles.twinInstructionBox}>
+              <Text style={styles.twinInstructionText}>
+                For twins, count each baby's movements separately. If you can't distinguish between them, track the total activity and usual pattern closely.
+              </Text>
+            </View>
+
+            {/* Medical Disclaimer */}
+            <Text style={styles.twinDisclaimerText}>
+              <Text style={{ fontWeight: '700' }}>Disclaimer:</Text> This feature is for personal tracking only & is not intended to replace medical advice or diagnostic evaluation.
+            </Text>
+
+            {/* Primary Action Button */}
+            <TouchableOpacity
+              style={styles.trackBabyMovementsBtn}
+              onPress={() => setShowTwinModal(false)}
+              activeOpacity={0.88}
+            >
+              <Text style={styles.trackBabyMovementsBtnText}>Track Baby Movements</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -555,410 +1015,715 @@ export const KickCounterScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFDF9',
+    backgroundColor: '#FFFFFF', // Clean, crisp, light aesthetic matching Image 2
   },
-  header: {
+  headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 12,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(225, 29, 72, 0.08)',
+    borderBottomColor: '#F1F5F9',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF1F2',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitleBox: {
-    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#881337',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#9F1239',
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  infoBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFE4E6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  infoCard: {
-    backgroundColor: '#FFFBEB',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  infoCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 6,
-  },
-  infoCardTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#92400E',
-  },
-  infoCardText: {
-    fontSize: 13,
-    color: '#78350F',
-    lineHeight: 20,
-  },
-  celebrationCard: {
-    backgroundColor: '#FDF2F8',
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1.5,
-    borderColor: '#F472B6',
-    shadowColor: '#EC4899',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  celebrationEmoji: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  celebrationTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#9D174D',
+    color: '#0F172A',
+    letterSpacing: -0.2,
+  },
+  twinHelpHeaderBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F0F9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // 3 Tabs matching Image 2
+  tabsRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+  },
+  tabItem: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  tabItemActive: {
+    borderBottomColor: '#38BDF8', // Light blue indicator from Image 2
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  tabLabelActive: {
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+
+  // Twin Notice Banner matching Image 2
+  twinNoticeBanner: {
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  twinNoticeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1E293B',
     textAlign: 'center',
+  },
+
+  // Baby Selector Row (Baby 1 / Baby 2) matching Image 2
+  babySelectorRow: {
+    flexDirection: 'row',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#0284C7',
+    overflow: 'hidden',
+    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+  },
+  babyPillBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  babyPillBtnActive: {
+    backgroundColor: '#0284C7', // Deep sky blue fill
+  },
+  babyPillText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0284C7',
+  },
+  babyPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+
+  // Central Dial with Concentric Ring & Baby Footprint matching Image 2
+  centralDialWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 14,
+    position: 'relative',
+  },
+  outerRingRing1: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: '#BAE6FD',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outerRingRing2: {
+    width: 172,
+    height: 172,
+    borderRadius: 86,
+    borderWidth: 1.5,
+    borderColor: '#E0F2FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footprintCircleButton: {
+    width: 144,
+    height: 144,
+    borderRadius: 72,
+    backgroundColor: '#F0F9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  footprintTouchable: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  floatingSparkle: {
+    position: 'absolute',
+    top: 20,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  floatingSparkleText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+
+  // Side-by-side Stat Cards matching Image 2
+  statCardsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  statCardLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  statCardValue: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+
+  // Main Count Kick Pill Button matching Image 2
+  mainCountKickBtn: {
+    backgroundColor: '#38BDF8', // Soft vibrant sky blue matching Image 2
+    borderRadius: 25,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+    marginBottom: 12,
+  },
+  mainCountKickBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mainCountKickBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+
+  // Secondary Control Toolbar
+  controlsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 24,
+  },
+  smallControlBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+  },
+  playBtn: {
+    backgroundColor: '#0284C7',
+  },
+  pauseBtn: {
+    backgroundColor: '#F59E0B',
+  },
+  smallControlText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  secondarySmallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+  },
+  secondarySmallText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  saveSmallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: '#E0F2FE',
+  },
+  saveSmallText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0284C7',
+  },
+
+  // How to Use This Kick Counter Section (Images 2 & 3)
+  howToSection: {
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  howToSectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  howToSectionSub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 12,
+  },
+  howToCardsScroll: {
+    gap: 12,
+    paddingBottom: 4,
+  },
+  howToCard: {
+    width: width * 0.62,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    position: 'relative',
+  },
+  howToNumberBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E0F2FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  howToNumberText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+  howToAvatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 60,
     marginBottom: 6,
   },
-  celebrationSub: {
-    fontSize: 13,
+  howToCardTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#0369A1',
+    marginBottom: 4,
+  },
+  howToCardText: {
+    fontSize: 11.5,
+    color: '#475569',
+    lineHeight: 16,
+  },
+
+  // Frequently Asked Questions Section (Images 3 & 4)
+  faqSection: {
+    marginBottom: 16,
+  },
+  faqSectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  faqAccordionCard: {
+    backgroundColor: '#F0F9FF', // Soft light blue pill card matching Image 3 & 4
+    borderRadius: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E0F2FE',
+    overflow: 'hidden',
+  },
+  faqQuestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  faqQuestionText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1E293B',
+    flex: 1,
+    paddingRight: 10,
+  },
+  faqPlusIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  faqAnswerContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#E0F2FE',
+  },
+  faqAnswerText: {
+    fontSize: 12.5,
+    color: '#475569',
+    lineHeight: 18,
+  },
+
+  // TAB 2: Records Styles
+  recordsFilterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  recordsFilterChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+  },
+  recordsFilterChipActive: {
+    backgroundColor: '#0284C7',
+  },
+  recordsFilterChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  recordsFilterChipTextActive: {
+    color: '#FFFFFF',
+  },
+  recordsOverviewRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 18,
+  },
+  recordsOverviewCard: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  overviewNumber: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  overviewLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  recordsListTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 10,
+  },
+  sessionHistoryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sessionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sessionDateBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sessionDateText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  babyTagBadge: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  baby2TagBadge: {
+    backgroundColor: '#FCE7F3',
+  },
+  babyTagText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+  baby2TagText: {
     color: '#BE185D',
+  },
+  sessionStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  sessionKicksCount: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  sessionDurationText: {
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  statusPillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  statusPillCompleted: {
+    backgroundColor: '#ECFDF5',
+  },
+  statusPillPartial: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  statusPillTextCompleted: {
+    color: '#059669',
+  },
+  statusPillTextPartial: {
+    color: '#D97706',
+  },
+  emptyStateBox: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6,
+  },
+  emptyStateSub: {
+    fontSize: 12.5,
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
   },
-  statsCard: {
-    flexDirection: 'row',
+
+  // TAB 3: Tips Styles
+  tipCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    shadowColor: '#BE185D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#FFE4E6',
-  },
-  statCol: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  divider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#FCE7F3',
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9CA3AF',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  timerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timerValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#1F2937',
-    fontVariant: ['tabular-nums'],
-  },
-  kicksCount: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-  targetTotal: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#9CA3AF',
-  },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#FCE7F3',
-    borderRadius: 4,
-    marginTop: 14,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#E11D48',
-    borderRadius: 4,
-  },
-  buttonCenterArea: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 36,
-    position: 'relative',
-  },
-  pulseRing: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: '#FDA4AF',
-  },
-  bigKickButton: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: '#E11D48',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#E11D48',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  innerKickCircle: {
-    width: 156,
-    height: 156,
-    borderRadius: 78,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#BE123C',
-  },
-  tapPrompt: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginTop: 8,
-  },
-  tapSub: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FECDD3',
-    letterSpacing: 1,
-    marginTop: 2,
-  },
-  floatingHeart: {
-    position: 'absolute',
-    top: 20,
-    backgroundColor: '#FFF',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  floatingText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-  controlRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 12,
-    marginBottom: 28,
-  },
-  controlBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 24,
-    gap: 8,
-  },
-  playBtn: {
-    backgroundColor: '#E11D48',
-  },
-  pauseBtn: {
-    backgroundColor: '#D97706',
-  },
-  controlBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  secondaryControlBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    backgroundColor: '#F3F4F6',
-    gap: 6,
-  },
-  secondaryBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-  saveControlBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    backgroundColor: '#ECFDF5',
+    padding: 16,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
-    gap: 6,
+    borderColor: '#E2E8F0',
   },
-  saveBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  sectionBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FFE4E6',
-    shadowColor: '#BE185D',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  sectionHeaderTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#881337',
-    marginBottom: 12,
-  },
-  kickStream: {
-    gap: 8,
-  },
-  kickItem: {
+  tipCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFF1F2',
-    borderRadius: 12,
+    gap: 8,
+    marginBottom: 10,
   },
-  kickIndexPill: {
-    backgroundColor: '#E11D48',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-  },
-  kickIndexText: {
-    fontSize: 11,
+  tipCardTitle: {
+    fontSize: 14.5,
     fontWeight: '800',
-    color: '#FFF',
+    color: '#0F172A',
   },
-  kickTime: {
-    fontSize: 14,
+  tipCardText: {
+    fontSize: 12.5,
+    color: '#475569',
+    lineHeight: 18,
+  },
+  milestoneItem: {
+    marginBottom: 8,
+  },
+  milestoneWeek: {
+    fontSize: 12.5,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#0284C7',
   },
-  kickInterval: {
+  milestoneText: {
     fontSize: 12,
-    color: '#9F1239',
+    color: '#475569',
+    lineHeight: 17,
+  },
+  redFlagBullet: {
+    fontSize: 12,
+    color: '#BE123C',
+    lineHeight: 18,
+    marginBottom: 4,
     fontWeight: '500',
   },
-  historyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  emptyHistory: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  emptyEmoji: {
-    fontSize: 32,
-    marginBottom: 6,
-  },
-  emptyTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#374151',
-  },
-  emptySubtitle: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 4,
-    maxWidth: 240,
-  },
-  historyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FDF2F8',
-  },
-  historyLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  historyIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+
+  // TWIN BABIES MODAL STYLES matching Image 1
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  historyDate: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1F2937',
+  twinModalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingTop: 28,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  historyDetails: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
+  modalCloseCircleBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  completedBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingVertical: 4,
+  twinModalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  twinModalSubtitle: {
+    fontSize: 12.5,
+    color: '#475569',
+    textAlign: 'center',
+    marginBottom: 14,
+    paddingHorizontal: 8,
+  },
+  twinGraphicContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  twinBadgeOverlay: {
+    marginTop: 6,
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
     paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 12,
   },
-  completedBadgeText: {
+  twinBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#065F46',
+    fontWeight: '800',
+    color: '#0284C7',
+  },
+  twinInstructionBox: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E0F2FE',
+  },
+  twinInstructionText: {
+    fontSize: 12.5,
+    color: '#1E293B',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  twinDisclaimerText: {
+    fontSize: 10.5,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 15,
+    marginBottom: 16,
+    paddingHorizontal: 6,
+  },
+  trackBabyMovementsBtn: {
+    width: '100%',
+    backgroundColor: '#38BDF8', // Matching Image 1 button
+    borderRadius: 24,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  trackBabyMovementsBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
   },
 });

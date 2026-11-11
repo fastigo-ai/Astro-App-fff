@@ -1,40 +1,19 @@
-import mongoose, { Document, Schema } from 'mongoose';
-
 export interface IContentBlock {
   type: 'video' | 'image' | 'text' | 'steps';
-  url?: string; // For video or image
-  text?: string; // For text
-  steps?: string[]; // For steps
+  url?: string;
+  text?: string;
+  steps?: string[];
 }
 
-export interface IActivity extends Document {
+export interface IActivity {
+  _id?: string;
+  id?: string;
   title: string;
   type: string;
   duration: string;
   color: string;
   iconName: string;
   contentBlocks: IContentBlock[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
-
-const ContentBlockSchema = new Schema({
-  type: { type: String, enum: ['video', 'image', 'text', 'steps'], required: true },
-  url: { type: String },
-  text: { type: String },
-  steps: [{ type: String }]
-}, { _id: false });
-
-const ActivitySchema = new Schema(
-  {
-    title: { type: String, required: true },
-    type: { type: String, required: true },
-    duration: { type: String, required: true },
-    color: { type: String, required: true },
-    iconName: { type: String, required: true },
-    contentBlocks: [ContentBlockSchema]
-  },
-  { timestamps: true }
-);
-
-export const Activity = mongoose.model<IActivity>('Activity', ActivitySchema);

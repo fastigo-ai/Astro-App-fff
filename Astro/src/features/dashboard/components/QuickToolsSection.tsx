@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Heart, Flower2, Mic, Camera, Sparkles } from 'lucide-react-native';
+import { Heart, Flower2, Mic, Camera, Sparkles, Compass, Video, Gift } from 'lucide-react-native';
 import { AppStackParamList } from '~/app/navigation/types';
 
 export const QuickToolsSection = () => {
@@ -51,6 +51,26 @@ export const QuickToolsSection = () => {
       colors: ['#F9A8D4', '#EC4899'], // Warm pink
       bgColor: '#FDF2F8',
       route: 'BabyBump' as const,
+    },
+    {
+      id: 'garbh-kundli',
+      title: isHindi ? 'गर्भ कुंडली' : 'Garbh Kundli',
+      subtitle: isHindi ? 'ग्रह व नक्षत्र' : 'Planetary chart',
+      badge: isHindi ? 'ज्योतिष' : 'VEDIC',
+      icon: <Compass size={24} color="#FFF" />,
+      colors: ['#DDD6FE', '#8B5CF6'], // Royal purple
+      bgColor: '#F5F3FF',
+      route: 'Kundli' as const,
+    },
+    {
+      id: 'live-classes',
+      title: isHindi ? 'लाइव कक्षा' : 'Live Classes',
+      subtitle: isHindi ? 'डॉक्टर वेबिनार' : 'Doctor webinars',
+      badge: isHindi ? 'लाइव' : 'LIVE',
+      icon: <Video size={24} color="#FFF" />,
+      colors: ['#FECDD3', '#EF4444'], // Crimson
+      bgColor: '#FFF1F2',
+      route: 'LiveSessions' as const,
     },
   ];
 

@@ -29,6 +29,11 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleBack = () => {
     setHasLanguage(false);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('LanguageSelect');
+    }
     return true; // prevent default behavior
   };
 
@@ -38,18 +43,20 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   const handleNextStep = async () => {
-    if (!name) return; // Simple validation for now
+    if (!name || !name.trim()) return; // Simple validation for now
 
     try {
       setIsLoading(true);
       // Sync to backend
-      await api.post('/api/v1/profile/details', { name, dob, city, state: selectedState }).catch(() => {});
+      await api.post('/api/v1/profile/details', { name: name.trim(), dob, city, state: selectedState }).catch(() => {});
       
-      // Update local state to advance to next screen
-      setHasProfile(true, { name, dob, city, state: selectedState });
+      // Update local state and immediately navigate to WelcomeCourseSelection
+      await setHasProfile(true, { name: name.trim(), dob, city, state: selectedState });
+      navigation.navigate('WelcomeCourseSelection');
     } catch (error) {
       console.error('Failed to save profile details:', error);
-      setHasProfile(true, { name, dob, city, state: selectedState });
+      await setHasProfile(true, { name: name.trim(), dob, city, state: selectedState });
+      navigation.navigate('WelcomeCourseSelection');
     } finally {
       setIsLoading(false);
     }
