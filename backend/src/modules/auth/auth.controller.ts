@@ -1,0 +1,81 @@
+import { Request, Response, NextFunction } from 'express';
+import { authService } from './auth.service';
+
+export const authController = {
+  sendOtp: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { phone } = req.body;
+      if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
+
+      const result = authService.sendOtp(String(phone));
+      return res.status(200).json({ success: true, message: result.message });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  verifyOtp: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { phone, otp } = req.body;
+      if (!phone || !otp) {
+        return res.status(400).json({ success: false, error: 'Phone and OTP required' });
+      }
+
+      const tokens = authService.verifyOtp(String(phone), String(otp));
+      if (!tokens) {
+        return res.status(401).json({ success: false, error: 'Invalid OTP' });
+      }
+
+      return res.status(200).json({ success: true, data: tokens });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  saveJourney: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { stage, lmp_date, edd_date, confirmed_month, remaining_months, planning_timeline } = req.body;
+      const user = req.user;
+      const phone = user?.phone || req.body.phone || '9366128220';
+      const userId = user?.id || 'usr_123';
+
+      const savedRecord = await authService.saveJourney({
+        userId,
+        phone,
+        stage,
+        lmp_date,
+        edd_date,
+        confirmed_month: Number(confirmed_month) || undefined,
+        remaining_months: Number(remaining_months) || undefined,
+        planning_timeline,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Journey details successfully saved to database collection',
+        data: savedRecord,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  refreshToken: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken) {
+        return res.status(401).json({ success: false, error: 'No refresh token provided' });
+      }
+
+      const accessToken = authService.refreshAccessToken(String(refreshToken));
+      if (!accessToken) {
+        return res.status(403).json({ success: false, error: 'Invalid or expired refresh token' });
+      }
+
+      return res.status(200).json({ success: true, data: { accessToken } });
+    } catch (error) {
+      next(error);
+    }
+  },
+};
+

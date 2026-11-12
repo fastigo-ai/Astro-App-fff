@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { supportController } from '../controllers/supportController';
-import { SupportTicketsCollection } from '../services/dbStore';
+import { supportController } from '../modules/support/support.controller';
+import { SupportTicketsCollection } from '../shared/db/dbStore';
 
 function createMockRes() {
   const res: any = {};
