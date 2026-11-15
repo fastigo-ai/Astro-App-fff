@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '~/shared/theme';
 
 import { DashboardHeader } from '../components/DashboardHeader';
+import { MomQuickAccessBar } from '../components/MomQuickAccessBar';
 import { BabyDailyGrowthTracker } from '../components/BabyDailyGrowthTracker';
 import { PregnancyPowerPack } from '../components/PregnancyPowerPack';
 import { KrishnaDailyVedicActivities } from '../components/KrishnaDailyVedicActivities';
@@ -29,6 +30,8 @@ export const DashboardScreen = () => {
         scrollEventThrottle={16}
         onScroll={(e) => useScrollStore.getState().setScrollY(e.nativeEvent.contentOffset.y)}
       >
+        {/* 0. 1-Tap Zero-Scroll Quick Tools Bar (Approach A) */}
+        <MomQuickAccessBar />
 
         {/* 1. Baby Daily Growth Tracker (Fruit comparison, days left, Baby Says letter from womb) */}
         <BabyDailyGrowthTracker />
