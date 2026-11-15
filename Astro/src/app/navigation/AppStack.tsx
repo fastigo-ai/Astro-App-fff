@@ -37,6 +37,7 @@ import { WeightTrackerScreen } from '~/features/interactions/screens/WeightTrack
 import { DadiNuskhaScreen } from '~/features/interactions/screens/DadiNuskhaScreen';
 import { PregnancyGamesScreen } from '~/features/games/screens/PregnancyGamesScreen';
 import { GarbhSanskarLibraryScreen } from '~/features/library/screens/GarbhSanskarLibraryScreen';
+import { GarbhSanskarAudioScreen } from '~/features/library/screens/GarbhSanskarAudioScreen';
 
 import { useAuthStore } from '~/store/useAuthStore';
 
@@ -162,6 +163,10 @@ export const AppStack = () => {
       <Stack.Screen 
         name="GarbhSanskarLibrary" 
         component={GarbhSanskarLibraryScreen} 
+      />
+      <Stack.Screen 
+        name="GarbhSanskarAudio" 
+        component={GarbhSanskarAudioScreen} 
       />
     </Stack.Navigator>
   );

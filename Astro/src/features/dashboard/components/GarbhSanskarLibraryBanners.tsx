@@ -29,7 +29,7 @@ export const GarbhSanskarLibraryBanners: React.FC<GarbhSanskarLibraryBannersProp
   const isHindi = i18n.language === 'hi';
 
   const handleAudioPress = () => {
-    navigation.navigate('MoodTherapy');
+    navigation.navigate('GarbhSanskarAudio');
   };
 
   const handleLibraryPress = () => {

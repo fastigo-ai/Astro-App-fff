@@ -55,6 +55,7 @@ export type AppStackParamList = {
   DadiNuskha: undefined;
   PregnancyGames: { initialGame?: 'cravings' | 'kick' | 'myths' | 'memory' | 'riddle' } | undefined;
   GarbhSanskarLibrary: undefined;
+  GarbhSanskarAudio: undefined;
 };
 
 export type RootStackParamList = {
