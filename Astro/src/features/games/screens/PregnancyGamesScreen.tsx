@@ -125,6 +125,48 @@ const MEMORY_CARD_TYPES = [
   { pairKey: 'sun', emoji: '☀️', label: 'Surya' },
 ];
 
+const GAMES_LIST: {
+  id: GameMode;
+  title: string;
+  titleHi: string;
+  emoji: string;
+  bgColor: string;
+  borderColor: string;
+}[] = [
+  {
+    id: 'cravings',
+    title: 'Cravings',
+    titleHi: 'क्रेविंग्स',
+    emoji: '🥭',
+    bgColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+  },
+  {
+    id: 'kicks',
+    title: 'Kick Pop',
+    titleHi: 'किक पॉप',
+    emoji: '👣',
+    bgColor: '#FFF1F2',
+    borderColor: '#FECDD3',
+  },
+  {
+    id: 'myths',
+    title: 'Myth Buster',
+    titleHi: 'मिथक',
+    emoji: '🔮',
+    bgColor: '#FAF5FF',
+    borderColor: '#DDD6FE',
+  },
+  {
+    id: 'memory',
+    title: 'Mom Brain',
+    titleHi: 'मेमोरी',
+    emoji: '🎴',
+    bgColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+];
+
 export const PregnancyGamesScreen: React.FC = () => {
   const navigation = useNavigation();
   const { i18n } = useTranslation();
@@ -406,47 +448,43 @@ export const PregnancyGamesScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Tabs */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          testID="tab-cravings"
-          style={[styles.tabItem, activeTab === 'cravings' && styles.tabItemActive]}
-          onPress={() => setActiveTab('cravings')}
-        >
-          <Text style={[styles.tabText, activeTab === 'cravings' && styles.tabTextActive]}>
-            🥭 {isHindi ? 'क्रेविंग्स' : 'Cravings'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          testID="tab-kicks"
-          style={[styles.tabItem, activeTab === 'kicks' && styles.tabItemActive]}
-          onPress={() => setActiveTab('kicks')}
-        >
-          <Text style={[styles.tabText, activeTab === 'kicks' && styles.tabTextActive]}>
-            👣 {isHindi ? 'किक पॉप' : 'Kick Pop'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          testID="tab-myths"
-          style={[styles.tabItem, activeTab === 'myths' && styles.tabItemActive]}
-          onPress={() => setActiveTab('myths')}
-        >
-          <Text style={[styles.tabText, activeTab === 'myths' && styles.tabTextActive]}>
-            🔮 {isHindi ? 'मिथक बस्टर' : 'Myth Buster'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          testID="tab-memory"
-          style={[styles.tabItem, activeTab === 'memory' && styles.tabItemActive]}
-          onPress={() => setActiveTab('memory')}
-        >
-          <Text style={[styles.tabText, activeTab === 'memory' && styles.tabTextActive]}>
-            🎴 {isHindi ? 'मेमोरी' : 'Mom Brain'}
-          </Text>
-        </TouchableOpacity>
+      {/* Games Selection as Clean Circle Icons (Centered, Never Scrolled) */}
+      <View style={styles.circleGamesRow}>
+        {GAMES_LIST.map((game) => {
+          const isSelected = activeTab === game.id;
+          return (
+            <TouchableOpacity
+              key={game.id}
+              testID={`tab-${game.id}`}
+              style={styles.circleGameItem}
+              activeOpacity={0.82}
+              onPress={() => setActiveTab(game.id)}
+            >
+              <View
+                style={[
+                  styles.gameCircle,
+                  {
+                    backgroundColor: game.bgColor,
+                    borderColor: isSelected ? '#1E1B4B' : game.borderColor,
+                  },
+                  isSelected && styles.gameCircleSelected,
+                ]}
+              >
+                <Text style={styles.gameCircleEmoji}>{game.emoji}</Text>
+                {isSelected && <View style={styles.selectedPillDot} />}
+              </View>
+              <Text
+                style={[
+                  styles.gameCircleLabel,
+                  isSelected && styles.gameCircleLabelSelected,
+                ]}
+                numberOfLines={1}
+              >
+                {isHindi ? game.titleHi : game.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <ScrollView
@@ -626,29 +664,57 @@ export const PregnancyGamesScreen: React.FC = () => {
                     {isHindi ? 'शिशु की हलचल पर टैप करें:' : 'Catch baby kicks on the bump:'}
                   </Text>
                   <View style={styles.bellyGrid}>
-                    {[0, 1, 2, 3, 4, 5].map((spotIdx) => {
-                      const isPopping = activeKickSpot === spotIdx;
-                      return (
-                        <TouchableOpacity
-                          key={spotIdx}
-                          style={[
-                            styles.bumpZone,
-                            isPopping && styles.bumpZoneActive,
-                          ]}
-                          activeOpacity={0.7}
-                          onPress={() => handleTapKickSpot(spotIdx)}
-                        >
-                          {isPopping ? (
-                            <View style={styles.kickEmojiWrap}>
-                              <Text style={styles.kickEmoji}>👣</Text>
-                              <Text style={styles.kickPopupText}>+20</Text>
-                            </View>
-                          ) : (
-                            <View style={styles.emptySpotDot} />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
+                    <View style={styles.bellyRow}>
+                      {[0, 1, 2].map((spotIdx) => {
+                        const isPopping = activeKickSpot === spotIdx;
+                        return (
+                          <TouchableOpacity
+                            key={spotIdx}
+                            style={[
+                              styles.bumpZone,
+                              isPopping && styles.bumpZoneActive,
+                            ]}
+                            activeOpacity={0.7}
+                            onPress={() => handleTapKickSpot(spotIdx)}
+                          >
+                            {isPopping ? (
+                              <View style={styles.kickEmojiWrap}>
+                                <Text style={styles.kickEmoji}>👣</Text>
+                                <Text style={styles.kickPopupText}>+20</Text>
+                              </View>
+                            ) : (
+                              <View style={styles.emptySpotDot} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <View style={styles.bellyRow}>
+                      {[3, 4, 5].map((spotIdx) => {
+                        const isPopping = activeKickSpot === spotIdx;
+                        return (
+                          <TouchableOpacity
+                            key={spotIdx}
+                            style={[
+                              styles.bumpZone,
+                              isPopping && styles.bumpZoneActive,
+                            ]}
+                            activeOpacity={0.7}
+                            onPress={() => handleTapKickSpot(spotIdx)}
+                          >
+                            {isPopping ? (
+                              <View style={styles.kickEmojiWrap}>
+                                <Text style={styles.kickEmoji}>👣</Text>
+                                <Text style={styles.kickPopupText}>+20</Text>
+                              </View>
+                            ) : (
+                              <View style={styles.emptySpotDot} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 </View>
               )}
@@ -917,32 +983,59 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#92400E',
   },
-  tabBar: {
+  circleGamesRow: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    gap: 8,
-  },
-  tabItem: {
-    flex: 1,
-    paddingVertical: 8,
+    justifyContent: 'space-around',
     alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  tabItemActive: {
+  circleGameItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  gameCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  gameCircleSelected: {
+    borderWidth: 2.5,
+    borderColor: '#1E1B4B',
+    transform: [{ scale: 1.08 }],
+    shadowOpacity: 0.16,
+  },
+  gameCircleEmoji: {
+    fontSize: 22,
+  },
+  selectedPillDot: {
+    position: 'absolute',
+    bottom: -4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#1E1B4B',
   },
-  tabText: {
-    fontSize: 12.5,
+  gameCircleLabel: {
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#64748B',
+    marginTop: 6,
+    textAlign: 'center',
   },
-  tabTextActive: {
-    color: '#FFFFFF',
+  gameCircleLabelSelected: {
+    color: '#1E1B4B',
     fontWeight: '800',
   },
   scrollContent: {
@@ -954,7 +1047,7 @@ const styles = StyleSheet.create({
   },
   introCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -963,6 +1056,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+    overflow: 'hidden',
   },
   introHeader: {
     flexDirection: 'row',
@@ -1091,39 +1185,46 @@ const styles = StyleSheet.create({
   },
   bellyContainer: {
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
+    width: '100%',
   },
   bellySubtext: {
     fontSize: 12.5,
     color: '#64748B',
-    marginBottom: 14,
+    marginBottom: 12,
     fontWeight: '600',
   },
   bellyGrid: {
-    width: 260,
-    height: 180,
+    width: '100%',
+    maxWidth: 300,
     backgroundColor: '#FFF1F2',
-    borderRadius: 90,
+    borderRadius: 32,
     borderWidth: 2,
     borderColor: '#FECDD3',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    justifyContent: 'space-around',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginVertical: 6,
   },
   bumpZone: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: '#FFE4E6',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 6,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
   },
   bumpZoneActive: {
     backgroundColor: '#FDA4AF',
-    transform: [{ scale: 1.15 }],
+    transform: [{ scale: 1.08 }],
     borderWidth: 2,
     borderColor: '#E11D48',
   },
