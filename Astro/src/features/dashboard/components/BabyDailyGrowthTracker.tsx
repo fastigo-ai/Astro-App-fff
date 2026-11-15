@@ -420,11 +420,11 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#F3E8FF',
-    shadowColor: '#BE185D',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 3,
   },
   headerRow: {
@@ -439,9 +439,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   weekPill: {
-    backgroundColor: '#FDF2F8',
+    backgroundColor: '#FEF3C7',
     borderWidth: 1,
-    borderColor: '#FCE7F3',
+    borderColor: '#FDE68A',
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 14,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   weekPillText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#BE185D',
+    color: '#92400E',
   },
   growthTrackerTitle: {
     fontSize: 14,
@@ -462,17 +462,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   trimesterPill: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: '#E2E8F0',
   },
   trimesterPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#92400E',
+    color: '#475569',
   },
   heroVisualCard: {
     backgroundColor: '#FFFDF9',
@@ -495,15 +495,15 @@ const styles = StyleSheet.create({
     width: 66,
     height: 66,
     borderRadius: 33,
-    backgroundColor: '#FFF1F2',
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FBCFE8',
-    shadowColor: '#BE185D',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   babyAvatarImg: {
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   sizeHeadline: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#831843',
+    color: '#1E1B4B',
     textAlign: 'center',
     letterSpacing: -0.2,
   },
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
   letterCtaText: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#BE185D',
+    color: '#0D9488',
   },
   progressBarTrack: {
     height: 7,
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#BE185D',
+    backgroundColor: '#0D9488',
     borderRadius: 4,
   },
   progressPercentSubtext: {
@@ -674,14 +674,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#FDF2F8',
+    backgroundColor: '#FEF3C7',
     paddingVertical: 6,
     borderRadius: 12,
   },
   timerPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9D174D',
+    color: '#92400E',
   },
   modalBackdrop: {
     flex: 1,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   closeLetterModalBtn: {
-    backgroundColor: '#EC4899',
+    backgroundColor: '#1E1B4B',
     paddingVertical: 12,
     borderRadius: 14,
     alignItems: 'center',
