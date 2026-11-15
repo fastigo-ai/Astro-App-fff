@@ -35,6 +35,7 @@ import { SupportChatScreen } from '~/features/support/screens/SupportChatScreen'
 import { PregnancySafetyScreen } from '~/features/interactions/screens/PregnancySafetyScreen';
 import { WeightTrackerScreen } from '~/features/interactions/screens/WeightTrackerScreen';
 import { DadiNuskhaScreen } from '~/features/interactions/screens/DadiNuskhaScreen';
+import { PregnancyGamesScreen } from '~/features/games/screens/PregnancyGamesScreen';
 
 import { useAuthStore } from '~/store/useAuthStore';
 
@@ -152,6 +153,10 @@ export const AppStack = () => {
       <Stack.Screen 
         name="DadiNuskha" 
         component={DadiNuskhaScreen} 
+      />
+      <Stack.Screen 
+        name="PregnancyGames" 
+        component={PregnancyGamesScreen} 
       />
     </Stack.Navigator>
   );

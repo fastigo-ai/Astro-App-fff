@@ -53,6 +53,7 @@ export type AppStackParamList = {
   PregnancySafety: undefined;
   WeightTracker: undefined;
   DadiNuskha: undefined;
+  PregnancyGames: { initialGame?: 'cravings' | 'kick' | 'myths' | 'memory' | 'riddle' } | undefined;
 };
 
 export type RootStackParamList = {

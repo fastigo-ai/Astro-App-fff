@@ -50,6 +50,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
           <TouchableOpacity
             key={index}
             accessibilityRole="button"
+            accessibilityLabel={label}
             accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
             style={styles.tabItem}
@@ -133,15 +134,15 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#EC4899', // Signature vibrant pink color
+    backgroundColor: '#DE6B81', // Gentle pastel rose color
     alignItems: 'center',
     justifyContent: 'center',
     transform: [{ translateY: -20 }], // Pops up playfully above the tab bar
-    shadowColor: '#EC4899',
+    shadowColor: '#DE6B81',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 4,
   },
   labelText: {
     fontSize: 10,
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: '50%',
-    backgroundColor: '#EC4899',
+    backgroundColor: '#DE6B81',
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 8,

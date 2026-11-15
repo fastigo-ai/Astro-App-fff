@@ -3,8 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Alert } fr
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Heart, Flower2, Mic, Camera, Sparkles, Compass, Puzzle, X, Brain, CheckCircle2 } from 'lucide-react-native';
+import { Heart, Flower2, Mic, Camera, Sparkles, Compass, Puzzle, X, Brain, CheckCircle2, Gamepad2 } from 'lucide-react-native';
 import { AppStackParamList } from '~/app/navigation/types';
+
+interface QuickTool {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  icon: React.ReactNode;
+  colors: string[];
+  bgColor: string;
+  route?: keyof AppStackParamList;
+  onPress?: () => void;
+}
 
 export const QuickToolsSection = () => {
   const { i18n } = useTranslation();
@@ -16,7 +28,7 @@ export const QuickToolsSection = () => {
   const [puzzleSolved, setPuzzleSolved] = useState(false);
 
   // Common Mom Support Tools for all mothers & all courses
-  const TOOLS = [
+  const TOOLS: QuickTool[] = [
     {
       id: 'kick-counter',
       title: isHindi ? 'शिशु स्पंदन' : 'Kick Counter',
@@ -49,13 +61,13 @@ export const QuickToolsSection = () => {
     },
     {
       id: 'brain-puzzles',
-      title: isHindi ? 'ब्रेन पहेलियां' : 'Brain Puzzles',
-      subtitle: isHindi ? 'स्मृति व बुद्धिमत्ता' : 'Brain games & IQ',
-      badge: isHindi ? 'गेम्स' : 'GAMES',
-      icon: <Puzzle size={22} color="#FFF" />,
+      title: isHindi ? 'मॉम गेम्स आर्केड' : 'Fun Games Arcade',
+      subtitle: isHindi ? 'क्रेविंग्स, किक्स व पहेली' : 'Cravings, kicks & IQ',
+      badge: isHindi ? 'गेम्स' : 'CRAZY FUN',
+      icon: <Gamepad2 size={22} color="#FFF" />,
       colors: ['#A7F3D0', '#059669'],
       bgColor: '#F0FDF4',
-      onPress: () => setShowPuzzleModal(true),
+      route: 'PregnancyGames' as const,
     },
     {
       id: 'mood-therapy',
