@@ -26,3 +26,4 @@ export const uploadAvatarMiddleware = multer({
   },
   fileFilter: imageFilter,
 }).single('avatar');
+

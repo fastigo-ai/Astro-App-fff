@@ -22,6 +22,7 @@ import krishnaRoutes from './modules/krishna/krishna.routes';
 import supportRoutes from './modules/support/support.routes';
 import coursesRoutes from './modules/courses/courses.routes';
 import classesRoutes from './modules/classes/classes.routes';
+import locationsRoutes from './modules/locations/locations.routes';
 
 const app: Application = express();
 
@@ -58,6 +59,8 @@ app.use('/api/v1/krishna', krishnaRoutes);
 app.use('/api/v1/support', supportRoutes);
 app.use('/api/v1/courses', coursesRoutes);
 app.use('/api/v1/classes', classesRoutes);
+app.use('/api/locations', locationsRoutes);
+app.use('/api/v1/locations', locationsRoutes);
 
 // Admin Dashboard UI Route
 app.get('/admin', (req, res) => {
