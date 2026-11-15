@@ -4,6 +4,7 @@ import { authController } from '../modules/auth/auth.controller';
 import { profileController } from '../modules/profile/profile.controller';
 import { mockSmsProvider } from '../modules/auth/sms/mockSmsProvider';
 import { UserJourneysCollection } from '../shared/db/dbStore';
+import { BYPASS_PHONE, BYPASS_OTP } from '../shared/config/constants';
 
 function createMockRes() {
   const res: any = {};
@@ -146,9 +147,9 @@ async function runTests() {
     }
   });
 
-  // 7. Test Bypass Number 9366128220 with OTP 1234
-  await assert('Bypass number 9366128220 works instantly with OTP 1234', async () => {
-    const verifyReq: any = { body: { phone: '9366128220', otp: '1234' } };
+  // 7. Test Bypass Number & OTP from .env
+  await assert(`Bypass number ${BYPASS_PHONE} works instantly with OTP ${BYPASS_OTP} from .env`, async () => {
+    const verifyReq: any = { body: { phone: BYPASS_PHONE, otp: BYPASS_OTP } };
     const verifyRes = createMockRes();
     await authController.verifyOtp(verifyReq, verifyRes, () => {});
 
@@ -169,3 +170,4 @@ runTests().catch((e) => {
   console.error('Fatal test error:', e);
   process.exit(1);
 });
+

@@ -12,7 +12,7 @@ export class MockSmsProvider implements ISmsProvider {
   private readonly defaultTtlMs = 5 * 60 * 1000; // 5 minutes
 
   async sendOtp(phone: string, otp: string): Promise<SendOtpResult> {
-    const isBypass = phone.endsWith(BYPASS_PHONE);
+    const isBypass = Boolean(BYPASS_PHONE && phone.endsWith(BYPASS_PHONE));
     const finalOtp = isBypass ? BYPASS_OTP : otp;
     const expiresAt = Date.now() + this.defaultTtlMs;
 
@@ -27,7 +27,7 @@ export class MockSmsProvider implements ISmsProvider {
     return {
       success: true,
       message: isBypass
-        ? 'OTP sent (bypass number detected)'
+        ? 'OTP sent (bypass number detected from .env)'
         : 'OTP generated and sent successfully (development mode)',
       devOtp: process.env.NODE_ENV !== 'production' ? finalOtp : undefined,
       provider: 'mock',
@@ -35,8 +35,8 @@ export class MockSmsProvider implements ISmsProvider {
   }
 
   async verifyOtp(phone: string, otp: string): Promise<VerifyOtpResult> {
-    // 1. Bypass number always works with BYPASS_OTP
-    if (phone.endsWith(BYPASS_PHONE) && otp === BYPASS_OTP) {
+    // 1. Bypass number check from .env (always works with configured BYPASS_OTP)
+    if (BYPASS_PHONE && BYPASS_OTP && phone.endsWith(BYPASS_PHONE) && otp === BYPASS_OTP) {
       return { valid: true, message: 'Bypass OTP verified successfully' };
     }
 
@@ -70,3 +70,4 @@ export class MockSmsProvider implements ISmsProvider {
 }
 
 export const mockSmsProvider = new MockSmsProvider();
+

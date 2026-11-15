@@ -46,9 +46,9 @@ export class TwilioSmsProvider implements ISmsProvider {
   async sendOtp(phone: string, otp: string): Promise<SendOtpResult> {
     const formattedPhone = this.normalizePhone(phone);
 
-    // Bypass check
-    if (formattedPhone.endsWith(BYPASS_PHONE)) {
-      console.log(`[TwilioSmsProvider] Bypass number ${formattedPhone} detected. Skipping Twilio dispatch.`);
+    // Bypass check from .env
+    if (BYPASS_PHONE && formattedPhone.endsWith(BYPASS_PHONE)) {
+      console.log(`[TwilioSmsProvider] Bypass number ${formattedPhone} detected from .env. Skipping Twilio dispatch.`);
       return {
         success: true,
         message: 'OTP sent (bypass)',
@@ -161,8 +161,8 @@ export class TwilioSmsProvider implements ISmsProvider {
   async verifyOtp(phone: string, otp: string): Promise<VerifyOtpResult> {
     const formattedPhone = this.normalizePhone(phone);
 
-    // Bypass check
-    if (formattedPhone.endsWith(BYPASS_PHONE) && otp === BYPASS_OTP) {
+    // Bypass check from .env
+    if (BYPASS_PHONE && BYPASS_OTP && formattedPhone.endsWith(BYPASS_PHONE) && otp === BYPASS_OTP) {
       return { valid: true, message: 'Bypass OTP verified' };
     }
 
@@ -220,3 +220,4 @@ export class TwilioSmsProvider implements ISmsProvider {
 }
 
 export const twilioSmsProvider = new TwilioSmsProvider();
+

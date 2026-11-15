@@ -15,3 +15,4 @@ export interface ISmsProvider {
   sendOtp(phone: string, otp: string): Promise<SendOtpResult>;
   verifyOtp(phone: string, otp: string): Promise<VerifyOtpResult>;
 }
+
