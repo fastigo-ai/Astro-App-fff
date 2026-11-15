@@ -9,6 +9,7 @@ import {
   Vibration,
   Platform,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,20 +17,18 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ArrowLeft,
-  Heart,
   Wind,
   Sparkles,
   Volume2,
-  VolumeX,
   Play,
   Pause,
   CheckCircle2,
   Calendar,
   Flower2,
-  Sun,
 } from 'lucide-react-native';
-import { api } from '~/shared/api';
 import { useAuthStore } from '~/store/useAuthStore';
+
+const { width } = Dimensions.get('window');
 
 interface MoodOption {
   id: string;
@@ -48,8 +47,8 @@ const MOODS: MoodOption[] = [
   {
     id: 'blessed',
     emoji: '🌸',
-    titleEn: 'Peaceful & Blessed',
-    titleHi: 'प्रसन्न व शांत',
+    titleEn: 'Peaceful',
+    titleHi: 'प्रसन्न',
     subEn: 'Feeling serene and spiritually connected',
     subHi: 'मन में शांति और गर्भस्थ शिशु से आत्मीयता',
     affirmationEn: 'My inner peace surrounds my baby with love and divine purity.',
@@ -60,8 +59,8 @@ const MOODS: MoodOption[] = [
   {
     id: 'loving',
     emoji: '💖',
-    titleEn: 'Loving & Joyful',
-    titleHi: 'स्नेहमयी व आनंदित',
+    titleEn: 'Joyful',
+    titleHi: 'आनंदित',
     subEn: 'Full of gratitude for this miracle',
     subHi: 'शिशु के आगमन की उत्सुकता और अपार स्नेह',
     affirmationEn: 'Every beat of my heart whispers unconditional love to my little one.',
@@ -72,8 +71,8 @@ const MOODS: MoodOption[] = [
   {
     id: 'tired',
     emoji: '🥱',
-    titleEn: 'Tired & Low Energy',
-    titleHi: 'थकी हुई व सुस्त',
+    titleEn: 'Tired',
+    titleHi: 'थकान',
     subEn: 'Growing a human is hard work; need rest',
     subHi: 'शरीर को विश्राम और पोषण की आवश्यकता है',
     affirmationEn: 'I give myself permission to rest. In stillness, my baby flourishes.',
@@ -84,8 +83,8 @@ const MOODS: MoodOption[] = [
   {
     id: 'anxious',
     emoji: '🌧️',
-    titleEn: 'Emotional / Anxious',
-    titleHi: 'भावुक व चिंतित',
+    titleEn: 'Anxious',
+    titleHi: 'चिंतित',
     subEn: 'Worries about health or birth are normal',
     subHi: 'मन में कुछ उलझनें या स्वास्थ्य की चिंताएं',
     affirmationEn: 'I release all fears. My body is designed by nature to protect and nourish.',
@@ -97,7 +96,7 @@ const MOODS: MoodOption[] = [
     id: 'restless',
     emoji: '⚡',
     titleEn: 'Overwhelmed',
-    titleHi: 'अशांत व बेचैन',
+    titleHi: 'तनाव',
     subEn: 'Too many thoughts; need to breathe & reset',
     subHi: 'थकावट और विचारों का दबाव, शांति की खोज',
     affirmationEn: 'One breath at a time. I breathe in sacred calm and exhale tension.',
@@ -111,9 +110,9 @@ const STORAGE_KEY = '@astrobaby_mood_logs';
 
 export const MoodTherapyScreen = () => {
   const navigation = useNavigation();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isHindi = i18n.language === 'hi';
-  const user = useAuthStore(state => state.user);
+  const user = useAuthStore((state) => state.user);
 
   const [selectedMood, setSelectedMood] = useState<MoodOption>(MOODS[0]);
   const [breathingActive, setBreathingActive] = useState(false);
@@ -140,260 +139,239 @@ export const MoodTherapyScreen = () => {
     }
   };
 
-  const safeVibrate = (pattern: number | number[] = 25) => {
-    try {
-      if (Platform.OS === 'ios') {
-        Vibration.vibrate(pattern);
-      }
-    } catch (e) {}
+  const safeVibrate = (duration = 40) => {
+    if (Platform.OS !== 'web') {
+      try {
+        Vibration.vibrate(duration);
+      } catch (err) {}
+    }
   };
 
-  // Breathing Pacer Logic: 4s inhale, 4s hold, 4s exhale
+  // 4-4-4 Box Breathing cycle
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    let phaseTimer: NodeJS.Timeout | null = null;
-
+    let interval: NodeJS.Timeout;
     if (breathingActive) {
-      // Counter
-      timer = setInterval(() => {
-        setBreathTimer(prev => prev + 1);
-      }, 1000);
-
-      // Loop sequence
-      const runBreathingCycle = () => {
-        setBreathPhase('inhale');
-        safeVibrate(20);
-        Animated.timing(breathAnim, {
-          toValue: 1.5,
-          duration: 4000,
-          useNativeDriver: true,
-        }).start(() => {
-          setBreathPhase('hold');
-          safeVibrate(20);
-          phaseTimer = setTimeout(() => {
+      interval = setInterval(() => {
+        setBreathTimer((prev) => {
+          const next = (prev + 1) % 12;
+          if (next === 0) {
+            setBreathPhase('inhale');
+            safeVibrate(50);
+            Animated.timing(breathAnim, {
+              toValue: 1.25,
+              duration: 4000,
+              useNativeDriver: true,
+            }).start();
+          } else if (next === 4) {
+            setBreathPhase('hold');
+            safeVibrate(30);
+          } else if (next === 8) {
             setBreathPhase('exhale');
-            safeVibrate(20);
+            safeVibrate(40);
             Animated.timing(breathAnim, {
               toValue: 1,
               duration: 4000,
               useNativeDriver: true,
-            }).start(() => {
-              if (breathingActive) {
-                runBreathingCycle();
-              }
-            });
-          }, 3000);
+            }).start();
+          }
+          return next;
         });
-      };
-
-      runBreathingCycle();
+      }, 1000);
     } else {
-      breathAnim.setValue(1);
+      Animated.timing(breathAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+      setBreathTimer(0);
       setBreathPhase('inhale');
-      if (timer) clearInterval(timer);
-      if (phaseTimer) clearTimeout(phaseTimer);
     }
-
-    return () => {
-      if (timer) clearInterval(timer);
-      if (phaseTimer) clearTimeout(phaseTimer);
-    };
+    return () => clearInterval(interval);
   }, [breathingActive]);
 
   const handleSelectMood = (mood: MoodOption) => {
     setSelectedMood(mood);
-    safeVibrate(30);
+    safeVibrate(25);
   };
 
   const handleSaveMood = async () => {
-    const logItem = {
-      id: `mood_${Date.now()}`,
-      moodId: selectedMood.id,
-      emoji: selectedMood.emoji,
-      title: isHindi ? selectedMood.titleHi : selectedMood.titleEn,
-      date: new Date().toLocaleDateString(isHindi ? 'hi-IN' : 'en-US', {
-        month: 'short',
+    safeVibrate(40);
+    const newEntry = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleDateString(isHindi ? 'hi-IN' : 'en-IN', {
         day: 'numeric',
+        month: 'short',
         hour: '2-digit',
         minute: '2-digit',
       }),
-      breathingSeconds: breathTimer,
+      moodId: selectedMood.id,
+      title: isHindi ? selectedMood.titleHi : selectedMood.titleEn,
+      emoji: selectedMood.emoji,
     };
 
-    const updated = [logItem, ...recentLogs];
+    const updated = [newEntry, ...recentLogs.slice(0, 9)];
     setRecentLogs(updated);
-
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      await api.post('/api/v1/mom/mood', {
-        phone: user?.phone || '9366128220',
-        moodId: selectedMood.id,
-        moodLabel: isHindi ? selectedMood.titleHi : selectedMood.titleEn,
-        moodEmoji: selectedMood.emoji,
-        breathingSeconds: breathTimer,
-        calmingTherapyUsed: 'Pranayama + Sound Therapy',
-      });
-    } catch (e) {
-      console.warn('Backend sync failed, saved locally:', e);
-    }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
     Alert.alert(
-      isHindi ? 'चेक-इन सहेजा गया 🌸' : 'Mood Check-in Saved 🌸',
-      isHindi 
-        ? 'आपके मन की स्थिति दर्ज हो गई है। विश्राम व शांत मन से शिशु को सकारात्मक ऊर्जा मिलती है।'
-        : 'Your mood check-in is saved. Nurturing your peace nurtures your baby.'
+      isHindi ? 'चेक-इन सहेजा गया 🌸' : 'Mood Recorded! 🌸',
+      isHindi
+        ? 'आपके मन की स्थिति दर्ज हो गई है। शांत मन से शिशु को सकारात्मक ऊर्जा मिलती है।'
+        : 'Your mood check-in is saved in your maternal health diary. Nurturing your peace nurtures your baby.'
     );
   };
 
   const getBreathPhaseText = () => {
     if (breathPhase === 'inhale') {
-      return isHindi ? 'श्वास लें (Inhale Peace)' : 'Breathe In Peace...';
+      return isHindi ? 'श्वास लें (Inhale)' : 'Breathe In Peace...';
     } else if (breathPhase === 'hold') {
-      return isHindi ? 'रोकें (Hold & Feel Baby)' : 'Hold & Feel Baby...';
+      return isHindi ? 'रोकें (Hold Gently)' : 'Hold Gently...';
     } else {
-      return isHindi ? 'श्वास छोड़ें (Exhale Worry)' : 'Breathe Out Tension...';
+      return isHindi ? 'श्वास छोड़ें (Exhale)' : 'Breathe Out Tension...';
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Header */}
+      {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <ArrowLeft size={22} color="#1F2937" />
+          <ArrowLeft size={20} color="#0F172A" />
         </TouchableOpacity>
         <View style={styles.headerTitleBox}>
           <Text style={styles.headerTitle}>
             {isHindi ? 'मन का मिजाज़ व शांत मन' : 'Mood Check-in & Therapy'}
           </Text>
           <Text style={styles.headerSubtitle}>
-            {isHindi ? 'माँ का शांत मन, शिशु का उत्तम संस्कार' : 'Your calm mind shapes baby’s peace'}
+            {isHindi ? 'माँ का शांत मन, शिशु का उत्तम विकास' : 'Calm Mind • Maternal Peace'}
           </Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Mood Question */}
-        <Text style={styles.questionTitle}>
-          {isHindi ? 'आज मम्मा कैसा महसूस कर रही हैं?' : 'How is Mumma feeling right now?'}
-        </Text>
-        <Text style={styles.questionSubtitle}>
-          {isHindi 
-            ? 'अपनी भावना चुनें, हम आपके लिए विशेष शांत मंत्र व प्राणायाम प्रस्तुत करेंगे'
-            : 'Select your state to unlock customized calming pranayama & shlokas'}
-        </Text>
+        {/* Mood Section Question */}
+        <View style={styles.questionSection}>
+          <Text style={styles.questionTitle}>
+            {isHindi ? 'आज मम्मा कैसा महसूस कर रही हैं?' : 'How is Mumma feeling today?'}
+          </Text>
+        </View>
 
-        {/* Mood Selector Horizontal Grid */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.moodsScroll}
-        >
-          {MOODS.map(mood => {
+        {/* Minimal Circle Mood Avatars (Centered, Sleek) */}
+        <View style={styles.moodsRow}>
+          {MOODS.map((mood) => {
             const isSelected = selectedMood.id === mood.id;
             return (
               <TouchableOpacity
                 key={mood.id}
-                style={[
-                  styles.moodCard,
-                  { backgroundColor: mood.bgColor },
-                  isSelected && { borderColor: mood.accentColor, borderWidth: 2 },
-                ]}
+                style={styles.moodItem}
                 activeOpacity={0.8}
                 onPress={() => handleSelectMood(mood)}
               >
-                <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                <Text style={[styles.moodTitle, isSelected && { color: mood.accentColor }]}>
+                <View
+                  style={[
+                    styles.moodCircle,
+                    { backgroundColor: mood.bgColor },
+                    isSelected && styles.moodCircleSelected,
+                  ]}
+                >
+                  <Text style={styles.moodEmoji}>{mood.emoji}</Text>
+                  {isSelected && <View style={styles.selectedMoodDot} />}
+                </View>
+                <Text
+                  style={[
+                    styles.moodTitle,
+                    isSelected && styles.moodTitleSelected,
+                  ]}
+                  numberOfLines={1}
+                >
                   {isHindi ? mood.titleHi : mood.titleEn}
                 </Text>
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </View>
 
-        {/* Selected Mood Affirmation Banner */}
-        <View style={[styles.affirmationCard, { backgroundColor: selectedMood.bgColor }]}>
+        {/* Clean, Serene Maternal Affirmation Card */}
+        <View style={styles.affirmationCard}>
           <View style={styles.affirmationHeader}>
-            <Sparkles size={18} color={selectedMood.accentColor} />
-            <Text style={[styles.affirmationTag, { color: selectedMood.accentColor }]}>
-              {isHindi ? 'आज का मातृ संकल्प (Mother’s Blessing)' : 'Today’s Maternal Affirmation'}
+            <Sparkles size={14} color="#D97706" />
+            <Text style={styles.affirmationTag}>
+              {isHindi ? 'मातृ संकल्प' : 'Daily Maternal Affirmation'}
             </Text>
           </View>
           <Text style={styles.affirmationText}>
-            "{isHindi ? selectedMood.affirmationHi : selectedMood.affirmationEn}"
+            &ldquo;{isHindi ? selectedMood.affirmationHi : selectedMood.affirmationEn}&rdquo;
           </Text>
         </View>
 
-        {/* Instant Calming Therapy: Pranayama Breathing Circle */}
+        {/* Instant Calming Therapy: Pranayama Breathing Orb */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={styles.iconCircle}>
-              <Wind size={20} color="#7C3AED" />
+              <Wind size={20} color="#1E1B4B" />
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.sectionTitle}>
-                {isHindi ? 'सुख प्राणायाम (Calming Breathwork)' : 'Calming Pranayama (4-4-4)'}
+                {isHindi ? 'सुख प्राणायाम (4-4-4)' : 'Calming Pranayama (4-4-4)'}
               </Text>
               <Text style={styles.sectionSubtitle}>
-                {isHindi ? '2 मिनट का गहरा श्वास शिशु तक ऑक्सीजन पहुंचाता है' : '2 minutes to calm fetal stress hormones'}
+                {isHindi
+                  ? '2 मिनट का गहरा श्वास शिशु तक ऑक्सीजन पहुंचाता है'
+                  : '2 minutes to calm fetal stress hormones'}
               </Text>
             </View>
           </View>
 
-          {/* Animated Circle Container */}
+          {/* Serene Pulsing Breath Orb */}
           <View style={styles.breathArea}>
             <Animated.View
               style={[
                 styles.breathCircleOuter,
-                {
-                  transform: [{ scale: breathAnim }],
-                  borderColor: selectedMood.accentColor,
-                },
+                { transform: [{ scale: breathAnim }] },
               ]}
             >
-              <View style={[styles.breathCircleInner, { backgroundColor: selectedMood.bgColor }]}>
-                <Flower2 size={36} color={selectedMood.accentColor} />
-                <Text style={[styles.breathPhaseText, { color: selectedMood.accentColor }]}>
+              <View style={styles.breathCircleInner}>
+                <Flower2 size={30} color="#059669" />
+                <Text style={styles.breathPhaseText}>
                   {getBreathPhaseText()}
                 </Text>
               </View>
             </Animated.View>
           </View>
 
-          {/* Breathing Controls */}
-          <View style={styles.breathControls}>
-            <TouchableOpacity
-              style={[
-                styles.breathBtn,
-                breathingActive ? styles.breathBtnStop : styles.breathBtnStart,
-              ]}
-              onPress={() => setBreathingActive(!breathingActive)}
-            >
-              {breathingActive ? (
-                <>
-                  <Pause size={18} color="#FFF" />
-                  <Text style={styles.breathBtnText}>
-                    {isHindi ? 'विश्राम समाप्त करें' : 'Pause Breathwork'}
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Play size={18} color="#FFF" fill="#FFF" />
-                  <Text style={styles.breathBtnText}>
-                    {isHindi ? 'प्राणायाम शुरू करें (Start Breathwork)' : 'Begin Calm Breathing'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+          {/* Breathing Action Button */}
+          <TouchableOpacity
+            style={[
+              styles.breathBtn,
+              breathingActive ? styles.breathBtnStop : styles.breathBtnStart,
+            ]}
+            activeOpacity={0.88}
+            onPress={() => setBreathingActive(!breathingActive)}
+          >
+            {breathingActive ? (
+              <>
+                <Pause size={17} color="#FFF" />
+                <Text style={styles.breathBtnText}>
+                  {isHindi ? 'विश्राम रोकें' : 'Pause Breathwork'}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Play size={17} color="#FFF" fill="#FFF" />
+                <Text style={styles.breathBtnText}>
+                  {isHindi ? 'प्राणायाम शुरू करें' : 'Begin Calm Breathing'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Sound Therapy & Sacred Shloka Section */}
@@ -402,12 +380,14 @@ export const MoodTherapyScreen = () => {
             <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
               <Volume2 size={20} color="#D97706" />
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.sectionTitle}>
                 {isHindi ? 'शांत नाद व वैदिक श्लोक' : 'Soothing Soundscape & Shloka'}
               </Text>
               <Text style={styles.sectionSubtitle}>
-                {isHindi ? 'पवित्र ध्वनि तरंगें मन को शांत करती हैं' : 'Vedic frequencies for mother & baby tranquility'}
+                {isHindi
+                  ? 'पवित्र ध्वनि तरंगें मन को शांत करती हैं'
+                  : 'Vedic frequencies for mother & baby tranquility'}
               </Text>
             </View>
           </View>
@@ -419,8 +399,8 @@ export const MoodTherapyScreen = () => {
             </Text>
             <Text style={styles.shlokaMeaning}>
               {isHindi
-                ? 'हे परमात्मा, उस प्राणस्वरूप, दुःखनाशक, सुखस्वरूप तेजस्वी श्रेष्ठ परमात्मा को हम अंतःकरण में धारण करें, जो हमारी और हमारे शिशु की बुद्धि को सन्मार्ग पर प्रेरित करे।'
-                : 'May the divine light of wisdom dispel all fears, blessing both mother and the womb with sacred serenity and auspicious strength.'}
+                ? 'हे परमात्मा, उस प्राणस्वरूप, दुःखनाशक तेजस्वी परमात्मा को हम अंतःकरण में धारण करें, जो हमारी व शिशु की बुद्धि को सन्मार्ग पर प्रेरित करे।'
+                : 'May the divine light of wisdom dispel all fears, blessing both mother and womb with auspicious serenity.'}
             </Text>
           </View>
 
@@ -428,31 +408,36 @@ export const MoodTherapyScreen = () => {
           <View style={styles.audioPlayerCard}>
             <View style={styles.audioDetails}>
               <Text style={styles.audioTitle}>
-                {isHindi ? 'मंदिर की घंटियां व बांसुरी नाद' : 'Temple Bells & Soothing Flute'}
+                {isHindi ? 'बांसुरी व मंदिर की घंटियां' : 'Temple Bells & Soothing Flute'}
               </Text>
               <Text style={styles.audioDuration}>432Hz Womb Relaxation • 10 Mins</Text>
             </View>
             <TouchableOpacity
               style={styles.audioPlayBtn}
+              activeOpacity={0.85}
               onPress={() => {
                 setIsPlayingAudio(!isPlayingAudio);
                 safeVibrate(30);
               }}
             >
               {isPlayingAudio ? (
-                <Pause size={18} color="#FFF" />
+                <Pause size={17} color="#FFF" />
               ) : (
-                <Play size={18} color="#FFF" fill="#FFF" />
+                <Play size={17} color="#FFF" fill="#FFF" />
               )}
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Save Today's Mood Check-in */}
-        <TouchableOpacity style={styles.saveCheckinBtn} onPress={handleSaveMood}>
-          <CheckCircle2 size={20} color="#FFF" />
+        <TouchableOpacity
+          style={styles.saveCheckinBtn}
+          activeOpacity={0.88}
+          onPress={handleSaveMood}
+        >
+          <CheckCircle2 size={18} color="#FFF" />
           <Text style={styles.saveCheckinBtnText}>
-            {isHindi ? 'आज का मिजाज़ सुरक्षित करें (Save Check-in)' : 'Save Mood to Health Diary'}
+            {isHindi ? 'आज का मिजाज़ सुरक्षित करें' : 'Save Mood to Health Diary'}
           </Text>
         </TouchableOpacity>
 
@@ -460,14 +445,14 @@ export const MoodTherapyScreen = () => {
         {recentLogs.length > 0 && (
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: '#F3E8FF' }]}>
-                <Calendar size={18} color="#9333EA" />
+              <View style={[styles.iconCircle, { backgroundColor: '#F1F5F9' }]}>
+                <Calendar size={18} color="#0F172A" />
               </View>
               <Text style={styles.sectionTitle}>
                 {isHindi ? 'हाल का मिजाज़ इतिहास' : 'Recent Mood Journal'}
               </Text>
             </View>
-            {recentLogs.slice(0, 4).map(item => (
+            {recentLogs.slice(0, 4).map((item) => (
               <View key={item.id} style={styles.logItem}>
                 <Text style={styles.logEmoji}>{item.emoji}</Text>
                 <View style={{ flex: 1 }}>
@@ -491,23 +476,23 @@ export const MoodTherapyScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF5FF',
+    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(124, 58, 237, 0.08)',
-    backgroundColor: '#FFF',
+    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3E8FF',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -515,276 +500,327 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16.5,
     fontWeight: '800',
-    color: '#4C1D95',
+    color: '#0F172A',
+    letterSpacing: -0.2,
   },
   headerSubtitle: {
-    fontSize: 12,
-    color: '#6D28D9',
+    fontSize: 11.5,
+    color: '#64748B',
     marginTop: 2,
     fontWeight: '500',
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  questionSection: {
+    marginBottom: 12,
   },
   questionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    color: '#3B0764',
-    marginBottom: 4,
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  questionSubtitle: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  moodsScroll: {
-    gap: 12,
-    paddingBottom: 16,
-  },
-  moodCard: {
-    width: 130,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+  moodsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
-    shadowColor: '#000',
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
   },
+  moodItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  moodCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  moodCircleSelected: {
+    borderWidth: 2.5,
+    borderColor: '#1E1B4B',
+    transform: [{ scale: 1.08 }],
+    shadowOpacity: 0.15,
+  },
   moodEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 24,
+  },
+  selectedMoodDot: {
+    position: 'absolute',
+    bottom: -3,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#1E1B4B',
   },
   moodTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#374151',
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 6,
     textAlign: 'center',
   },
+  moodTitleSelected: {
+    color: '#1E1B4B',
+    fontWeight: '800',
+  },
   affirmationCard: {
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 20,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    backgroundColor: '#FFFDF9',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.06)',
+    borderColor: '#FEF08A',
   },
   affirmationHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   affirmationTag: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
+    color: '#92400E',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   affirmationText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
-    lineHeight: 22,
+    color: '#334155',
+    lineHeight: 20,
     fontStyle: 'italic',
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: 22,
+    padding: 18,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F3E8FF',
-    shadowColor: '#7C3AED',
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F3E8FF',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EEF2F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15.5,
     fontWeight: '800',
-    color: '#1F2937',
+    color: '#0F172A',
   },
   sectionSubtitle: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
     marginTop: 2,
+    fontWeight: '500',
   },
   breathArea: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 24,
+    paddingVertical: 18,
   },
   breathCircleOuter: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 3,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 2,
+    borderColor: '#A7F3D0',
+    backgroundColor: '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
   },
   breathCircleInner: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   breathPhaseText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     textAlign: 'center',
-    marginTop: 6,
-  },
-  breathControls: {
-    alignItems: 'center',
-    marginTop: 10,
+    color: '#047857',
+    marginTop: 4,
   },
   breathBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 26,
-    borderRadius: 26,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 14,
     gap: 8,
+    alignSelf: 'center',
   },
   breathBtnStart: {
-    backgroundColor: '#7C3AED',
+    backgroundColor: '#1E1B4B',
+    shadowColor: '#1E1B4B',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 2,
   },
   breathBtnStop: {
     backgroundColor: '#DC2626',
   },
   breathBtnText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#FFF',
+    color: '#FFFFFF',
   },
   shlokaBox: {
     backgroundColor: '#FFFBEB',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: '#FDE68A',
   },
   shlokaSanskrit: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: '#92400E',
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 8,
+    lineHeight: 21,
+    marginBottom: 6,
   },
   shlokaMeaning: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#78350F',
-    lineHeight: 18,
+    lineHeight: 17,
     textAlign: 'center',
+    fontWeight: '500',
   },
   audioPlayerCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    padding: 14,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0',
   },
   audioDetails: {
     flex: 1,
   },
   audioTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#0F172A',
   },
   audioDuration: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 11.5,
+    color: '#64748B',
     marginTop: 2,
+    fontWeight: '500',
   },
   audioPlayBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#7C3AED',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#1E1B4B',
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 10,
   },
   saveCheckinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#059669',
-    borderRadius: 24,
-    paddingVertical: 16,
+    borderRadius: 16,
+    paddingVertical: 14,
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 16,
     shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 2,
   },
   saveCheckinBtnText: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '800',
-    color: '#FFF',
+    color: '#FFFFFF',
   },
   logItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F1F5F9',
     gap: 12,
   },
   logEmoji: {
-    fontSize: 24,
+    fontSize: 22,
   },
   logTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#0F172A',
   },
   logDate: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 1,
   },
   checkDoneBadge: {
-    backgroundColor: '#DEF7EC',
-    paddingVertical: 4,
+    backgroundColor: '#ECFDF5',
+    paddingVertical: 3,
     paddingHorizontal: 8,
     borderRadius: 8,
   },
   checkDoneText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#03543F',
+    color: '#059669',
   },
 });
