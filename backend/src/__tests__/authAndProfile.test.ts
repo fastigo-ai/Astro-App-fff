@@ -157,6 +157,69 @@ async function runTests() {
     if (!verifyRes.data.data.accessToken) throw new Error('Expected accessToken for bypass number');
   });
 
+  // 8. Test First Avatar Upload & Count Tracking (Count = 1)
+  await assert('profileController.uploadAvatar records 1st photo and sets avatarUpdateCount to 1', async () => {
+    const req: any = {
+      user: { phone: testNewUserPhone },
+      body: {
+        avatar: 'https://res.cloudinary.com/dt59dbh3f/image/upload/v12345/astrobaby/avatar1.jpg',
+        publicId: 'astrobaby/avatar1',
+      },
+      headers: {
+        'x-forwarded-for': '49.36.120.45',
+        'user-agent': 'Astrobaby-iOS/1.0',
+      },
+      socket: { remoteAddress: '49.36.120.45' },
+    };
+    const res = createMockRes();
+    await profileController.uploadAvatar(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.data.data.avatarUpdateCount !== 1) {
+      throw new Error(`Expected avatarUpdateCount to be 1, got ${res.data.data.avatarUpdateCount}`);
+    }
+    if (!res.data.data.avatarUpdatedAt) throw new Error('Expected avatarUpdatedAt timestamp');
+  });
+
+  // 9. Test Second Avatar Upload & Count Tracking (Count = 2, Audit Trail)
+  await assert('profileController.uploadAvatar increments avatarUpdateCount to 2 and appends audit history', async () => {
+    const req: any = {
+      user: { phone: testNewUserPhone },
+      body: {
+        avatar: 'https://res.cloudinary.com/dt59dbh3f/image/upload/v12345/astrobaby/avatar2.jpg',
+        publicId: 'astrobaby/avatar2',
+      },
+      headers: {
+        'x-forwarded-for': '49.36.120.99',
+        'user-agent': 'Astrobaby-Android/1.0',
+      },
+      socket: { remoteAddress: '49.36.120.99' },
+    };
+    const res = createMockRes();
+    await profileController.uploadAvatar(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.data.data.avatarUpdateCount !== 2) {
+      throw new Error(`Expected avatarUpdateCount to be 2, got ${res.data.data.avatarUpdateCount}`);
+    }
+    if (res.data.data.historyCount !== 2) {
+      throw new Error(`Expected historyCount 2 in audit trail, got ${res.data.data.historyCount}`);
+    }
+
+    // Verify stored user in collection has full history
+    const profileReq: any = { user: { phone: testNewUserPhone }, query: { phone: testNewUserPhone } };
+    const profileRes = createMockRes();
+    await profileController.getProfile(profileReq, profileRes, () => {});
+
+    const history = profileRes.data.data.avatarHistory;
+    if (!Array.isArray(history) || history.length !== 2) {
+      throw new Error(`Expected avatarHistory array with 2 entries, got: ${history?.length}`);
+    }
+    if (history[0].count !== 1 || history[1].count !== 2) {
+      throw new Error('Audit history entries missing proper count tags');
+    }
+  });
+
   console.log(`\n========================================`);
   console.log(`🏁 Auth & Profile Tests Completed: ${passed} Passed, ${failed} Failed`);
   console.log(`========================================\n`);

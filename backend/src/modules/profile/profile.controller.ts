@@ -57,4 +57,43 @@ export const profileController = {
       next(error);
     }
   },
+
+  uploadAvatar: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || req.body.phone;
+      if (!phone) {
+        return res.status(400).json({ success: false, error: 'Phone number is required' });
+      }
+
+      // Check if file was streamed via Multer direct to Cloudinary
+      const file: any = req.file;
+      const avatarUrl = file?.url || req.body.avatar || req.body.url;
+      const publicId = file?.publicId || req.body.publicId;
+
+      if (!avatarUrl) {
+        return res.status(400).json({
+          success: false,
+          error: 'No image file uploaded or avatar URL provided',
+        });
+      }
+
+      const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+      const userAgent = (req.headers['user-agent'] as string) || 'Astrobaby Mobile App';
+
+      const result = await profileService.updateAvatar(
+        String(phone),
+        { url: avatarUrl, publicId },
+        { ip: clientIp, userAgent }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Profile picture updated successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

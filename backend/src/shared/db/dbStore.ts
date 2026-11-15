@@ -114,6 +114,15 @@ export class JsonCollection<T extends { id?: string; _id?: string }> {
   }
 }
 
+export interface IAvatarHistoryItem {
+  url: string;
+  publicId?: string;
+  count: number;
+  updatedAt: string;
+  ip?: string;
+  userAgent?: string;
+}
+
 export interface IUserJourney {
   _id?: string;
   userId?: string;
@@ -129,6 +138,11 @@ export interface IUserJourney {
   confirmed_month?: number;
   remaining_months?: number;
   planning_timeline?: string;
+  avatar?: string;
+  avatarPublicId?: string;
+  avatarUpdateCount?: number;
+  avatarUpdatedAt?: string;
+  avatarHistory?: IAvatarHistoryItem[];
   subscription_tier?: 'full' | 'half' | 'trial';
   subscription_status?: 'active' | 'trial' | 'none' | 'expired';
   last_subscribed_program?: string;
