@@ -27,7 +27,21 @@ export const authService = {
       user = await authRepository.upsertUserJourney(cleaned, {
         userId: generatedUserId,
         phone: cleaned,
+        is_deleted: false,
       });
+    } else if (user.is_deleted) {
+      // Reactivate returning user if previously soft-deleted (fresh onboarding flow)
+      user = await authRepository.upsertUserJourney(cleaned, {
+        is_deleted: false,
+        deleted_at: undefined,
+        deletion_reason: undefined,
+        name: '', // reset name so user goes through fresh onboarding form
+        stage: undefined,
+        confirmed_month: undefined,
+        remaining_months: undefined,
+        subscription_status: 'none',
+      });
+      console.log(`[Reactivation] Soft-deleted user ${cleaned} reactivated upon successful OTP verification.`);
     }
 
     // A user is considered a new user if their profile (e.g. name) is not yet set

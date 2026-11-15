@@ -116,4 +116,24 @@ export const profileController = {
       next(error);
     }
   },
+
+  deleteAccount: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || req.body.phone;
+      const reason = req.body?.reason || req.query?.reason;
+
+      if (!phone) {
+        return res.status(400).json({ success: false, error: 'Phone number is required' });
+      }
+
+      const result = await profileService.deleteAccount(String(phone), reason ? String(reason) : undefined);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      if (error?.message === 'User profile not found') {
+        return res.status(404).json({ success: false, error: 'User profile not found' });
+      }
+      next(error);
+    }
+  },
 };

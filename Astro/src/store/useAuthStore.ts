@@ -55,6 +55,7 @@ interface AuthState {
   verifyOtp: (otp: string) => Promise<void>;
   resetState: () => void;
   logout: () => Promise<void>;
+  deleteAccount: (reason?: string) => Promise<boolean>;
   setSubscriptionStatus: (status: SubscriptionStatus) => void;
   fetchSubscriptionStatus: () => Promise<void>;
   incrementBabyKicks: () => void;
@@ -432,6 +433,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isDemoActive: false,
       journeyData: null 
     });
+  },
+
+  deleteAccount: async (reason?: string) => {
+    try {
+      await api.delete('/api/v1/profile', { data: { reason } });
+    } catch (error) {
+      console.warn('[AuthStore] Soft-delete API call failed or offline:', error);
+    } finally {
+      await get().logout();
+    }
+    return true;
   },
 
   setSubscriptionStatus: (status: SubscriptionStatus) => set({ subscriptionStatus: status }),

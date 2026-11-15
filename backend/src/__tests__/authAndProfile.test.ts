@@ -245,6 +245,83 @@ async function runTests() {
     }
   });
 
+  // 10. Test Account Deletion (Compliant Soft Delete: is_deleted = true, preserve audit history)
+  await assert('profileController.deleteAccount soft-deletes account with is_deleted=true and audit reason', async () => {
+    const req: any = {
+      user: { phone: testNewUserPhone },
+      body: { reason: 'Switching to another platform' },
+    };
+    const res = createMockRes();
+    await profileController.deleteAccount(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.data.is_deleted !== true) throw new Error('Expected is_deleted to be true in response');
+    if (!res.data.deleted_at) throw new Error('Expected deleted_at timestamp in response');
+
+    // Verify record in collection was NOT hard-deleted
+    const rawUsers = UserJourneysCollection.read();
+    const stored = rawUsers.find((u: any) => u.phone === testNewUserPhone);
+    if (!stored) throw new Error('User record was hard-deleted! Must be retained for legal compliance.');
+    if (stored.is_deleted !== true) throw new Error(`Expected stored.is_deleted to be true, got: ${stored.is_deleted}`);
+    if (stored.deletion_reason !== 'Switching to another platform') {
+      throw new Error(`Expected deletion_reason 'Switching to another platform', got: ${stored.deletion_reason}`);
+    }
+  });
+
+  // 11. Test Auth Middleware rejects soft-deleted account with 403 Forbidden
+  await assert('authMiddleware rejects soft-deleted user requests with 403 Forbidden', async () => {
+    const { authMiddleware } = await import('../shared/middlewares/authMiddleware');
+    const req: any = {
+      headers: { authorization: `Bearer ${userToken}` },
+    };
+    const res = createMockRes();
+    let nextCalled = false;
+    await authMiddleware(req, res, () => {
+      nextCalled = true;
+    });
+
+    if (nextCalled) throw new Error('Expected authMiddleware to reject deleted account, but next() was called!');
+    if (res.statusCode !== 403) throw new Error(`Expected 403, got ${res.statusCode}`);
+    if (res.data.is_deleted !== true) throw new Error('Expected is_deleted: true in 403 response');
+  });
+
+  // 12. Test Reactivation when user logs back in with OTP
+  await assert('authController.verifyOtp reactivates soft-deleted user as isNewUser: true with is_deleted=false', async () => {
+    const sendReq: any = { body: { phone: testNewUserPhone } };
+    const sendRes = createMockRes();
+    await authController.sendOtp(sendReq, sendRes, () => {});
+
+    const validOtp = mockSmsProvider.getStoredOtp(testNewUserPhone);
+    const verifyReq: any = { body: { phone: testNewUserPhone, otp: validOtp } };
+    const verifyRes = createMockRes();
+    await authController.verifyOtp(verifyReq, verifyRes, () => {});
+
+    if (verifyRes.statusCode !== 200) throw new Error(`Expected 200, got ${verifyRes.statusCode}`);
+    if (verifyRes.data.data.isNewUser !== true) {
+      throw new Error(`Expected isNewUser: true on reactivation, got ${verifyRes.data.data.isNewUser}`);
+    }
+
+    // Verify record in database is no longer marked deleted
+    const rawUsers = UserJourneysCollection.read();
+    const stored = rawUsers.find((u: any) => u.phone === testNewUserPhone);
+    if (stored?.is_deleted !== false) {
+      throw new Error(`Expected stored.is_deleted to be false after reactivation, got: ${stored?.is_deleted}`);
+    }
+  });
+
+  // 13. Test Swagger Spec registers Account Deletion Endpoints
+  await assert('Swagger Spec (/api-docs) registers Account Deletion DELETE & POST endpoints', async () => {
+    const { swaggerSpec } = await import('../shared/config/swagger');
+    const deletePath = swaggerSpec.paths['/api/v1/profile']?.delete;
+    const postDeletePath = swaggerSpec.paths['/api/v1/profile/delete-account']?.post;
+
+    if (!deletePath) throw new Error('Missing DELETE /api/v1/profile in Swagger spec');
+    if (!deletePath.summary.includes('Delete Account')) {
+      throw new Error(`Unexpected Swagger summary: ${deletePath.summary}`);
+    }
+    if (!postDeletePath) throw new Error('Missing POST /api/v1/profile/delete-account in Swagger spec');
+  });
+
   console.log(`\n========================================`);
   console.log(`🏁 Auth & Profile Tests Completed: ${passed} Passed, ${failed} Failed`);
   console.log(`========================================\n`);

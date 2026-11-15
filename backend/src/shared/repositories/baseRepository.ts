@@ -40,8 +40,16 @@ export class BaseRepository<T extends { id?: string; _id?: string }> {
     return this.collection.update(id, update);
   }
 
-  async deleteById(id: string): Promise<boolean> {
-    return this.collection.delete(id);
+  async deleteById(id: string, reason?: string): Promise<boolean> {
+    return this.collection.delete(id, reason);
+  }
+
+  async softDelete(query: Partial<T>, reason?: string): Promise<boolean> {
+    return this.collection.softDelete(query, reason);
+  }
+
+  async hardDelete(id: string): Promise<boolean> {
+    return this.collection.hardDelete(id);
   }
 
   replaceAll(items: T[]): void {

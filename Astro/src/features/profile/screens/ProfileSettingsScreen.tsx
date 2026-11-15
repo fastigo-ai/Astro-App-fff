@@ -186,6 +186,25 @@ export const ProfileSettingsScreen = () => {
                   navigation.navigate('Kundli');
                 } else if (item.id === 'live') {
                   navigation.navigate('LiveSessions');
+                } else if (item.id === 'delete') {
+                  Alert.alert(
+                    'Delete Account',
+                    'Are you sure you want to delete your Astrobaby account?\n\n• Your active plans and subscriptions will be cancelled.\n• In accordance with privacy regulations and store compliance, your account will be deactivated and soft-deleted.\n• You will be logged out immediately.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Delete Account',
+                        style: 'destructive',
+                        onPress: async () => {
+                          try {
+                            await useAuthStore.getState().deleteAccount('User requested deletion in profile settings');
+                          } catch (e) {
+                            console.warn('Error during account deletion:', e);
+                          }
+                        },
+                      },
+                    ]
+                  );
                 }
               }}
             >

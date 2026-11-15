@@ -81,6 +81,16 @@ export const swaggerSpec: any = {
           },
         },
       },
+      DeleteAccountRequest: {
+        type: 'object',
+        properties: {
+          reason: {
+            type: 'string',
+            example: 'Taking a break from app',
+            description: 'Reason for requesting account deletion',
+          },
+        },
+      },
       JourneyRequest: {
         type: 'object',
         required: ['stage'],
@@ -323,6 +333,57 @@ export const swaggerSpec: any = {
         responses: {
           200: {
             description: 'Returns profile details, avatar update count, and history',
+          },
+          401: {
+            description: 'Unauthorized',
+          },
+        },
+      },
+      delete: {
+        tags: ['User Profile'],
+        summary: 'Delete Account (Compliant Soft Delete: is_deleted = true)',
+        description:
+          'Soft-deletes the user account by setting is_deleted = true, cancels active subscriptions, and preserves historical data for legal audit & data retention compliance (meets Apple/Google App Store guidelines).',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/DeleteAccountRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Account successfully soft-deleted and scheduled for retention/reactivation',
+          },
+          401: {
+            description: 'Unauthorized',
+          },
+          404: {
+            description: 'User profile not found',
+          },
+        },
+      },
+    },
+    '/api/v1/profile/delete-account': {
+      post: {
+        tags: ['User Profile'],
+        summary: 'Delete Account via POST (Soft Delete fallback)',
+        description:
+          'Alternative POST endpoint for environments where HTTP DELETE body is restricted.',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/DeleteAccountRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Account successfully soft-deleted',
           },
           401: {
             description: 'Unauthorized',

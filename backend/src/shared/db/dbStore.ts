@@ -42,6 +42,7 @@ export class JsonCollection<T extends { id?: string; _id?: string }> {
   async insert(item: T): Promise<T> {
     const items = this.read();
     const record = {
+      is_deleted: (item as any).is_deleted ?? false,
       ...item,
       _id: item._id || item.id || `rec_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString(),
@@ -67,7 +68,7 @@ export class JsonCollection<T extends { id?: string; _id?: string }> {
       this.write(items);
       return items[index];
     } else {
-      return this.insert({ ...query, ...update } as any);
+      return this.insert({ is_deleted: false, ...query, ...update } as any);
     }
   }
 
@@ -99,7 +100,49 @@ export class JsonCollection<T extends { id?: string; _id?: string }> {
     return null;
   }
 
-  async delete(id: string): Promise<boolean> {
+  /**
+   * Soft delete an item by id or query: sets is_deleted = true, deleted_at = ISOString.
+   * Ensures zero hard data loss and preserves audit compliance.
+   */
+  async softDelete(query: Partial<T>, reason?: string): Promise<boolean> {
+    const items = this.read();
+    let modified = false;
+    for (const item of items as any[]) {
+      const match = Object.keys(query).every(key => {
+        if (key === 'id' || key === '_id') {
+          return item.id === (query as any)[key] || item._id === (query as any)[key];
+        }
+        return item[key] === (query as any)[key];
+      });
+      if (match) {
+        item.is_deleted = true;
+        item.deleted_at = new Date().toISOString();
+        if (reason) item.deletion_reason = reason;
+        item.updatedAt = new Date().toISOString();
+        modified = true;
+      }
+    }
+    if (modified) {
+      this.write(items);
+    }
+    return modified;
+  }
+
+  /**
+   * Default delete performs a compliant soft delete (is_deleted = true)
+   */
+  async delete(id: string, reason?: string): Promise<boolean> {
+    return this.softDelete({ id } as any, reason);
+  }
+
+  async deleteById(id: string, reason?: string): Promise<boolean> {
+    return this.softDelete({ id } as any, reason);
+  }
+
+  /**
+   * Hard delete completely purges a record. Only for test cleanup or explicit admin purge.
+   */
+  async hardDelete(id: string): Promise<boolean> {
     const items = this.read();
     const filtered = items.filter((item: any) => item._id !== id && item.id !== id);
     if (filtered.length !== items.length) {
@@ -107,10 +150,6 @@ export class JsonCollection<T extends { id?: string; _id?: string }> {
       return true;
     }
     return false;
-  }
-
-  async deleteById(id: string): Promise<boolean> {
-    return this.delete(id);
   }
 }
 
@@ -143,6 +182,9 @@ export interface IUserJourney {
   avatarUpdateCount?: number;
   avatarUpdatedAt?: string;
   avatarHistory?: IAvatarHistoryItem[];
+  is_deleted?: boolean;
+  deleted_at?: string;
+  deletion_reason?: string;
   subscription_tier?: 'full' | 'half' | 'trial';
   subscription_status?: 'active' | 'trial' | 'none' | 'expired';
   last_subscribed_program?: string;
@@ -168,6 +210,9 @@ export interface ISubscriptionRecord {
   nextInstallmentDue?: string;
   unlockedModules?: string[];
   status: 'active' | 'expired' | 'cancelled';
+  is_deleted?: boolean;
+  deleted_at?: string;
+  deletion_reason?: string;
   paymentId?: string;
   orderId?: string;
   activatedAt: string;

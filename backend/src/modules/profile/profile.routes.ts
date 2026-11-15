@@ -21,4 +21,8 @@ router.put('/language', profileController.updateLanguage);
 router.post('/avatar', uploadAvatarMiddleware, profileController.uploadAvatar);
 router.put('/avatar', uploadAvatarMiddleware, profileController.uploadAvatar);
 
+// Account Deletion (Soft delete: is_deleted = true, Apple & Google store compliance)
+router.delete('/', profileController.deleteAccount);
+router.post('/delete-account', profileController.deleteAccount);
+
 export default router;
