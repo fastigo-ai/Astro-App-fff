@@ -19,19 +19,39 @@ export const profileController = {
     }
   },
 
+  getLanguage: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || (req.query.phone as string);
+      if (!phone) {
+        return res.status(200).json({ success: true, data: { language: 'en' } });
+      }
+
+      const language = await profileService.getLanguage(phone);
+      return res.status(200).json({
+        success: true,
+        data: { language },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   updateLanguage: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { language } = req.body;
       const user = req.user;
+      const phone = user?.phone || req.body.phone;
 
       if (!language || !['en', 'hi'].includes(language)) {
         return res.status(400).json({ success: false, error: 'Valid language code is required (en or hi)' });
       }
 
-      await profileService.updateLanguage(user?.phone, language);
+      const result = await profileService.updateLanguage(phone, language);
       return res.status(200).json({
         success: true,
         message: 'Language preference updated successfully',
+        data: result,
       });
     } catch (error) {
       next(error);

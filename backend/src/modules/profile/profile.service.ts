@@ -7,6 +7,12 @@ export const profileService = {
     return profileRepository.findByPhone(phone);
   },
 
+  async getLanguage(phone: string | undefined): Promise<string> {
+    if (!phone) return 'en';
+    const user = await profileRepository.findByPhone(phone);
+    return user?.language || 'en';
+  },
+
   async updateLanguage(phone: string | undefined, language: string) {
     console.log(`[Backend] Updated language for user ${phone} to: ${language}`);
     if (phone) {

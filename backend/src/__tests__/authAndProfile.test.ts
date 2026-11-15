@@ -105,6 +105,31 @@ async function runTests() {
     if (!res.data.success) throw new Error('Expected success true');
   });
 
+  // 4b. Test Language Preference Update & Retrieval (en -> hi)
+  await assert('profileController.updateLanguage updates and stores language preference', async () => {
+    const updateReq: any = {
+      user: { phone: testNewUserPhone },
+      body: { language: 'hi' },
+    };
+    const updateRes = createMockRes();
+    await profileController.updateLanguage(updateReq, updateRes, () => {});
+
+    if (updateRes.statusCode !== 200) throw new Error(`Expected 200, got ${updateRes.statusCode}`);
+    if (updateRes.data.data.language !== 'hi') {
+      throw new Error(`Expected language 'hi', got ${updateRes.data.data.language}`);
+    }
+
+    // Verify GET /language returns 'hi'
+    const getReq: any = { user: { phone: testNewUserPhone } };
+    const getRes = createMockRes();
+    await profileController.getLanguage(getReq, getRes, () => {});
+
+    if (getRes.statusCode !== 200) throw new Error(`Expected 200, got ${getRes.statusCode}`);
+    if (getRes.data.data.language !== 'hi') {
+      throw new Error(`Expected getLanguage to return 'hi', got ${getRes.data.data.language}`);
+    }
+  });
+
   // 5. Test Profile Retrieval
   await assert('profileController.getProfile returns updated profile details', async () => {
     const req: any = {

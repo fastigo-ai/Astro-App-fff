@@ -352,9 +352,53 @@ export const swaggerSpec: any = {
       },
     },
     '/api/v1/profile/language': {
+      get: {
+        tags: ['User Profile'],
+        summary: 'Get Current Language Preference',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Returns language code (en or hi)',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        language: { type: 'string', example: 'hi' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       post: {
         tags: ['User Profile'],
         summary: 'Update Language Preference (en / hi)',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/LanguageRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Language updated successfully',
+          },
+        },
+      },
+      put: {
+        tags: ['User Profile'],
+        summary: 'Update Language Preference via PUT',
         security: [{ BearerAuth: [] }],
         requestBody: {
           required: true,
