@@ -4,15 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '~/shared/theme';
 
 import { DashboardHeader } from '../components/DashboardHeader';
-import { TeamBanner } from '../components/TeamBanner';
-import { KrishnaLiveMasterclassBanner } from '../components/KrishnaLiveMasterclassBanner';
-import { KrishnaPillarsGrid } from '../components/KrishnaPillarsGrid';
-import { KrishnaDailyVedicActivities } from '../components/KrishnaDailyVedicActivities';
 import { BabyDailyGrowthTracker } from '../components/BabyDailyGrowthTracker';
 import { PregnancyPowerPack } from '../components/PregnancyPowerPack';
-import { BabyGrowthCard } from '../components/BabyGrowthCard';
+import { KrishnaDailyVedicActivities } from '../components/KrishnaDailyVedicActivities';
+import { KrishnaLiveMasterclassBanner } from '../components/KrishnaLiveMasterclassBanner';
 import { QuickToolsSection } from '../components/QuickToolsSection';
-import { CourseGrid } from '../components/CourseGrid';
 import { UsersExperience } from '../components/UsersExperience';
 import { TrustSection } from '../components/TrustSection';
 import { RecentBabies } from '../components/RecentBabies';
@@ -34,30 +30,20 @@ export const DashboardScreen = () => {
         onScroll={(e) => useScrollStore.getState().setScrollY(e.nativeEvent.contentOffset.y)}
       >
 
-        <TeamBanner />
-
-        {/* Krishna Coming Live Masterclass Banner */}
-        <KrishnaLiveMasterclassBanner />
-
-        {/* Krishna Coming 4 Primary Vedic Pillars (2x2 Grid) */}
-        <KrishnaPillarsGrid />
-
-        {/* Baby Daily Growth Tracker (Image 2: Fruit comparison, days left, Baby Says letter from womb) */}
+        {/* 1. Baby Daily Growth Tracker (Fruit comparison, days left, Baby Says letter from womb) */}
         <BabyDailyGrowthTracker />
 
-        {/* Pregnancy Power Pack (Image 3: Essential Maternity & Vedic Tools) */}
-        <PregnancyPowerPack />
-
-        {/* Krishna Coming Daily Vedic Activities Routine */}
+        {/* 2. Today's Vedic Routine / Daily Sanskar Activities */}
         <KrishnaDailyVedicActivities />
 
-        {/* Baby Growth / Pregnancy Progress Card */}
-        <BabyGrowthCard />
+        {/* 3. Pregnancy Power Pack (Essential Maternity Tools: Kick Counter, Weight, Safety, Dadi Nuskha) */}
+        <PregnancyPowerPack />
 
-        {/* Daily Essentials (Baby Bump, Om, Games) */}
+        {/* 4. Live Doctor Masterclass Banner */}
+        <KrishnaLiveMasterclassBanner />
+
+        {/* 5. Daily Essentials & Quick Tools */}
         <QuickToolsSection />
-
-        <CourseGrid />
         
         <WhyAstroBabyVideo />
 
@@ -67,7 +53,7 @@ export const DashboardScreen = () => {
         <VideoBanner />
         <Dignitaries />
 
-        {/* Home Screen FAQs at the very end */}
+        {/* 7. Home Screen FAQs */}
         <DashboardFaqSection />
       </ScrollView>
     </SafeAreaView>
