@@ -10,8 +10,7 @@ import {
   Linking,
   Alert,
   Modal,
-  Platform,
-  Dimensions,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -22,69 +21,56 @@ import {
   Calendar,
   Clock,
   Play,
-  CheckCircle2,
-  Sparkles,
-  Users,
   Bell,
-  BookOpen,
-  FileText,
-  Download,
   X,
-  Plus,
-  Minus,
   MessageCircle,
   Send,
   HelpCircle,
-  GraduationCap,
-  ShieldCheck,
-  Share2,
+  Sparkles,
 } from 'lucide-react-native';
 import { api } from '~/shared/api';
 import { useAuthStore } from '~/store/useAuthStore';
 
-const { width } = Dimensions.get('window');
-
-interface LiveMasterclass {
+interface LiveClassItem {
   id: string;
   title: string;
-  hindiTitle?: string;
+  courseName: string;
+  dayTime: string;
   doctorName: string;
-  credentials: string;
-  institution: string;
-  dateTime: string;
   zoomLink: string;
-  status: 'live_today' | 'upcoming';
-  trimester: string;
-  category: string;
-  categoryLabel: string;
-  registeredCount: number;
-  overview: string;
-  learningPoints: string[];
+  imageUrl: string;
 }
 
-interface RecordedMasterclass {
+interface RecordedClassItem {
   id: string;
   title: string;
-  hindiTitle?: string;
-  doctorName: string;
+  courseName: string;
   duration: string;
-  category: string;
-  categoryLabel: string;
-  trimester: string;
-  viewsCount: string;
-  notesAvailable: boolean;
+  doctorName: string;
   videoUrl: string;
-  summary: string;
-  takeaways: string[];
+  imageUrl: string;
 }
+
+const DEFAULT_LIVE_IMAGES = [
+  'https://images.unsplash.com/photo-1544126592-807ade215a0b?w=700&auto=format&fit=crop&q=80', // Mother bond & music/brain
+  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=700&auto=format&fit=crop&q=80', // Prenatal yoga & pelvic stretch
+  'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=700&auto=format&fit=crop&q=80', // Ayurvedic nutrition & diet
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=700&auto=format&fit=crop&q=80', // Preconception doctor consultation
+];
+
+const DEFAULT_REC_IMAGES = [
+  'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=700&auto=format&fit=crop&q=80', // Spiritual peaceful birth
+  'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=700&auto=format&fit=crop&q=80', // Father & mother bump bonding
+  'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=700&auto=format&fit=crop&q=80', // Morning sickness & herbal relief
+  'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=700&auto=format&fit=crop&q=80', // Newborn Vedic massage care
+];
 
 interface AnsweredQA {
   id: string;
   question: string;
-  askedBy: string;
-  answeredBy: string;
+  doctor: string;
   answer: string;
-  category: string;
+  course: string;
 }
 
 export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMode = false }) => {
@@ -93,317 +79,206 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
   const isHindi = i18n.language === 'hi';
   const user = useAuthStore(state => state.user);
 
-  // Main Tabs: Upcoming Live, Recorded Library, Ask Doctor Q&A
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'recorded' | 'qa'>('upcoming');
+  // 3 Main Headings: 'live' (default), 'recorded', 'qa'
+  const [activeTab, setActiveTab] = useState<'live' | 'recorded' | 'qa'>('live');
 
-  // Sub-category Filter
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedTrimester, setSelectedTrimester] = useState<string>('all');
+  // Live classes list
+  const [liveClasses, setLiveClasses] = useState<LiveClassItem[]>([
+    {
+      id: 'live_1',
+      title: isHindi ? 'गर्भ संवाद एवं शिशु मस्तिष्क विकास' : 'Garbh Samvad & Fetal Brain Stimulation with Raagas',
+      courseName: 'Brain',
+      dayTime: 'Saturday • 11:00 AM IST',
+      doctorName: 'Dr. Anita Joshi',
+      zoomLink: 'https://zoom.us/j/9109121342?pwd=KC_VEDIC_SANSCAR',
+      imageUrl: 'https://images.unsplash.com/photo-1544126592-807ade215a0b?w=700&auto=format&fit=crop&q=80',
+    },
+    {
+      id: 'live_2',
+      title: isHindi ? 'सुख प्रसव योग व पेल्विक लचीलापन कार्यशाला' : 'Easy Natural Birth & Pelvic Opening Yoga (Sukha Prasava)',
+      courseName: 'Safe',
+      dayTime: 'Sunday • 04:30 PM IST',
+      doctorName: 'Dr. Meenakshi Sharma',
+      zoomLink: 'https://zoom.us/j/9109121343?pwd=KC_VEDIC_SANSCAR',
+      imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=700&auto=format&fit=crop&q=80',
+    },
+    {
+      id: 'live_3',
+      title: isHindi ? 'माह-अनुसार आयुर्वेदिक सात्विक आहार एवं पोषण' : 'Ayurvedic Trimester Diet: Iron & Calcium Without Constipation',
+      courseName: 'Ayurvedic',
+      dayTime: 'Tuesday • 06:00 PM IST',
+      doctorName: 'Dr. Vasant Lad & Dt. Neha Gupta',
+      zoomLink: 'https://zoom.us/j/9109121344?pwd=KC_VEDIC_SANSCAR',
+      imageUrl: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=700&auto=format&fit=crop&q=80',
+    },
+    {
+      id: 'live_4',
+      title: isHindi ? 'शिशु की योजना व प्राकृतिक गर्भधारण' : 'Preconception Vedic Detox & Planning',
+      courseName: 'Preconception',
+      dayTime: 'Wednesday • 07:00 PM IST',
+      doctorName: 'Dr. Anita Joshi',
+      zoomLink: 'https://zoom.us/j/9109121345?pwd=KC_VEDIC_SANSCAR',
+      imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=700&auto=format&fit=crop&q=80',
+    },
+  ]);
 
-  // Data states
-  const [upcomingClasses, setUpcomingClasses] = useState<LiveMasterclass[]>([]);
-  const [recordedClasses, setRecordedClasses] = useState<RecordedMasterclass[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Lecture Video / Notes Modal
-  const [selectedLecture, setSelectedLecture] = useState<RecordedMasterclass | null>(null);
-  const [showLectureModal, setShowLectureModal] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-
-  // Q&A submission
-  const [questionText, setQuestionText] = useState('');
-  const [questionCategory, setQuestionCategory] = useState('Diet & Nausea');
-  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
-
-  // FAQs Accordion
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-
-  // Registered state for upcoming sessions
-  const [registeredSessionIds, setRegisteredSessionIds] = useState<string[]>(['live_kc_101']);
+  // Recorded classes list
+  const [recordedClasses, setRecordedClasses] = useState<RecordedClassItem[]>([
+    {
+      id: 'rec_1',
+      title: isHindi ? 'सुखद व निर्भय प्रसव की आध्यात्मिक तैयारी' : 'Spiritual Preparation for Gentle Birth',
+      courseName: 'Safe Delivery',
+      duration: '48 mins',
+      doctorName: 'Dr. Sunita Sharma',
+      videoUrl: 'https://www.youtube.com',
+      imageUrl: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=700&auto=format&fit=crop&q=80',
+    },
+    {
+      id: 'rec_2',
+      title: isHindi ? 'गर्भ में शिशु से संवाद व पिता की भूमिका' : 'Fetal Communication & Father-Baby Bonding',
+      courseName: 'Bonding',
+      duration: '35 mins',
+      doctorName: 'Prof. Vipin Joshi',
+      videoUrl: 'https://www.youtube.com',
+      imageUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=700&auto=format&fit=crop&q=80',
+    },
+    {
+      id: 'rec_3',
+      title: isHindi ? 'गर्भावस्था में उल्टी व गैस के अचूक घरेलू उपाय' : 'Nausea, Acidity & Morning Sickness Relief',
+      courseName: 'Ayurveda',
+      duration: '28 mins',
+      doctorName: 'Dr. Anita Joshi',
+      videoUrl: 'https://www.youtube.com',
+      imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=700&auto=format&fit=crop&q=80',
+    },
+    {
+      id: 'rec_4',
+      title: isHindi ? 'नवजात शिशु मालिश व वैदिक बाल संस्कार' : 'Newborn Oil Massage & Vedic Care Routine',
+      courseName: 'Bal Sanskar',
+      duration: '40 mins',
+      doctorName: 'Dr. Meenakshi Sharma',
+      videoUrl: 'https://www.youtube.com',
+      imageUrl: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=700&auto=format&fit=crop&q=80',
+    },
+  ]);
 
   const answeredQAs: AnsweredQA[] = [
     {
       id: 'qa_1',
       question: 'Is ghee intake necessary for a normal delivery in the 9th month?',
-      askedBy: 'Pooja S., 34 Weeks',
-      answeredBy: 'Dr. Anita Joshi (MD Ayurveda)',
-      answer: 'Ayurveda recommends 1 teaspoon of A2 cow ghee with warm milk in the 9th month to lubricate reproductive tissues (Snehana) and encourage Vata downward flow (Apana Vayu). Ghee does not directly "slip" the baby out, but it prevents maternal exhaustion and keeps perineal tissues supple.',
-      category: 'Diet & Labor',
+      doctor: 'Dr. Anita Joshi',
+      answer: '1 teaspoon of A2 cow ghee with warm milk in 9th month supports pelvic lubrication and calm energy.',
+      course: 'Garbh Sanskar',
     },
     {
       id: 'qa_2',
-      question: 'Can listening to 432Hz Raagas really make baby calmer after birth?',
-      askedBy: 'Shreya M., 24 Weeks',
-      answeredBy: 'Dr. Sunita Sharma (Fetal Psychologist)',
-      answer: 'Yes! Auditory memory begins forming by week 20. Babies exposed to specific classical raagas (like Raag Yaman and Raag Bilawal) consistently show lower heart rate variability, sleep faster to the same tunes after birth, and exhibit fewer colic episodes.',
-      category: 'Fetal Brain Stimulation',
+      question: 'Can listening to 432Hz Raagas make baby calmer after birth?',
+      doctor: 'Dr. Sunita Sharma',
+      answer: 'Yes! Auditory memory begins by week 20. Babies exposed to Raag Yaman consistently sleep faster.',
+      course: 'Garbh Sanskar',
     },
     {
       id: 'qa_3',
-      question: 'How do I distinguish between false labor (Braxton Hicks) and real labor?',
-      askedBy: 'Ananya K., 37 Weeks',
-      answeredBy: 'Dr. Meenakshi Sharma (MS Obs & Gynae)',
-      answer: 'Braxton Hicks contractions are irregular, do not intensify with walking, and ease when you drink water or change posture. True labor contractions occur at predictable intervals (e.g. every 5 minutes), become progressively longer, stronger, and do not stop when resting.',
-      category: 'Labor Prep',
+      question: 'How do I distinguish between false labor and real labor?',
+      doctor: 'Dr. Meenakshi Sharma',
+      answer: 'Braxton Hicks are irregular and ease with rest. Real contractions occur at regular intervals and get stronger.',
+      course: 'Garbh Sanskar',
     },
   ];
 
+  // Registered reminder IDs
+  const [reminders, setReminders] = useState<string[]>(['live_1']);
+
+  // Q&A form
+  const [questionText, setQuestionText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Video Player Modal
+  const [activeVideo, setActiveVideo] = useState<RecordedClassItem | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   useEffect(() => {
-    fetchSessions();
+    fetchRemoteClasses();
   }, []);
 
-  const fetchSessions = async () => {
+  const fetchRemoteClasses = async () => {
     try {
-      setIsLoading(true);
       const res = await api.get('/api/v1/krishna/live/sessions');
-      if (res.data?.success) {
-        setUpcomingClasses(res.data.upcoming || []);
-        setRecordedClasses(res.data.recorded || []);
+      if (res.data?.success && res.data.upcoming?.length) {
+        setLiveClasses(res.data.upcoming.map((u: any, idx: number) => ({
+          id: u.id,
+          title: u.title,
+          courseName: u.categoryLabel ? u.categoryLabel.split(' ')[0] : 'Brain',
+          dayTime: u.dateTime || 'Saturday • 11:00 AM IST',
+          doctorName: u.doctorName || 'Senior Ayurvedic Gynecologist',
+          zoomLink: u.zoomLink || 'https://zoom.us',
+          imageUrl: u.thumbnail || u.imageUrl || DEFAULT_LIVE_IMAGES[idx % DEFAULT_LIVE_IMAGES.length],
+        })));
+      }
+      if (res.data?.success && res.data.recorded?.length) {
+        setRecordedClasses(res.data.recorded.map((r: any, idx: number) => ({
+          id: r.id,
+          title: r.title,
+          courseName: r.categoryLabel ? uCleanCategory(r.categoryLabel) : 'Garbh Sanskar',
+          duration: r.duration || '40 mins',
+          doctorName: r.doctorName || 'Doctor Faculty',
+          videoUrl: r.videoUrl || 'https://www.youtube.com',
+          imageUrl: r.thumbnail || r.imageUrl || DEFAULT_REC_IMAGES[idx % DEFAULT_REC_IMAGES.length],
+        })));
       }
     } catch (e) {
-      // Fallback data
-      setUpcomingClasses([
-        {
-          id: 'live_kc_101',
-          title: 'Garbh Samvad & Fetal Brain Stimulation with Raagas',
-          hindiTitle: 'गर्भ संवाद एवं शास्त्रीय रागों द्वारा शिशु मस्तिष्क विकास',
-          doctorName: 'Dr. Anita Joshi',
-          credentials: 'MD (Ayurveda Gynaecology), Certified Fetal Psychologist',
-          institution: 'Vedic Maternity & Neuro-Fetal Research Institute',
-          dateTime: 'Saturday • 11:00 AM IST',
-          zoomLink: 'https://zoom.us/j/9109121342?pwd=KC_VEDIC_SANSCAR',
-          status: 'live_today',
-          trimester: 'Trimester 2 & 3',
-          category: 'brain_stimulation',
-          categoryLabel: 'Brain Stimulation & Raagas 🧠',
-          registeredCount: 582,
-          overview: 'Discover how specific 432Hz sound vibrations, parents loving speech patterns, and rhythmic Vedic mantras physically accelerate neural dendritic connections in the fetal auditory cortex.',
-          learningPoints: [
-            'How baby hears and processes father vs mother voice pitch',
-            '432Hz Raag Yaman and Raag Bilawal neuro-stimulatory protocol',
-            'Overcoming maternal cortisol to protect baby limbic system',
-            'Interactive live womb-bonding dialogue exercise'
-          ],
-        },
-        {
-          id: 'live_kc_102',
-          title: 'Easy Natural Birth & Pelvic Opening Yoga (Sukha Prasava)',
-          hindiTitle: 'सुख प्रसव योग व पेल्विक लचीलापन कार्यशाला',
-          doctorName: 'Dr. Meenakshi Sharma',
-          credentials: 'MS (Obs & Gynae), Prenatal Yoga Guru',
-          institution: 'Apollo Maternity & Garbh Sanskar Center',
-          dateTime: 'Sunday • 04:30 PM IST',
-          zoomLink: 'https://zoom.us/j/9109121343?pwd=KC_VEDIC_SANSCAR',
-          status: 'upcoming',
-          trimester: 'Trimester 2 & 3',
-          category: 'safe_delivery',
-          categoryLabel: 'Safe Delivery & Yoga 🧘‍♀️',
-          registeredCount: 420,
-          overview: 'Learn proven physiological movement sequences, gentle pelvic floor strengthening, and butterfly stretches designed to ease baby down into the optimal anterior birth position.',
-          learningPoints: [
-            'Bhadrasana and pelvic tilt postures for labor readiness',
-            'Breathing techniques (Apana Vayu Pranayama) during contractions',
-            'Perineal massage and natural labor pain management',
-            'Live posture correction and pelvic alignment'
-          ],
-        },
-        {
-          id: 'live_kc_103',
-          title: 'Ayurvedic Trimester Diet: Iron & Calcium Without Constipation',
-          hindiTitle: 'माह-अनुसार आयुर्वेदिक सात्विक आहार एवं पोषण',
-          doctorName: 'Dr. Vasant Lad & Dt. Neha Gupta',
-          credentials: 'BAMS, MD (Ayurveda Nutrition & Dietetics)',
-          institution: 'National Institute of Ayurvedic Sciences',
-          dateTime: 'Tuesday • 06:00 PM IST',
-          zoomLink: 'https://zoom.us/j/9109121344?pwd=KC_VEDIC_SANSCAR',
-          status: 'upcoming',
-          trimester: 'All Trimesters',
-          category: 'nutrition',
-          categoryLabel: 'Ayurvedic Nutrition 🥗',
-          registeredCount: 390,
-          overview: 'Master satvik pregnancy eating principles: natural food sources of iron, calcium, and DHA that absorb smoothly without triggering heartburn or sluggish digestion.',
-          learningPoints: [
-            'Superfoods for fetal bone density and maternal hemoglobin',
-            'Munakka and anjeer water for smooth bowel motility',
-            'Debunking ghee myths: how much healthy fat baby really needs',
-            'Personalized trimester meal timetable guide'
-          ],
-        },
-      ]);
-
-      setRecordedClasses([
-        {
-          id: 'rec_kc_201',
-          title: 'Spiritual Preparation for Normal Gentle Birth',
-          hindiTitle: 'सुखद व निर्भय प्रसव की आध्यात्मिक तैयारी',
-          doctorName: 'Dr. Sunita Sharma, MD (Gynae)',
-          duration: '48 mins',
-          category: 'safe_delivery',
-          categoryLabel: 'Safe Delivery 🧘‍♀️',
-          trimester: 'Trimester 3',
-          viewsCount: '12.4k views',
-          notesAvailable: true,
-          videoUrl: 'https://www.youtube.com',
-          summary: 'A transformative clinical masterclass on removing maternal fear and birth anxiety through ancient Garbha Upanishad meditation and focused pelvic relaxation.',
-          takeaways: [
-            'The fear-tension-pain cycle and how to dissolve it',
-            'Sacred affirmations for the labor room',
-            'Birthing partner guidance: how fathers support active labor'
-          ]
-        },
-        {
-          id: 'rec_kc_202',
-          title: 'Overcoming Pregnancy Anxiety with Pranayama & Mantras',
-          hindiTitle: 'प्राणायाम व मंत्रोच्चार द्वारा गर्भावस्था का तनाव मुक्ति',
-          doctorName: 'Yogacharya Rajeshwar & Dr. Anita Joshi',
-          duration: '42 mins',
-          category: 'mantras',
-          categoryLabel: 'Spiritual Mantras 🕉️',
-          trimester: 'All Trimesters',
-          viewsCount: '18.9k views',
-          notesAvailable: true,
-          videoUrl: 'https://www.youtube.com',
-          summary: 'Learn specific safe prenatal breathing rhythms (Anulom Vilom and Bhramari) that increase oxygen saturation to the placenta by up to 20%.',
-          takeaways: [
-            'Safe vs unsafe breathing exercises in pregnancy',
-            'Santan Gopal Stotra recitation pronunciation guide',
-            'Daily 15-minute mental peace protocol'
-          ]
-        },
-        {
-          id: 'rec_kc_203',
-          title: 'Fetal Memory & Womb Education (Abhimanyu Principle)',
-          hindiTitle: 'गर्भस्थ शिशु की स्मरण शक्ति व संस्कार (अभिमन्यु सिद्धांत)',
-          doctorName: 'Prof. Vipin Joshi',
-          duration: '54 mins',
-          category: 'brain_stimulation',
-          categoryLabel: 'Brain Stimulation 🧠',
-          trimester: 'Trimester 2',
-          viewsCount: '24.1k views',
-          notesAvailable: true,
-          videoUrl: 'https://www.youtube.com',
-          summary: 'Exploring the biological and historical proof of intrauterine learning, highlighting how mothers daily reading and moral contemplation shape baby subconscious instincts.',
-          takeaways: [
-            'When fetal sensory organs connect to cerebral memory banks',
-            'Reading stories with moral values to the bump',
-            'How maternal serenity fosters high EQ in infants'
-          ]
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
+      // Use defaults
     }
   };
 
-  const handleJoinZoom = (zoomUrl: string, title: string) => {
+  const uCleanCategory = (cat: string) => {
+    return cat.replace(/[^\w\s]/gi, '').trim().split(' ')[0] || 'Garbh Sanskar';
+  };
+
+  const handleJoinClass = (zoomUrl: string, title: string) => {
     Linking.openURL(zoomUrl).catch(() => {
       Alert.alert(
-        'Live Masterclass Zoom Link',
-        `Meeting Link: ${zoomUrl}\nPasscode: KC_VEDIC_SANSCAR`
+        'Live Class Link',
+        `Class: ${title}\nMeeting Link: ${zoomUrl}\nPasscode: KC_VEDIC_SANSCAR`
       );
     });
   };
 
-  const handleToggleRegister = (id: string) => {
-    if (registeredSessionIds.includes(id)) {
-      setRegisteredSessionIds(registeredSessionIds.filter(item => item !== id));
-      Alert.alert('Reminder Removed', 'You will no longer receive a reminder for this session.');
+  const handleToggleReminder = (id: string) => {
+    if (reminders.includes(id)) {
+      setReminders(reminders.filter(r => r !== id));
+      Alert.alert('Reminder Removed', 'Notification turned off for this class.');
     } else {
-      setRegisteredSessionIds([...registeredSessionIds, id]);
-      Alert.alert(
-        'Registered Successfully! 🌸',
-        'You are confirmed for this masterclass! We will send you an app notification and Zoom link 15 minutes before the session starts.'
-      );
+      setReminders([...reminders, id]);
+      Alert.alert('Reminder Set! 🌸', 'We will notify you 15 minutes before the live class starts.');
     }
   };
 
-  const handleOpenLectureModal = (lecture: RecordedMasterclass) => {
-    setSelectedLecture(lecture);
-    setIsVideoPlaying(false);
-    setShowLectureModal(true);
-  };
-
-  const handleAskQuestion = async () => {
+  const handleSubmitQuestion = async () => {
     if (!questionText.trim()) {
       Alert.alert('Empty Question', 'Please type your question for the doctor.');
       return;
     }
-
     try {
-      setIsSubmittingQuestion(true);
+      setIsSubmitting(true);
       await api.post('/api/v1/krishna/live/ask-question', {
         phone: user?.phone || '9366128220',
         question: questionText,
-        category: questionCategory,
       }).catch(() => {});
 
       Alert.alert(
-        'Question Submitted to Doctor Panel 🌸',
-        'Our senior Ayurvedic gynecologists have received your query. It will be addressed live during Saturday’s Zoom session and posted in your Q&A dashboard!'
+        'Question Sent 🌸',
+        'Our doctor panel has received your question. It will be answered in the live class!'
       );
       setQuestionText('');
     } finally {
-      setIsSubmittingQuestion(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Filter logic
-  const filteredUpcoming = upcomingClasses.filter(c => {
-    const matchCat = selectedCategory === 'all' || c.category === selectedCategory;
-    const matchTri =
-      selectedTrimester === 'all' ||
-      c.trimester === 'All Trimesters' ||
-      c.trimester.toLowerCase().includes(selectedTrimester.toLowerCase());
-    return matchCat && matchTri;
-  });
-
-  const filteredRecorded = recordedClasses.filter(c => {
-    const matchCat = selectedCategory === 'all' || c.category === selectedCategory;
-    const matchTri =
-      selectedTrimester === 'all' ||
-      c.trimester === 'All Trimesters' ||
-      c.trimester.toLowerCase().includes(selectedTrimester.toLowerCase());
-    return matchCat && matchTri;
-  });
-
-  const categories = [
-    { id: 'all', label: 'All Topics', icon: '✨' },
-    { id: 'brain_stimulation', label: 'Brain Stimulation 🧠', icon: '🧠' },
-    { id: 'safe_delivery', label: 'Safe Delivery & Yoga 🧘‍♀️', icon: '🧘‍♀️' },
-    { id: 'nutrition', label: 'Ayurvedic Diet 🥗', icon: '🥗' },
-    { id: 'mantras', label: 'Vedic Mantras 🕉️', icon: '🕉️' },
-  ];
-
-  const faqs = [
-    {
-      q: 'How do I join the live Zoom session?',
-      a: 'Simply tap the "Join Zoom Masterclass" button on this screen when the class is scheduled. It directly launches the Zoom app on your device. The meeting ID and passcode are pre-configured.',
-    },
-    {
-      q: 'What if I miss a live session due to a doctor appointment or work?',
-      a: 'All live doctor masterclasses are recorded in full HD and published to the "Recordings" tab within 2 hours after the session concludes. You have unlimited replay access throughout your pregnancy.',
-    },
-    {
-      q: 'Can I ask personal pregnancy questions directly to the doctor?',
-      a: 'Yes! You can either type your question into Zoom’s live Q&A box during the session or submit it in advance using the "Ask Doctor (Q&A)" tab above. Senior gynaecologists dedicate 20 minutes at the end of each session specifically to answering mothers.',
-    },
-    {
-      q: 'Can my husband or birthing partner join the Zoom call with me?',
-      a: 'Absolutely! We strongly encourage fathers and family members to attend together, especially during Garbh Samvad bonding sessions and Labor Preparation masterclasses.',
-    },
-    {
-      q: 'Are all masterclasses doctor-certified and safe for all trimesters?',
-      a: 'Yes, every session is led exclusively by MD Ayurvedic Gynecologists, certified fetal psychologists, and certified prenatal yoga acharyas with over 15+ years of clinical maternity experience.',
-    },
-    {
-      q: 'Do I get lecture notes and diet charts from these classes?',
-      a: 'Yes! Each recorded masterclass includes downloadable PDF lecture slides, recipe cards, and mantra pronunciation cheat sheets in the "Recordings" tab.',
-    },
-  ];
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Header Bar */}
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      {/* Top Header */}
       <View style={styles.headerBar}>
         {!isTabMode ? (
           <TouchableOpacity
@@ -417,56 +292,61 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
             }}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <ChevronLeft size={26} color="#1F2937" />
+            <ChevronLeft size={24} color="#1E1B4B" />
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 10 }} />
+          <View style={{ width: 8 }} />
         )}
+
         <View style={styles.headerTitleBox}>
-          <Text style={styles.headerTitle}>Live Doctor Masterclasses</Text>
+          <Text style={styles.headerTitle}>
+            {isHindi ? 'कक्षाएं (Classes)' : 'Classes'}
+          </Text>
           <Text style={styles.headerSubtitle}>
-            Interactive Zoom Sessions & Certified Video Library
+            {isHindi ? 'लाइव सत्र, रिकॉर्डेड कक्षाएं व प्रश्नोत्तरी' : 'Live doctor sessions & recorded library'}
           </Text>
         </View>
+
         <TouchableOpacity
-          style={styles.headerHelpBtn}
+          style={styles.helpBtn}
           onPress={() => navigation.navigate('SupportChat')}
+          activeOpacity={0.8}
         >
-          <HelpCircle size={20} color="#BE185D" />
+          <HelpCircle size={20} color="#BE123C" />
         </TouchableOpacity>
       </View>
 
-      {/* Main Tabs: Upcoming Live | Recordings | Ask Doctor Q&A */}
-      <View style={styles.mainTabsRow}>
+      {/* Main 3 Headings: Live Classes | Recorded Classes | Ask Doctor Q&A */}
+      <View style={styles.topHeadingsContainer}>
         <TouchableOpacity
-          style={[styles.mainTabBtn, activeTab === 'upcoming' && styles.mainTabBtnActive]}
-          onPress={() => setActiveTab('upcoming')}
+          style={[styles.headingTab, activeTab === 'live' && styles.headingTabActive]}
+          onPress={() => setActiveTab('live')}
           activeOpacity={0.85}
         >
           <View style={styles.tabBadgeRow}>
-            <View style={styles.livePulseDot} />
-            <Text style={[styles.mainTabText, activeTab === 'upcoming' && styles.mainTabTextActive]}>
-              Upcoming Live ({upcomingClasses.length})
+            <View style={[styles.pulseDot, activeTab === 'live' && styles.pulseDotActive]} />
+            <Text style={[styles.headingTabText, activeTab === 'live' && styles.headingTabTextActive]}>
+              Live Classes ({liveClasses.length})
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.mainTabBtn, activeTab === 'recorded' && styles.mainTabBtnActive]}
+          style={[styles.headingTab, activeTab === 'recorded' && styles.headingTabActive]}
           onPress={() => setActiveTab('recorded')}
           activeOpacity={0.85}
         >
-          <Text style={[styles.mainTabText, activeTab === 'recorded' && styles.mainTabTextActive]}>
-            Recordings ({recordedClasses.length})
+          <Text style={[styles.headingTabText, activeTab === 'recorded' && styles.headingTabTextActive]}>
+            Recorded ({recordedClasses.length})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.mainTabBtn, activeTab === 'qa' && styles.mainTabBtnActive]}
+          style={[styles.headingTab, activeTab === 'qa' && styles.headingTabActive]}
           onPress={() => setActiveTab('qa')}
           activeOpacity={0.85}
         >
-          <Text style={[styles.mainTabText, activeTab === 'qa' && styles.mainTabTextActive]}>
+          <Text style={[styles.headingTabText, activeTab === 'qa' && styles.headingTabTextActive]}>
             Ask Doctor Q&A
           </Text>
         </TouchableOpacity>
@@ -476,149 +356,71 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Category Pills */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesScroll}
-        >
-          {categories.map(cat => (
-            <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.categoryChip,
-                selectedCategory === cat.id && styles.categoryChipActive,
-              ]}
-              onPress={() => setSelectedCategory(cat.id)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.categoryChipText, selectedCategory === cat.id && styles.categoryChipTextActive]}>
-                {cat.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Trimester Filter Chips */}
-        <View style={styles.trimesterRow}>
-          {['all', '1st Trimester', '2nd Trimester', '3rd Trimester'].map(tri => (
-            <TouchableOpacity
-              key={tri}
-              style={[
-                styles.triChip,
-                selectedTrimester === tri && styles.triChipActive,
-              ]}
-              onPress={() => setSelectedTrimester(tri)}
-            >
-              <Text
-                style={[
-                  styles.triChipText,
-                  selectedTrimester === tri && styles.triChipTextActive,
-                ]}
-              >
-                {tri === 'all' ? 'All Trimesters' : tri}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {/* ========================================= */}
-        {/* TAB 1: UPCOMING LIVE MASTERCLASSES (ZOOM) */}
+        {/* 1. LIVE CLASSES (DEFAULT SELECTED)        */}
         {/* ========================================= */}
-        {activeTab === 'upcoming' && (
-          <View style={styles.tabSection}>
-            {filteredUpcoming.map(item => {
-              const isRegistered = registeredSessionIds.includes(item.id);
+        {activeTab === 'live' && (
+          <View style={styles.cardsList}>
+            {liveClasses.map(item => {
+              const isReminded = reminders.includes(item.id);
 
               return (
-                <View key={item.id} style={styles.upcomingCard}>
-                  {/* Status Banner */}
-                  <View style={styles.cardStatusRow}>
-                    <View style={styles.liveTagBadge}>
-                      <View style={styles.redBlinkDot} />
-                      <Text style={styles.liveTagText}>
-                        {item.status === 'live_today' ? 'LIVE THIS SATURDAY' : 'UPCOMING MASTERCLASS'}
-                      </Text>
-                    </View>
-
-                    <View style={styles.registeredBadge}>
-                      <Users size={12} color="#0369A1" />
-                      <Text style={styles.registeredText}>{item.registeredCount}+ Moms</Text>
-                    </View>
-                  </View>
-
-                  {/* Class Title */}
-                  <Text style={styles.classCardTitle}>{item.title}</Text>
-                  {item.hindiTitle ? (
-                    <Text style={styles.classCardHindiTitle}>{item.hindiTitle}</Text>
-                  ) : null}
-
-                  {/* Doctor Profile Box */}
-                  <View style={styles.doctorProfileBox}>
-                    <View style={styles.doctorAvatarRing}>
-                      <Text style={{ fontSize: 24 }}>👩‍⚕️</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.doctorName}>{item.doctorName}</Text>
-                      <Text style={styles.doctorCredentials}>{item.credentials}</Text>
-                      <Text style={styles.doctorHospital}>{item.institution}</Text>
-                    </View>
-                  </View>
-
-                  {/* Date & Time Tag */}
-                  <View style={styles.scheduleTagRow}>
-                    <Calendar size={14} color="#BE123C" />
-                    <Text style={styles.scheduleTagText}>{item.dateTime}</Text>
-                    <View style={styles.tagSeparator} />
-                    <Text style={styles.trimesterPillText}>{item.trimester}</Text>
-                  </View>
-
-                  {/* Session Overview */}
-                  <Text style={styles.overviewText}>{item.overview}</Text>
-
-                  {/* 4 Learning Points */}
-                  <View style={styles.learningPointsBox}>
-                    <Text style={styles.learningPointsHeader}>What You Will Learn:</Text>
-                    {item.learningPoints.map((pt, i) => (
-                      <View key={i} style={styles.learningPtRow}>
-                        <CheckCircle2 size={13} color="#059669" />
-                        <Text style={styles.learningPtText}>{pt}</Text>
+                <View key={item.id} style={styles.minimalCard}>
+                  {/* Theme Hero Image Banner */}
+                  <View style={styles.cardImageContainer}>
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={styles.cardImage}
+                      resizeMode="cover"
+                    />
+                    {/* Top Overlay Badges */}
+                    <View style={styles.imageOverlayTop}>
+                      <View style={styles.liveBadge}>
+                        <View style={styles.livePulseDot} />
+                        <Text style={styles.liveBadgeText}>LIVE</Text>
                       </View>
-                    ))}
+                      <View style={styles.courseTagPill}>
+                        <Text style={styles.courseTagText}>{item.courseName}</Text>
+                      </View>
+                    </View>
                   </View>
 
-                  {/* Actions: Join Zoom Button & Reminder Toggle */}
-                  <View style={styles.cardActionsRow}>
-                    <TouchableOpacity
-                      style={styles.joinZoomBtn}
-                      onPress={() => handleJoinZoom(item.zoomLink, item.title)}
-                      activeOpacity={0.88}
-                    >
-                      <Video size={16} color="#FFFFFF" />
-                      <Text style={styles.joinZoomBtnText}>Join Zoom Masterclass ↗</Text>
-                    </TouchableOpacity>
+                  {/* Card Content Details */}
+                  <View style={styles.cardBody}>
+                    {/* Day & Time */}
+                    <View style={styles.dayTimePill}>
+                      <Calendar size={11} color="#C2410C" />
+                      <Text style={styles.dayTimeText}>{item.dayTime}</Text>
+                    </View>
 
-                    <TouchableOpacity
-                      style={[
-                        styles.reminderBtn,
-                        isRegistered && styles.reminderBtnActive,
-                      ]}
-                      onPress={() => handleToggleRegister(item.id)}
-                      activeOpacity={0.8}
-                    >
-                      <Bell
-                        size={15}
-                        color={isRegistered ? '#059669' : '#475569'}
-                      />
-                      <Text
-                        style={[
-                          styles.reminderBtnText,
-                          isRegistered && styles.reminderBtnTextActive,
-                        ]}
+                    {/* Heading for the Live Class */}
+                    <Text style={styles.cardTitle}>{item.title}</Text>
+
+                    {/* Doctor Name */}
+                    <Text style={styles.doctorName}>By {item.doctorName}</Text>
+
+                    {/* Clean Action Row */}
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={styles.joinBtn}
+                        onPress={() => handleJoinClass(item.zoomLink, item.title)}
+                        activeOpacity={0.88}
                       >
-                        {isRegistered ? 'Registered ✓' : 'Remind Me'}
-                      </Text>
-                    </TouchableOpacity>
+                        <Video size={14} color="#FFFFFF" />
+                        <Text style={styles.joinBtnText}>Join Live Class ↗</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.reminderBtn, isReminded && styles.reminderBtnActive]}
+                        onPress={() => handleToggleReminder(item.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Bell size={13} color={isReminded ? '#15803D' : '#64748B'} />
+                        <Text style={[styles.reminderText, isReminded && styles.reminderTextActive]}>
+                          {isReminded ? '✓ Set' : 'Remind'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               );
@@ -627,277 +429,185 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
         )}
 
         {/* ========================================= */}
-        {/* TAB 2: RECORDED MASTERCLASSES LIBRARY     */}
+        {/* 2. RECORDED CLASSES                       */}
         {/* ========================================= */}
         {activeTab === 'recorded' && (
-          <View style={styles.tabSection}>
-            <Text style={styles.subLibraryHeading}>
-              Complete HD Masterclasses Library ({filteredRecorded.length})
-            </Text>
-
-            {filteredRecorded.map(rec => (
-              <TouchableOpacity
-                key={rec.id}
-                style={styles.recordedCard}
-                onPress={() => handleOpenLectureModal(rec)}
-                activeOpacity={0.9}
-              >
-                {/* Video Mockup Thumbnail with Play overlay */}
-                <View style={styles.videoThumbnailBox}>
-                  <View style={styles.videoThumbBackground} />
-                  <View style={styles.playCenterButton}>
-                    <Play size={20} color="#FFFFFF" fill="#FFFFFF" />
+          <View style={styles.cardsList}>
+            {recordedClasses.map(rec => (
+              <View key={rec.id} style={styles.minimalCard}>
+                {/* Theme Hero Image Banner */}
+                <View style={styles.cardImageContainer}>
+                  <Image
+                    source={{ uri: rec.imageUrl }}
+                    style={styles.cardImage}
+                    resizeMode="cover"
+                  />
+                  {/* Top Overlay Badges */}
+                  <View style={styles.imageOverlayTop}>
+                    <View style={styles.recordedBadge}>
+                      <Play size={10} color="#FFFFFF" fill="#FFFFFF" />
+                      <Text style={styles.recordedBadgeText}>RECORDED</Text>
+                    </View>
+                    <View style={styles.courseTagPill}>
+                      <Text style={styles.courseTagText}>{rec.courseName}</Text>
+                    </View>
                   </View>
+                </View>
+
+                {/* Card Content Details */}
+                <View style={styles.cardBody}>
+                  {/* Duration Pill */}
                   <View style={styles.durationPill}>
-                    <Clock size={11} color="#FFFFFF" />
+                    <Clock size={11} color="#1D4ED8" />
                     <Text style={styles.durationText}>{rec.duration}</Text>
                   </View>
-                  <View style={styles.viewsPill}>
-                    <Text style={styles.viewsText}>{rec.viewsCount}</Text>
-                  </View>
+
+                  {/* Heading */}
+                  <Text style={styles.cardTitle}>{rec.title}</Text>
+
+                  {/* Doctor */}
+                  <Text style={styles.doctorName}>By {rec.doctorName}</Text>
+
+                  {/* Clean Action Button */}
+                  <TouchableOpacity
+                    style={styles.watchBtn}
+                    onPress={() => {
+                      setActiveVideo(rec);
+                      setIsPlaying(false);
+                    }}
+                    activeOpacity={0.88}
+                  >
+                    <Play size={13} color="#FFFFFF" fill="#FFFFFF" />
+                    <Text style={styles.watchBtnText}>Watch Recording</Text>
+                  </TouchableOpacity>
                 </View>
-
-                {/* Details */}
-                <View style={styles.recordedDetailsBox}>
-                  <View style={styles.recordedTopMetaRow}>
-                    <Text style={styles.categorySmallTag}>{rec.categoryLabel}</Text>
-                    <Text style={styles.trimesterSmallTag}>{rec.trimester}</Text>
-                  </View>
-
-                  <Text style={styles.recordedTitle}>{rec.title}</Text>
-                  <Text style={styles.recordedDoctorText}>By {rec.doctorName}</Text>
-                  <Text style={styles.recordedSummarySnippet} numberOfLines={2}>
-                    {rec.summary}
-                  </Text>
-
-                  {/* Bottom features bar */}
-                  <View style={styles.recordedFooterRow}>
-                    <View style={styles.notesAvailablePill}>
-                      <FileText size={12} color="#059669" />
-                      <Text style={styles.notesAvailableText}>PDF Slides & Notes Available</Text>
-                    </View>
-                    <Text style={styles.tapToWatchText}>Watch Now →</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+              </View>
             ))}
           </View>
         )}
 
         {/* ========================================= */}
-        {/* TAB 3: LIVE DOCTOR Q&A / ASK THE DOCTOR   */}
+        {/* 3. ASK DOCTOR Q&A                         */}
         {/* ========================================= */}
         {activeTab === 'qa' && (
-          <View style={styles.tabSection}>
-            {/* Ask Question Box */}
-            <View style={styles.askQuestionCard}>
-              <View style={styles.askHeaderRow}>
-                <MessageCircle size={20} color="#BE123C" />
-                <Text style={styles.askHeaderTitle}>Ask Doctor for Live Session</Text>
-              </View>
-              <Text style={styles.askHeaderSub}>
-                Type your pregnancy health, diet, or Garbh Sanskar query. Our senior doctors will address it live on Saturday!
-              </Text>
-
-              {/* Category selector */}
-              <View style={styles.qaCategorySelector}>
-                {['Diet & Nausea', 'Baby Movements', 'Labor Prep', 'Mantras & Mind'].map(cat => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.qaCatChip,
-                      questionCategory === cat && styles.qaCatChipActive,
-                    ]}
-                    onPress={() => setQuestionCategory(cat)}
-                  >
-                    <Text
-                      style={[
-                        styles.qaCatChipText,
-                        questionCategory === cat && styles.qaCatChipTextActive,
-                      ]}
-                    >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+          <View style={styles.cardsList}>
+            {/* Minimal Question Card */}
+            <View style={[styles.minimalCard, styles.qaCard]}>
+              <View style={styles.qaHeader}>
+                <MessageCircle size={16} color="#BE123C" />
+                <Text style={styles.qaHeaderTitle}>Ask Doctor for Live Session</Text>
               </View>
 
               <TextInput
-                style={styles.qaTextInput}
-                placeholder="Type your question in Hindi or English (e.g. Can I take ghee in 8th month?)..."
+                style={styles.qaInput}
+                placeholder="Type your question for the doctor..."
                 placeholderTextColor="#94A3B8"
                 multiline
-                numberOfLines={3}
+                numberOfLines={2}
                 value={questionText}
                 onChangeText={setQuestionText}
               />
 
               <TouchableOpacity
-                style={styles.submitQuestionBtn}
-                onPress={handleAskQuestion}
-                disabled={isSubmittingQuestion}
+                style={styles.submitBtn}
+                onPress={handleSubmitQuestion}
+                disabled={isSubmitting}
                 activeOpacity={0.88}
               >
-                {isSubmittingQuestion ? (
+                {isSubmitting ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
-                    <Send size={15} color="#FFFFFF" />
-                    <Text style={styles.submitQuestionBtnText}>Submit to Doctor Panel →</Text>
+                    <Send size={13} color="#FFFFFF" />
+                    <Text style={styles.submitBtnText}>Ask Doctor →</Text>
                   </>
                 )}
               </TouchableOpacity>
             </View>
 
-            {/* Answered Questions Library */}
-            <Text style={styles.subLibraryHeading}>Recent Doctor Answers</Text>
+            {/* Answered Q&As list */}
+            <Text style={styles.sectionTitle}>Recent Doctor Answers</Text>
 
             {answeredQAs.map(qa => (
-              <View key={qa.id} style={styles.qaAnswerCard}>
-                <View style={styles.qaTopMeta}>
-                  <Text style={styles.qaBadgeText}>{qa.category}</Text>
-                  <Text style={styles.qaAskedByText}>{qa.askedBy}</Text>
+              <View key={qa.id} style={[styles.minimalCard, styles.qaCard]}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.courseTagPill}>
+                    <Text style={styles.courseTagText}>{qa.course}</Text>
+                  </View>
+                  <Text style={styles.qaDoctorText}>{qa.doctor}</Text>
                 </View>
 
-                <Text style={styles.qaQuestionBold}>Q: {qa.question}</Text>
-
-                <View style={styles.qaDoctorAnswerBox}>
-                  <Text style={styles.qaDoctorNameHeader}>👩‍⚕️ Answer by {qa.answeredBy}:</Text>
-                  <Text style={styles.qaDoctorAnswerBody}>{qa.answer}</Text>
-                </View>
+                <Text style={styles.qaQuestion}>Q: {qa.question}</Text>
+                <Text style={styles.qaAnswer}>A: {qa.answer}</Text>
               </View>
             ))}
           </View>
         )}
 
-        {/* ========================================= */}
-        {/* DOCTOR MASTERCLASSES FAQs ACCORDION       */}
-        {/* ========================================= */}
-        <View style={styles.faqSection}>
-          <Text style={styles.faqSectionTitle}>Frequently Asked Questions</Text>
-
-          {faqs.map((faq, idx) => {
-            const isExpanded = expandedFaq === idx;
-            return (
-              <View key={idx} style={styles.faqAccordionCard}>
-                <TouchableOpacity
-                  style={styles.faqQuestionRow}
-                  onPress={() => setExpandedFaq(isExpanded ? null : idx)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.faqQuestionText}>{faq.q}</Text>
-                  <View style={styles.faqPlusBox}>
-                    {isExpanded ? (
-                      <Minus size={16} color="#0F172A" />
-                    ) : (
-                      <Plus size={16} color="#0F172A" />
-                    )}
-                  </View>
-                </TouchableOpacity>
-
-                {isExpanded && (
-                  <View style={styles.faqAnswerContainer}>
-                    <Text style={styles.faqAnswerText}>{faq.a}</Text>
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </View>
-
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ========================================= */}
-      {/* LECTURE VIDEO & DOCTOR NOTES MODAL        */}
-      {/* ========================================= */}
+      {/* Video Modal */}
       <Modal
-        visible={showLectureModal}
+        visible={!!activeVideo}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowLectureModal(false)}
+        onRequestClose={() => setActiveVideo(null)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.lectureModalCard}>
-            {/* Modal Header */}
-            <View style={styles.modalHeaderRow}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalLectureTitle} numberOfLines={1}>
-                  {selectedLecture?.title}
+                <Text style={styles.modalTitle} numberOfLines={1}>
+                  {activeVideo?.title}
                 </Text>
-                <Text style={styles.modalLectureDoc}>
-                  {selectedLecture?.doctorName} • {selectedLecture?.duration}
+                <Text style={styles.modalSub}>
+                  {activeVideo?.doctorName} • {activeVideo?.duration}
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.modalCloseBtn}
-                onPress={() => setShowLectureModal(false)}
+                onPress={() => setActiveVideo(null)}
               >
                 <X size={18} color="#475569" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 520 }} showsVerticalScrollIndicator={false}>
-              {/* Simulated Video Player Box */}
-              <View style={styles.playerContainer}>
-                <View style={styles.playerScreenPlaceholder}>
-                  <TouchableOpacity
-                    style={styles.bigPlayTrigger}
-                    onPress={() => setIsVideoPlaying(!isVideoPlaying)}
-                  >
-                    {isVideoPlaying ? (
-                      <View style={{ alignItems: 'center' }}>
-                        <Text style={{ color: '#10B981', fontWeight: '900', fontSize: 13 }}>
-                          ▶ PLAYING HD STREAM
-                        </Text>
-                        <Text style={{ color: '#E2E8F0', fontSize: 11, marginTop: 4 }}>
-                          Audio synced via 432Hz Master Stream
-                        </Text>
-                      </View>
-                    ) : (
-                      <>
-                        <View style={styles.modalPlayCircle}>
-                          <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
-                        </View>
-                        <Text style={styles.modalPlayPrompt}>Tap to Play Masterclass</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Lecture Summary */}
-              <Text style={styles.modalSectionTitle}>Lecture Clinical Summary:</Text>
-              <Text style={styles.modalSummaryText}>{selectedLecture?.summary}</Text>
-
-              {/* Key Takeaways */}
-              <Text style={styles.modalSectionTitle}>Key Clinical Takeaways:</Text>
-              <View style={styles.modalTakeawaysList}>
-                {selectedLecture?.takeaways.map((pt, i) => (
-                  <View key={i} style={styles.modalTakeawayRow}>
-                    <CheckCircle2 size={13} color="#059669" />
-                    <Text style={styles.modalTakeawayText}>{pt}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Download PDF Notes Action */}
+            <View style={styles.playerBox}>
+              {activeVideo?.imageUrl && !isPlaying && (
+                <Image
+                  source={{ uri: activeVideo.imageUrl }}
+                  style={styles.playerBackdropImage}
+                  resizeMode="cover"
+                />
+              )}
+              {activeVideo?.imageUrl && !isPlaying && (
+                <View style={styles.playerBackdropOverlay} />
+              )}
               <TouchableOpacity
-                style={styles.downloadPdfBtn}
-                onPress={() => {
-                  Alert.alert(
-                    'PDF Notes Downloaded 📄',
-                    `Doctor lecture slides & summary prescription saved to your AstroBaby downloads folder.`
-                  );
-                }}
-                activeOpacity={0.88}
+                style={styles.playTrigger}
+                onPress={() => setIsPlaying(!isPlaying)}
+                activeOpacity={0.85}
               >
-                <Download size={16} color="#FFFFFF" />
-                <Text style={styles.downloadPdfBtnText}>
-                  Download Clinical PDF Slides & Notes
-                </Text>
+                {isPlaying ? (
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ color: '#059669', fontWeight: '800', fontSize: 13 }}>
+                      ▶ PLAYING HD RECORDING
+                    </Text>
+                    <Text style={{ color: '#6B7280', fontSize: 11, marginTop: 4 }}>
+                      Audio synced with 432Hz Sound Vibration
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.playCircle}>
+                      <Play size={20} color="#FFFFFF" fill="#FFFFFF" />
+                    </View>
+                    <Text style={styles.playPrompt}>Tap to Play Lecture</Text>
+                  </>
+                )}
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
         </View>
       </Modal>
@@ -908,776 +618,426 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF9F6', // Soft creamy warm off-white
   },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 12,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    backgroundColor: '#FAF9F6',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+    padding: 4,
+    marginRight: 6,
   },
   headerTitleBox: {
-    alignItems: 'center',
+    flex: 1,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#1E1B4B',
+    letterSpacing: -0.2,
   },
   headerSubtitle: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#6B7280',
+    fontWeight: '500',
     marginTop: 1,
   },
-  headerHelpBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFF1F2',
-    alignItems: 'center',
-    justifyContent: 'center',
+  helpBtn: {
+    padding: 6,
   },
 
-  // Main Tabs (Upcoming Live | Recordings | Q&A)
-  mainTabsRow: {
+  // Main 3 Headings Tabs
+  topHeadingsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FAF9F6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
   },
-  mainTabBtn: {
+  headingTab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  mainTabBtnActive: {
-    borderBottomColor: '#BE123C', // Signature deep rose
+  headingTabActive: {
+    backgroundColor: '#FFF1F2',
+    borderColor: '#FDA4AF',
   },
   tabBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
-  livePulseDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#EF4444',
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#94A3B8',
   },
-  mainTabText: {
-    fontSize: 12.5,
-    fontWeight: '700',
+  pulseDotActive: {
+    backgroundColor: '#BE123C',
+  },
+  headingTabText: {
+    fontSize: 11.5,
+    fontWeight: '600',
     color: '#64748B',
   },
-  mainTabTextActive: {
+  headingTabTextActive: {
     color: '#BE123C',
-    fontWeight: '900',
+    fontWeight: '800',
   },
 
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 8,
+    paddingBottom: 100,
   },
 
-  // Category and Trimester filters
-  categoriesScroll: {
-    gap: 8,
-    paddingBottom: 10,
-  },
-  categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 18,
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  categoryChipActive: {
-    backgroundColor: '#FFF1F2',
-    borderColor: '#FDA4AF',
-  },
-  categoryChipText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569',
-  },
-  categoryChipTextActive: {
-    color: '#BE123C',
-    fontWeight: '900',
-  },
-  trimesterRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 16,
-  },
-  triChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  triChipActive: {
-    backgroundColor: '#0284C7',
-    borderColor: '#0284C7',
-  },
-  triChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  triChipTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '800',
+  cardsList: {
+    gap: 10,
   },
 
-  tabSection: {
-    marginBottom: 16,
-  },
-  subLibraryHeading: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 12,
-  },
-
-  // UPCOMING CARD
-  upcomingCard: {
+  // Minimal Clean Card Box
+  minimalCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
-    shadowColor: '#BE123C',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: 8,
   },
-  cardStatusRow: {
+  qaCard: {
+    padding: 14,
+  },
+  cardImageContainer: {
+    height: 135,
+    width: '100%',
+    position: 'relative',
+    backgroundColor: '#F1F5F9',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlayTop: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
   },
-  liveTagBadge: {
+  liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FEF2F2',
+    gap: 5,
+    backgroundColor: 'rgba(190, 18, 60, 0.92)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FECACA',
   },
-  redBlinkDot: {
+  livePulseDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#DC2626',
+    backgroundColor: '#FFFFFF',
   },
-  liveTagText: {
-    fontSize: 10.5,
-    fontWeight: '900',
-    color: '#DC2626',
+  liveBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
-  registeredBadge: {
+  recordedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0F9FF',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 8,
   },
-  registeredText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#0369A1',
-  },
-  classCardTitle: {
-    fontSize: 16,
+  recordedBadgeText: {
+    fontSize: 10,
     fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 2,
-    lineHeight: 22,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
-  classCardHindiTitle: {
-    fontSize: 12.5,
-    color: '#881337',
-    fontWeight: '600',
-    marginBottom: 10,
+  cardBody: {
+    padding: 14,
   },
-  doctorProfileBox: {
+  cardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  courseTagPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  courseTagText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#1E1B4B',
+  },
+  dayTimePill: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 12,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    gap: 4,
+    backgroundColor: '#FFF7ED',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  doctorAvatarRing: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFF1F2',
+  dayTimeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#C2410C',
+  },
+  durationPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  durationText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#1D4ED8',
+  },
+
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E1B4B',
+    marginBottom: 2,
+    lineHeight: 20,
   },
   doctorName: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  doctorCredentials: {
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 1,
-  },
-  doctorHospital: {
-    fontSize: 10.5,
-    color: '#0284C7',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  scheduleTagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
     marginBottom: 10,
   },
-  scheduleTagText: {
-    fontSize: 12.5,
-    fontWeight: '800',
-    color: '#BE123C',
-  },
-  tagSeparator: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: '#94A3B8',
-  },
-  trimesterPillText: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: '#0284C7',
-  },
-  overviewText: {
-    fontSize: 12.5,
-    color: '#475569',
-    lineHeight: 18,
-    marginBottom: 10,
-  },
-  learningPointsBox: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 14,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
-  learningPointsHeader: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    color: '#166534',
-    marginBottom: 2,
-  },
-  learningPtRow: {
+
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  learningPtText: {
-    fontSize: 11.5,
-    color: '#15803D',
-    flex: 1,
-  },
-  cardActionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  joinZoomBtn: {
+  joinBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#BE123C',
-    borderRadius: 14,
-    paddingVertical: 12,
-    shadowColor: '#BE123C',
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: '#DE6B81', // Gentle pastel coral rose
+    borderRadius: 12,
+    paddingVertical: 9,
   },
-  joinZoomBtnText: {
+  joinBtnText: {
     color: '#FFFFFF',
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '800',
   },
   reminderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    gap: 4,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   reminderBtnActive: {
     backgroundColor: '#DCFCE7',
+    borderColor: '#BBF7D0',
   },
-  reminderBtnText: {
-    fontSize: 12,
+  reminderText: {
+    fontSize: 11.5,
     fontWeight: '700',
-    color: '#475569',
+    color: '#64748B',
   },
-  reminderBtnTextActive: {
+  reminderTextActive: {
     color: '#15803D',
   },
 
-  // RECORDED CARD
-  recordedCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    overflow: 'hidden',
-    marginBottom: 14,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  videoThumbnailBox: {
-    height: 140,
-    backgroundColor: '#1E293B',
-    position: 'relative',
+  watchBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  videoThumbBackground: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#0F172A',
-    opacity: 0.85,
-  },
-  playCenterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#BE123C',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  durationPill: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  durationText: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  viewsPill: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  viewsText: {
-    fontSize: 10.5,
-    color: '#E2E8F0',
-    fontWeight: '600',
-  },
-  recordedDetailsBox: {
-    padding: 14,
-  },
-  recordedTopMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  categorySmallTag: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#BE123C',
-  },
-  trimesterSmallTag: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '600',
-  },
-  recordedTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0F172A',
-    lineHeight: 20,
-    marginBottom: 2,
-  },
-  recordedDoctorText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  recordedSummarySnippet: {
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 16,
-    marginBottom: 10,
-  },
-  recordedFooterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  notesAvailablePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  notesAvailableText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  tapToWatchText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#0284C7',
-  },
-
-  // ASK THE DOCTOR SECTION
-  askQuestionCard: {
-    backgroundColor: '#FFF1F2',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1.5,
-    borderColor: '#FECDD3',
-  },
-  askHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  askHeaderTitle: {
-    fontSize: 15.5,
-    fontWeight: '800',
-    color: '#881337',
-  },
-  askHeaderSub: {
-    fontSize: 11.5,
-    color: '#9F1239',
-    lineHeight: 16,
-    marginBottom: 12,
-  },
-  qaCategorySelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 6,
-    marginBottom: 10,
-  },
-  qaCatChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: '#DE6B81',
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#FDA4AF',
+    paddingVertical: 9,
   },
-  qaCatChipActive: {
-    backgroundColor: '#BE123C',
-    borderColor: '#BE123C',
-  },
-  qaCatChipText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#BE123C',
-  },
-  qaCatChipTextActive: {
+  watchBtnText: {
     color: '#FFFFFF',
-  },
-  qaTextInput: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 13,
-    color: '#0F172A',
-    borderWidth: 1,
-    borderColor: '#FDA4AF',
-    textAlignVertical: 'top',
-    minHeight: 70,
-    marginBottom: 10,
-  },
-  submitQuestionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#BE123C',
-    borderRadius: 14,
-    paddingVertical: 12,
-  },
-  submitQuestionBtnText: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  qaAnswerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: '#F1F5F9',
-  },
-  qaTopMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  qaBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#BE123C',
-  },
-  qaAskedByText: {
-    fontSize: 11,
-    color: '#64748B',
-  },
-  qaQuestionBold: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 8,
-  },
-  qaDoctorAnswerBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    padding: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#0284C7',
-  },
-  qaDoctorNameHeader: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    color: '#0284C7',
-    marginBottom: 2,
-  },
-  qaDoctorAnswerBody: {
-    fontSize: 12,
-    color: '#334155',
-    lineHeight: 17,
   },
 
-  // FAQ Section
-  faqSection: {
-    marginBottom: 16,
+  // Q&A
+  qaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
   },
-  faqSectionTitle: {
-    fontSize: 16,
+  qaHeaderTitle: {
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 12,
+    color: '#1E1B4B',
   },
-  faqAccordionCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    marginBottom: 10,
+  qaInput: {
+    backgroundColor: '#FAF9F6',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    overflow: 'hidden',
-  },
-  faqQuestionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-  },
-  faqQuestionText: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: '#0F172A',
-    flex: 1,
-    paddingRight: 10,
-  },
-  faqPlusBox: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  faqAnswerContainer: {
-    paddingHorizontal: 14,
-    paddingBottom: 14,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-  },
-  faqAnswerText: {
-    fontSize: 12.5,
-    color: '#475569',
-    lineHeight: 18,
-  },
-
-  // Modal Styles
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
-    justifyContent: 'flex-end',
-  },
-  lectureModalCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: Platform.OS === 'ios' ? 38 : 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  modalHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  modalLectureTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  modalLectureDoc: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     fontSize: 12,
-    color: '#64748B',
-    marginTop: 1,
-  },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playerContainer: {
-    marginBottom: 14,
-  },
-  playerScreenPlaceholder: {
-    height: 180,
-    backgroundColor: '#0F172A',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  bigPlayTrigger: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalPlayCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#BE123C',
-    alignItems: 'center',
-    justifyContent: 'center',
+    color: '#1E1B4B',
+    minHeight: 52,
+    textAlignVertical: 'top',
     marginBottom: 8,
   },
-  modalPlayPrompt: {
+  submitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#DE6B81',
+    borderRadius: 10,
+    paddingVertical: 8,
+  },
+  submitBtnText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
   },
-  modalSectionTitle: {
+
+  sectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0F172A',
-    marginTop: 10,
-    marginBottom: 6,
+    color: '#1E1B4B',
+    marginVertical: 6,
   },
-  modalSummaryText: {
+  qaDoctorText: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  qaQuestion: {
     fontSize: 12.5,
-    color: '#475569',
-    lineHeight: 18,
+    fontWeight: '700',
+    color: '#1E1B4B',
+    marginBottom: 3,
   },
-  modalTakeawaysList: {
-    gap: 6,
-    marginBottom: 16,
+  qaAnswer: {
+    fontSize: 11.5,
+    color: '#4B5563',
+    lineHeight: 16,
   },
-  modalTakeawayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  modalTakeawayText: {
-    fontSize: 12,
-    color: '#334155',
+
+  // Modal
+  modalBackdrop: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    padding: 18,
   },
-  downloadPdfBtn: {
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+  },
+  modalHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E1B4B',
+  },
+  modalSub: {
+    fontSize: 11,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  playerBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    height: 130,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#0284C7',
-    borderRadius: 16,
-    paddingVertical: 14,
-    marginBottom: 10,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  downloadPdfBtnText: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#FFFFFF',
+  playerBackdropImage: {
+    ...StyleSheet.absoluteFill,
+  },
+  playerBackdropOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  playTrigger: {
+    alignItems: 'center',
+  },
+  playCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DE6B81',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  playPrompt: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4B5563',
   },
 });

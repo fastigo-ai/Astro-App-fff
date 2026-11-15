@@ -372,6 +372,7 @@ export const krishnaBusinessController = {
           category: 'brain_stimulation',
           categoryLabel: 'Brain Stimulation & Raagas 🧠',
           registeredCount: 582,
+          thumbnail: 'https://images.unsplash.com/photo-1544126592-807ade215a0b?w=700&auto=format&fit=crop&q=80',
           overview: 'Discover how specific 432Hz sound vibrations, parents loving speech patterns, and rhythmic Vedic mantras physically accelerate neural dendritic connections in the fetal auditory cortex.',
           learningPoints: [
             'How baby hears and processes father vs mother voice pitch',
@@ -394,6 +395,7 @@ export const krishnaBusinessController = {
           category: 'safe_delivery',
           categoryLabel: 'Safe Delivery & Yoga 🧘‍♀️',
           registeredCount: 420,
+          thumbnail: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=700&auto=format&fit=crop&q=80',
           overview: 'Learn proven physiological movement sequences, gentle pelvic floor strengthening, and butterfly stretches designed to ease baby down into the optimal anterior birth position.',
           learningPoints: [
             'Bhadrasana and pelvic tilt postures for labor readiness',
@@ -416,6 +418,7 @@ export const krishnaBusinessController = {
           category: 'nutrition',
           categoryLabel: 'Ayurvedic Nutrition 🥗',
           registeredCount: 390,
+          thumbnail: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=700&auto=format&fit=crop&q=80',
           overview: 'Master satvik pregnancy eating principles: natural food sources of iron, calcium, and DHA that absorb smoothly without triggering heartburn or sluggish digestion.',
           learningPoints: [
             'Superfoods for fetal bone density and maternal hemoglobin',
