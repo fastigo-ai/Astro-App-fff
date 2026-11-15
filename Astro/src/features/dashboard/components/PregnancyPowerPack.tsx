@@ -54,7 +54,7 @@ export const PregnancyPowerPack: React.FC = () => {
   const [currentWeight, setCurrentWeight] = useState('62');
   const [savedWeight, setSavedWeight] = useState('62 kg (Healthy Range: 60-65 kg)');
 
-  // 8 Essential Tools - Each with a distinctive icon & single clear text
+  // 6 Premium Course Tools (Unlocked with Course Purchase)
   const POWER_TOOLS = [
     {
       id: 'safety',
@@ -62,13 +62,6 @@ export const PregnancyPowerPack: React.FC = () => {
       icon: <ShieldQuestion size={26} color="#9333EA" />,
       bg: '#F3E8FF',
       action: () => navigation.navigate('PregnancySafety'),
-    },
-    {
-      id: 'kicks',
-      title: isHindi ? 'किक काउंटर' : 'Kick Counter',
-      icon: <Footprints size={26} color="#EC4899" />,
-      bg: '#FDF2F8',
-      action: () => navigation.navigate('KickCounter'),
     },
     {
       id: 'weight',
@@ -97,13 +90,6 @@ export const PregnancyPowerPack: React.FC = () => {
       icon: <GraduationCap size={26} color="#BE185D" />,
       bg: '#FFF1F2',
       action: () => navigation.navigate('LiveSessions'),
-    },
-    {
-      id: 'samvad',
-      title: isHindi ? 'गर्भ संवाद' : 'Womb Talk',
-      icon: <HeartHandshake size={26} color="#E11D48" />,
-      bg: '#FFE4E6',
-      action: () => navigation.navigate('GarbhSamvad'),
     },
     {
       id: 'mamapedia',
@@ -377,8 +363,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#F3E8FF',
-    shadowColor: '#BE185D',
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -406,7 +392,7 @@ const styles = StyleSheet.create({
     rowGap: 16,
   },
   toolIconItem: {
-    width: '23%',
+    width: '30%',
     alignItems: 'center',
   },
   iconBox: {

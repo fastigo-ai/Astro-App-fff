@@ -36,14 +36,14 @@ export const DashboardScreen = () => {
         {/* 2. Today's Vedic Routine / Daily Sanskar Activities */}
         <KrishnaDailyVedicActivities />
 
-        {/* 3. Pregnancy Power Pack (Essential Maternity Tools: Kick Counter, Weight, Safety, Dadi Nuskha) */}
-        <PregnancyPowerPack />
+        {/* 3. Maa & Baby Daily Connect (Common Mom Support Tools: Kick Counter, Samvad, Bump, Puzzles, Mood, Kundli) */}
+        <QuickToolsSection />
 
         {/* 4. Live Doctor Masterclass Banner */}
         <KrishnaLiveMasterclassBanner />
 
-        {/* 5. Daily Essentials & Quick Tools */}
-        <QuickToolsSection />
+        {/* 5. Pregnancy Power Pack (Course-Unlocked Premium Tools: Food Safety, Weight, Dadi Nuskha, Doctor School, Music, Guide) */}
+        <PregnancyPowerPack />
         
         <WhyAstroBabyVideo />
 
