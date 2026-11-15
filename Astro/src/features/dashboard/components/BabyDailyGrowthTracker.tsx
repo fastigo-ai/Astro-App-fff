@@ -8,7 +8,7 @@ import {
   ScrollView,
   Image as RNImage,
 } from 'react-native';
-import { Sparkles, Heart, X, Clock } from 'lucide-react-native';
+import { Sparkles, Heart, X } from 'lucide-react-native';
 import { useAuthStore } from '~/store/useAuthStore';
 import { useTranslation } from 'react-i18next';
 
@@ -226,19 +226,14 @@ export const BabyDailyGrowthTracker: React.FC = () => {
             <View style={styles.weekPill}>
               <Text style={styles.weekPillText}>🌸 Week {currentWeek}</Text>
             </View>
-            <View>
-              <Text style={styles.growthTrackerTitle}>
-                {isHindi ? 'शिशु का दैनिक विकास ट्रैकर' : 'Baby Daily Growth Tracker'}
-              </Text>
-              <Text style={styles.growthTrackerSub}>
-                {isHindi ? 'आज आपका नन्हा शिशु' : 'Your Baby Today'}
-              </Text>
-            </View>
+            <Text style={styles.growthTrackerTitle}>
+              {isHindi ? 'शिशु का दैनिक विकास' : 'Baby Daily Growth Tracker'}
+            </Text>
           </View>
 
           <View style={styles.trimesterPill}>
             <Text style={styles.trimesterPillText}>
-              Day {currentDay} • {isHindi ? data.trimester.hi : data.trimester.en}
+              {isHindi ? data.trimester.hi : data.trimester.en}
             </Text>
           </View>
         </View>
@@ -271,11 +266,6 @@ export const BabyDailyGrowthTracker: React.FC = () => {
             {isHindi
               ? `शिशु वर्तमान में ${data.fruit} के आकार का है`
               : `Baby is currently the size of a ${data.fruit}`}
-          </Text>
-          <Text style={styles.sizeSubHeadline}>
-            {isHindi
-              ? `सप्ताह ${currentWeek}, दिन ${currentDay} • प्रसव में ~${data.daysLeft} दिन शेष`
-              : `Day ${currentDay} of Week ${currentWeek} • ${data.daysLeft} days left till birth`}
           </Text>
         </View>
 
@@ -320,7 +310,7 @@ export const BabyDailyGrowthTracker: React.FC = () => {
         <View style={styles.journeySection}>
           <View style={styles.journeyTopRow}>
             <Text style={styles.daysLeftPillText}>
-              ⏳ {data.daysLeft} {isHindi ? 'दिन शेष' : 'Days Left'}
+              ⏳ {data.daysLeft} {isHindi ? 'दिन शेष' : 'days left till birth'}
             </Text>
             <TouchableOpacity
               onPress={() => setShowLetterModal(true)}
@@ -341,15 +331,7 @@ export const BabyDailyGrowthTracker: React.FC = () => {
           </View>
 
           <Text style={styles.progressPercentSubtext}>
-            {journeyPercent}% {isHindi ? 'सफर पूर्ण' : 'Journey Completed'} • Week {currentWeek} of 40
-          </Text>
-        </View>
-
-        {/* Next Daily Guidance Countdown Pill */}
-        <View style={styles.timerPill}>
-          <Clock size={12} color="#9D174D" />
-          <Text style={styles.timerPillText}>
-            {isHindi ? 'अगला वैदिक परामर्श 18 घंटे में' : 'Next Daily Guidance In: 18h 56m'}
+            {journeyPercent}% {isHindi ? 'सफर पूर्ण' : 'Journey Completed'}
           </Text>
         </View>
       </View>
