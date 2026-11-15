@@ -113,6 +113,28 @@ async function runTests() {
     if (deletedVal !== null) throw new Error('Expected deleted key to return null');
   });
 
+  // 6. Test Swagger Documentation Spec contains all routes
+  await assert('Swagger Spec (/api-docs) registers Locations, Auth, Profile & Avatar endpoints', async () => {
+    const { swaggerSpec } = require('../shared/config/swagger');
+    if (!swaggerSpec || !swaggerSpec.paths) throw new Error('Swagger spec missing paths');
+
+    if (!swaggerSpec.paths['/api/locations/states']) {
+      throw new Error('Swagger missing /api/locations/states endpoint');
+    }
+    if (!swaggerSpec.paths['/api/locations/cities/{stateCode}']) {
+      throw new Error('Swagger missing /api/locations/cities/{stateCode} endpoint');
+    }
+    if (!swaggerSpec.paths['/api/v1/auth/verify-otp']) {
+      throw new Error('Swagger missing /api/v1/auth/verify-otp endpoint');
+    }
+    if (!swaggerSpec.paths['/api/v1/profile/avatar']) {
+      throw new Error('Swagger missing /api/v1/profile/avatar endpoint');
+    }
+    if (!swaggerSpec.components.securitySchemes.BearerAuth) {
+      throw new Error('Swagger missing BearerAuth security scheme');
+    }
+  });
+
   console.log(`\n========================================`);
   console.log(`🏁 Locations & Cache Tests Completed: ${passed} Passed, ${failed} Failed`);
   console.log(`========================================\n`);
@@ -126,3 +148,4 @@ runTests().catch((e) => {
   console.error('Fatal test error:', e);
   process.exit(1);
 });
+

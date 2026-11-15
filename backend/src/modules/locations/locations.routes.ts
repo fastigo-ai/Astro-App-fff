@@ -10,3 +10,4 @@ router.get('/states', locationsController.getStates);
 router.get('/cities/:stateCode', locationsController.getCities);
 
 export default router;
+
