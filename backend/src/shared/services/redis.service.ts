@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import Redis from 'ioredis';
 
 interface CacheEntry {
@@ -9,45 +10,85 @@ class CacheService {
   private redisClient: Redis | null = null;
   private memoryCache = new Map<string, CacheEntry>();
   private isRedisConnected = false;
+  private connectionPromise: Promise<boolean> | null = null;
 
   constructor() {
     this.init();
   }
 
   private init() {
-    const redisUrl = process.env.REDIS_URL;
+    const redisUrl = process.env.REDIS_URL?.trim();
 
     if (redisUrl) {
       try {
-        console.log(`[CacheService] Attempting connection to Redis at ${redisUrl}...`);
+        let maskedHost = 'Redis Server';
+        try {
+          const parsed = new URL(redisUrl);
+          maskedHost = `${parsed.hostname}:${parsed.port || '6379'}`;
+        } catch {}
+
         this.redisClient = new Redis(redisUrl, {
           lazyConnect: true,
           maxRetriesPerRequest: 1,
-          connectTimeout: 3000,
+          connectTimeout: 5000,
           enableOfflineQueue: false,
+          retryStrategy(times) {
+            if (times > 3) return null; // Stop retrying after 3 attempts
+            return Math.min(times * 300, 1000);
+          },
         });
 
         this.redisClient.on('connect', () => {
           this.isRedisConnected = true;
-          console.log('[CacheService] ✅ Successfully connected to Redis server');
         });
 
-        this.redisClient.on('error', (err) => {
-          this.isRedisConnected = false;
-          console.warn('[CacheService] ⚠️ Redis connection error, using in-memory cache fallback:', err.message);
+        this.redisClient.on('ready', () => {
+          this.isRedisConnected = true;
+          console.log(`[Redis] ✅ Connected & Ready at ${maskedHost}`);
         });
 
-        this.redisClient.connect().catch((err) => {
+        this.redisClient.on('error', (err: any) => {
           this.isRedisConnected = false;
-          console.warn('[CacheService] ⚠️ Initial Redis connection failed, falling back to memory cache.');
+          // Only log once or on change to avoid console spam
+          console.warn(`[Redis] ⚠️ Redis error (${err.code || err.message}). In-memory cache is active.`);
+        });
+
+        this.redisClient.on('close', () => {
+          this.isRedisConnected = false;
         });
       } catch (err: any) {
         this.isRedisConnected = false;
-        console.warn('[CacheService] ⚠️ Redis initialization error, using in-memory fallback:', err.message);
+        console.warn('[Redis] ⚠️ Redis client init failed, using in-memory cache:', err.message);
       }
-    } else {
-      console.log('[CacheService] ℹ️ REDIS_URL not set in .env. Using built-in high-performance in-memory cache.');
     }
+  }
+
+  async ensureConnection(): Promise<boolean> {
+    const redisUrl = process.env.REDIS_URL?.trim();
+    if (!redisUrl || !this.redisClient) {
+      console.log('[Redis] ℹ️ REDIS_URL not configured. Using high-performance in-memory cache.');
+      return false;
+    }
+
+    if (this.isRedisConnected) return true;
+
+    if (!this.connectionPromise) {
+      this.connectionPromise = (async () => {
+        try {
+          await this.redisClient!.connect();
+          this.isRedisConnected = true;
+          return true;
+        } catch (err: any) {
+          this.isRedisConnected = false;
+          console.warn(`[Redis] ⚠️ Could not connect to Redis (${err.message}). Using in-memory fallback.`);
+          return false;
+        } finally {
+          this.connectionPromise = null;
+        }
+      })();
+    }
+
+    return this.connectionPromise;
   }
 
   async get<T>(key: string): Promise<T | null> {
@@ -60,7 +101,7 @@ class CacheService {
         }
         return null;
       } catch (err) {
-        console.warn(`[CacheService] Redis get error for key "${key}", checking memory cache fallback.`);
+        // Fall through to memory cache
       }
     }
 
@@ -85,7 +126,7 @@ class CacheService {
         await this.redisClient.set(key, jsonStr, 'EX', ttlSeconds);
         return;
       } catch (err) {
-        console.warn(`[CacheService] Redis set error for key "${key}", caching in memory.`);
+        // Fall through to memory cache
       }
     }
 
@@ -115,4 +156,3 @@ class CacheService {
 }
 
 export const cacheService = new CacheService();
-
