@@ -30,8 +30,12 @@ const MENU_ITEMS = [
   { id: 'delete', icon: '🗑️', title: 'Delete My Account', color: '#ff758c' },
 ];
 
-export const ProfileSettingsScreen = () => {
-  const navigation = useNavigation<any>();
+export const ProfileSettingsScreen: React.FC<any> = ({ navigation: propNavigation }) => {
+  let hookNavigation: any = null;
+  try {
+    hookNavigation = useNavigation<any>();
+  } catch {}
+  const navigation = propNavigation || hookNavigation;
   const insets = useSafeAreaInsets();
 
   const user = useAuthStore((state) => state.user);
@@ -178,7 +182,9 @@ export const ProfileSettingsScreen = () => {
                 index === MENU_ITEMS.length - 1 && { borderBottomWidth: 0 }
               ]}
               onPress={() => {
-                if (item.id === 'doctor' || item.id === 'mother' || item.id === 'husband') {
+                if (item.id === 'mother') {
+                  navigation.navigate('PregnancyDetails');
+                } else if (item.id === 'doctor' || item.id === 'husband') {
                   navigation.navigate('MedicalProfile');
                 } else if (item.id === 'refer') {
                   navigation.navigate('ReferEarn');
@@ -186,6 +192,21 @@ export const ProfileSettingsScreen = () => {
                   navigation.navigate('Kundli');
                 } else if (item.id === 'live') {
                   navigation.navigate('LiveSessions');
+                } else if (item.id === 'notify') {
+                  navigation.navigate('Notifications');
+                } else if (item.id === 'delete') {
+                  Alert.alert(
+                    'Delete Account',
+                    'Are you sure you want to delete your account? This action cannot be undone and will erase all journey progress.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { 
+                        text: 'Delete', 
+                        style: 'destructive', 
+                        onPress: () => useAuthStore.getState().logout() 
+                      }
+                    ]
+                  );
                 }
               }}
             >

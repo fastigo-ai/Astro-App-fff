@@ -50,10 +50,11 @@ const SettingItem: React.FC<SettingItemProps> = ({ icon, title, subtitle, onPres
   </TouchableOpacity>
 );
 
-export const ProfileScreen = () => {
+export const ProfileScreen: React.FC<any> = ({ navigation: propNavigation }) => {
   const { t, i18n } = useTranslation();
-  const navigation = useNavigation();
-  const { user, logout } = useAuthStore();
+  const hookNavigation = useNavigation();
+  const navigation = propNavigation || hookNavigation;
+  const { user, journeyData, logout } = useAuthStore();
   const insets = useSafeAreaInsets();
   const [notifications, setNotifications] = React.useState(true);
   const [isContactModalVisible, setContactModalVisible] = React.useState(false);
@@ -73,6 +74,44 @@ export const ProfileScreen = () => {
     .toUpperCase();
 
   const isHindi = i18n.language?.startsWith('hi');
+
+  const navigateToScreen = (screenName: string, params?: any) => {
+    const parent = navigation.getParent();
+    if (parent) {
+      (parent as any).navigate(screenName, params);
+    } else {
+      (navigation as any).navigate(screenName, params);
+    }
+  };
+
+  const handlePartnerProfile = () => {
+    Alert.alert(
+      t('profile.partnerProfile'),
+      isHindi 
+        ? 'अपने साथी को जोड़ें और अपनी गर्भावस्था यात्रा को एक साथ साझा करें।' 
+        : 'Connect with your partner to share baby development updates, Garbh Samvad, and Vedic activities together.',
+      [
+        { text: isHindi ? 'रद्द करें' : 'Cancel', style: 'cancel' },
+        { 
+          text: isHindi ? 'साथी जोड़ें' : 'Invite Partner', 
+          onPress: () => {
+            Alert.alert(
+              isHindi ? 'निमंत्रण भेजा गया 🌸' : 'Invitation Sent 🌸',
+              isHindi ? 'साथी को जोड़ने का निमंत्रण लिंक साझा किया गया है।' : 'An invitation link has been generated to sync your journey with your partner.'
+            );
+          } 
+        }
+      ]
+    );
+  };
+
+  const handleHelpCenter = () => {
+    navigateToScreen('Contact');
+  };
+
+  const handleTermsPrivacy = () => {
+    navigateToScreen('TermsConditions');
+  };
 
   const handlePickAvatar = async () => {
     try {
@@ -106,6 +145,16 @@ export const ProfileScreen = () => {
         
         {/* Header Section (Dreamy Aesthetic) */}
         <View style={[styles.headerCanvas, { paddingTop: insets.top + 20 }]}>
+          <TouchableOpacity 
+            style={styles.headerSettingsBtn} 
+            onPress={() => navigateToScreen('ProfileSettings')}
+            accessibilityRole="button"
+            accessibilityLabel="Profile Settings"
+            activeOpacity={0.8}
+          >
+            <Settings size={22} color="#6B7280" />
+          </TouchableOpacity>
+
           <View style={styles.avatarContainer}>
             {user?.avatar ? (
               <RNImage source={{ uri: user.avatar }} style={styles.avatarImage} />
@@ -121,7 +170,11 @@ export const ProfileScreen = () => {
               activeOpacity={0.8}
             >
               <Camera size={11} color="#FFFFFF" style={{ marginRight: 3 }} />
-              <Text style={styles.editAvatarText}>{isHindi ? 'फ़ोटो बदलें' : 'Edit'}</Text>
+              <Text style={styles.editAvatarText}>
+                {user?.avatar
+                  ? (isHindi ? 'DP बदलें' : 'Change DP')
+                  : (isHindi ? 'नयी DP लगाएं' : 'Add DP')}
+              </Text>
             </TouchableOpacity>
           </View>
           
@@ -158,25 +211,74 @@ export const ProfileScreen = () => {
 
           {/* Section: My Journey */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionHeader}>{t('profile.myJourney')}</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeader}>{t('profile.myJourney')}</Text>
+              <TouchableOpacity
+                onPress={() => navigateToScreen('PregnancyDetails')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.editSectionLink}>
+                  {isHindi ? 'विवरण देखें / बदलें ✏️' : 'View & Update ✏️'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Collected Details Summary Card */}
+            <TouchableOpacity
+              style={styles.pregnancyDetailsSummaryCard}
+              onPress={() => navigateToScreen('PregnancyDetails')}
+              activeOpacity={0.88}
+            >
+              <View style={styles.pregnancySummaryHeader}>
+                <View style={styles.pregnancyIconBadge}>
+                  <Calendar size={18} color="#BE123C" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.pregnancyStageTitle}>
+                    {journeyData?.stage === 'planning'
+                      ? (isHindi ? 'गर्भाधान योजना चरण' : 'Conception Planning Stage')
+                      : (isHindi 
+                          ? `गर्भावस्था माह ${journeyData?.confirmed_month || 4} (${(journeyData?.confirmed_month || 4) <= 3 ? 'प्रथम' : (journeyData?.confirmed_month || 4) <= 6 ? 'द्वितीय' : 'तृतीय'} तिमाही)` 
+                          : `Pregnancy Month ${journeyData?.confirmed_month || 4} • ${(journeyData?.confirmed_month || 4) <= 3 ? '1st' : (journeyData?.confirmed_month || 4) <= 6 ? '2nd' : '3rd'} Trimester`)}
+                  </Text>
+                  <Text style={styles.pregnancyMilestoneSubtitle}>
+                    {journeyData?.stage === 'planning'
+                      ? (isHindi ? 'बीज शुद्धि एवं सात्विक तैयारी' : 'Preconception Vedic Detox & Wellness')
+                      : (isHindi ? 'मस्तिष्क व संवेदी तंत्रिकाओं का तीव्र विकास' : 'Auditory sensory nerves & brain wiring active')}
+                  </Text>
+                </View>
+                <ChevronRight size={18} color="#94A3B8" />
+              </View>
+
+              {/* Quick Details Chips */}
+              <View style={styles.collectedChipsGrid}>
+                <View style={styles.collectedChip}>
+                  <Text style={styles.chipLabel}>{isHindi ? 'प्रसव तिथि (EDD)' : 'Due Date (EDD)'}</Text>
+                  <Text style={styles.chipValue}>{journeyData?.edd_date || '15 Oct 2027'}</Text>
+                </View>
+                <View style={styles.collectedChip}>
+                  <Text style={styles.chipLabel}>{isHindi ? 'अंतिम माहवारी (LMP)' : 'LMP Date'}</Text>
+                  <Text style={styles.chipValue}>{journeyData?.lmp_date || user?.lmp_date || '10 Jan 2027'}</Text>
+                </View>
+                <View style={styles.collectedChip}>
+                  <Text style={styles.chipLabel}>{isHindi ? 'स्थान' : 'City'}</Text>
+                  <Text style={styles.chipValue}>{user?.city || 'Delhi, India'}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
             <View style={styles.cardGroup}>
               <SettingItem 
                 icon={<Calendar size={22} color="#EC4899" />} 
                 title={t('profile.pregnancyDetails')} 
-                subtitle={t('profile.pregnancyDetailsSub')} 
-                onPress={() => {
-                  const parent = navigation.getParent();
-                  if (parent) {
-                    (parent as any).navigate('LifeStage');
-                  } else {
-                    (navigation as any).navigate('LifeStage');
-                  }
-                }}
+                subtitle={isHindi ? 'सभी विवरण देखें व फोटो (DP) अपडेट करें' : 'View all collected details & update DP'} 
+                onPress={() => navigateToScreen('PregnancyDetails')}
               />
               <SettingItem 
                 icon={<Heart size={22} color="#EC4899" />} 
                 title={t('profile.partnerProfile')} 
                 subtitle={t('profile.partnerProfileSub')} 
+                onPress={handlePartnerProfile}
                 isLast
               />
             </View>
@@ -186,6 +288,12 @@ export const ProfileScreen = () => {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionHeader}>{t('profile.preferences')}</Text>
             <View style={styles.cardGroup}>
+              <SettingItem 
+                icon={<Settings size={22} color="#6366F1" />} 
+                title={isHindi ? 'खाता और ऐप सेटिंग्स' : 'Account & App Settings'} 
+                subtitle={isHindi ? 'सदस्यता, डॉक्टर और प्रोफ़ाइल विवरण' : 'Subscription, doctor & profile details'} 
+                onPress={() => navigateToScreen('ProfileSettings')} 
+              />
               <SettingItem 
                 icon={<Globe size={22} color="#4B5563" />} 
                 title={t('profile.language')} 
@@ -235,10 +343,14 @@ export const ProfileScreen = () => {
               <SettingItem 
                 icon={<HelpCircle size={22} color="#4B5563" />} 
                 title={t('profile.helpCenter')} 
+                subtitle={isHindi ? 'संपर्क और सहायता केंद्र' : 'Contact & customer care'}
+                onPress={handleHelpCenter}
               />
               <SettingItem 
                 icon={<User size={22} color="#4B5563" />} 
                 title={t('profile.termsPrivacy')} 
+                subtitle={isHindi ? 'नियम और गोपनीयता नीति' : 'Terms & Privacy Policy'}
+                onPress={handleTermsPrivacy}
                 isLast
               />
             </View>
@@ -334,6 +446,26 @@ const styles = StyleSheet.create({
     zIndex: 10,
     borderWidth: 1,
     borderColor: '#FEF3C7',
+    position: 'relative',
+  },
+  headerSettingsBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    zIndex: 20,
   },
   avatarContainer: {
     position: 'relative',
@@ -452,14 +584,83 @@ const styles = StyleSheet.create({
   sectionContainer: {
     marginBottom: 24,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 8,
+  },
   sectionHeader: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
     color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  editSectionLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#BE123C',
+  },
+  pregnancyDetailsSummaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
     marginBottom: 12,
-    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#FCE7F3',
+    shadowColor: '#BE123C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  pregnancySummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  pregnancyIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF1F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pregnancyStageTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E1B4B',
+  },
+  pregnancyMilestoneSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  collectedChipsGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#FAF9F6',
+    borderRadius: 12,
+    padding: 10,
+  },
+  collectedChip: {
+    flex: 1,
+  },
+  chipLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#94A3B8',
+    marginBottom: 2,
+  },
+  chipValue: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#1E1B4B',
   },
   cardGroup: {
     backgroundColor: '#FFFFFF',

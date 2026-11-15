@@ -11,6 +11,13 @@ export interface User {
   phone: string;
   lmp_date?: string;
   avatar?: string;
+  dob?: string;
+  city?: string;
+  state?: string;
+  bloodGroup?: string;
+  doctorName?: string;
+  hospitalName?: string;
+  partnerName?: string;
 }
 
 export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'none';
@@ -62,6 +69,8 @@ interface AuthState {
   isModuleUnlocked: (moduleId: string) => boolean;
   subscribeToProgram: (programId: string, planDetails: any) => Promise<void>;
   setUserAvatar: (avatarUri: string) => Promise<void>;
+  updateUserProfile: (data: Partial<User>) => Promise<void>;
+  updateJourneyDetails: (data: Partial<JourneyData>) => Promise<void>;
 }
 
 const RATE_LIMIT_COUNT = 3;
@@ -222,9 +231,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: { 
           id: '1', 
           name: profileData?.name || 'New Mom', 
-          phone: '',
+          phone: profileData?.phone || '',
           lmp_date: extraData?.lmp_date,
           avatar: storedAvatar || undefined,
+          dob: profileData?.dob,
+          city: profileData?.city,
+          state: profileData?.state,
+          bloodGroup: profileData?.bloodGroup,
+          doctorName: profileData?.doctorName,
+          hospitalName: profileData?.hospitalName,
+          partnerName: profileData?.partnerName,
         },
         hasLanguage: !!hasLang,
         hasProfile: !!hasProf,
@@ -240,13 +256,62 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } else {
       set({ 
         status: 'idle', 
-        user: storedAvatar ? { id: '1', name: profileData?.name || 'New Mom', phone: '', avatar: storedAvatar } : null, 
+        user: storedAvatar ? { 
+          id: '1', 
+          name: profileData?.name || 'New Mom', 
+          phone: profileData?.phone || '', 
+          avatar: storedAvatar,
+          dob: profileData?.dob,
+          city: profileData?.city,
+          state: profileData?.state,
+          bloodGroup: profileData?.bloodGroup,
+          doctorName: profileData?.doctorName,
+          hospitalName: profileData?.hospitalName,
+          partnerName: profileData?.partnerName,
+        } : null, 
         isDemoActive: isDemo === 'true',
         subscribedPrograms: parsedPrograms,
         activeSubscriptions: parsedActiveSubs,
         subscriptionStatus: (storedSub as any) || 'none' 
       });
     }
+  },
+
+  updateUserProfile: async (data: Partial<User>) => {
+    const currentUser = get().user || { id: '1', name: 'New Mom', phone: '' };
+    const updatedUser = { ...currentUser, ...data };
+    
+    // Save to profile_data in AsyncStorage
+    const existingRaw = await AsyncStorage.getItem('@garbhcompanion/profile_data');
+    let existingProfile: any = {};
+    if (existingRaw) {
+      try { existingProfile = JSON.parse(existingRaw); } catch (e) {}
+    }
+    const mergedProfile = { ...existingProfile, ...data };
+    await AsyncStorage.setItem('@garbhcompanion/profile_data', JSON.stringify(mergedProfile));
+    
+    if (data.avatar) {
+      await AsyncStorage.setItem('@garbhcompanion/user_avatar', data.avatar);
+    }
+    
+    set({ user: updatedUser });
+    
+    try {
+      await api.post('/api/v1/profile/details', mergedProfile).catch(() => {});
+    } catch (e) {}
+  },
+
+  updateJourneyDetails: async (data: Partial<JourneyData>) => {
+    const current = get().journeyData || { stage: 'pregnant' as const, confirmed_month: 4 };
+    const merged: JourneyData = { ...current, ...data };
+    await AsyncStorage.setItem('@garbhcompanion/life_stage_extra', JSON.stringify(merged));
+    if (merged.stage) {
+      await AsyncStorage.setItem('@garbhcompanion/life_stage_data', merged.stage);
+    }
+    set((state) => ({
+      journeyData: merged,
+      user: state.user ? { ...state.user, lmp_date: merged.lmp_date } : null,
+    }));
   },
 
   setUserAvatar: async (avatarUri: string) => {

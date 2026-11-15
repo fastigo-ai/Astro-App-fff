@@ -38,6 +38,7 @@ import { DadiNuskhaScreen } from '~/features/interactions/screens/DadiNuskhaScre
 import { PregnancyGamesScreen } from '~/features/games/screens/PregnancyGamesScreen';
 import { GarbhSanskarLibraryScreen } from '~/features/library/screens/GarbhSanskarLibraryScreen';
 import { GarbhSanskarAudioScreen } from '~/features/library/screens/GarbhSanskarAudioScreen';
+import { PregnancyDetailsScreen } from '~/features/profile/screens/PregnancyDetailsScreen';
 
 import { useAuthStore } from '~/store/useAuthStore';
 
@@ -167,6 +168,10 @@ export const AppStack = () => {
       <Stack.Screen 
         name="GarbhSanskarAudio" 
         component={GarbhSanskarAudioScreen} 
+      />
+      <Stack.Screen 
+        name="PregnancyDetails" 
+        component={PregnancyDetailsScreen} 
       />
     </Stack.Navigator>
   );
