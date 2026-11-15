@@ -5,78 +5,46 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Dimensions,
+  Image as RNImage,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
-import {
-  CheckCircle2,
-  Circle,
-  Music,
-  Sun,
-  Heart,
-  Calendar,
-  ArrowRight,
-  Sparkles,
-} from 'lucide-react-native';
+import { Calendar, CheckCircle2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = Math.min(280, Math.round(width * 0.72));
+const CARD_WIDTH = Math.min(210, Math.round(width * 0.54));
 
 export const KrishnaDailyVedicActivities = () => {
   const navigation = useNavigation<NavigationProp>();
   const { i18n } = useTranslation();
   const isHindi = i18n.language === 'hi';
-  const [completedList, setCompletedList] = useState<string[]>(['act_1']);
+  const [completedList] = useState<string[]>(['act_1']);
 
-  // 3 Curated Feature Activities for the Swipe Carousel
+  // 3 Curated Feature Activities with photo and single activity title
   const FEATURE_ACTIVITIES = [
     {
       id: 'act_1',
       detailId: '1',
-      time: '07:00 AM',
-      duration: '10 min',
-      title: isHindi ? 'प्रातः स्मरण एवं शांति पाठ' : 'Pratah Smaran & Morning Shloka',
-      subtitle: isHindi ? 'शिशु के साथ पावन शुरुआत' : 'Sacred sunrise Vedic chanting',
-      icon: <Sun size={20} color="#D97706" />,
-      iconBg: '#FEF3C7',
-      category: isHindi ? 'दैनिक मंत्र' : 'Mantra',
-      actionPrompt: isHindi ? 'पाठ शुरू करें' : 'Start Chanting',
-      color: '#D97706',
+      title: isHindi ? 'प्रातः स्मरण एवं श्लोक' : 'Pratah Smaran & Shloka',
+      image: require('../../../assets/programs/garbh_sanskar.jpg'),
     },
     {
       id: 'act_2',
       detailId: '3',
-      time: '10:30 AM',
-      duration: '12 min',
-      title: isHindi ? 'गर्भ संवाद (पावन संवाद)' : 'Garbh Samvad: Daily Womb Talk',
-      subtitle: isHindi ? 'शिशु को प्रेम व संस्कार का संदेश' : 'Deep soul-to-soul womb conversation',
-      icon: <Heart size={20} color="#E11D48" />,
-      iconBg: '#FFE4E6',
-      category: isHindi ? 'गर्भ संवाद' : 'Womb Talk',
-      actionPrompt: isHindi ? 'संवाद शुरू करें' : 'Talk to Baby',
-      color: '#E11D48',
+      title: isHindi ? 'गर्भ संवाद' : 'Garbh Samvad',
+      image: require('../../../assets/programs/infant_care.jpg'),
     },
     {
       id: 'act_3',
       detailId: '4',
-      time: '01:00 PM',
-      duration: '15 min',
-      title: isHindi ? 'राग यमन व नाद चिकित्सा' : 'Raag Yaman & 432Hz Music',
-      subtitle: isHindi ? 'शिशु के मस्तिष्क का विकास' : 'Harmonic frequencies for fetal brain',
-      icon: <Music size={20} color="#7C3AED" />,
-      iconBg: '#F3E8FF',
-      category: isHindi ? 'संगीत चिकित्सा' : 'Raaga Therapy',
-      actionPrompt: isHindi ? 'संगीत सुनें' : 'Play Raaga',
-      color: '#7C3AED',
+      title: isHindi ? 'राग यमन संगीत' : 'Raag Yaman Music',
+      image: require('../../../assets/programs/bal_sanskar.jpg'),
     },
   ];
-
-  const TOTAL_ACTIVITIES_COUNT = 5;
 
   const navigateToActivitiesScreen = () => {
     try {
@@ -88,20 +56,6 @@ export const KrishnaDailyVedicActivities = () => {
       }
     } catch {
       (navigation as any).navigate('Activity');
-    }
-  };
-
-  const handleToggle = (id: string) => {
-    if (completedList.includes(id)) {
-      setCompletedList((prev) => prev.filter((x) => x !== id));
-    } else {
-      setCompletedList((prev) => [...prev, id]);
-      Alert.alert(
-        isHindi ? 'संस्कार पूर्ण! 🌸' : 'Activity Completed! 🌸',
-        isHindi
-          ? 'आपके शिशु को आज के पावन संस्कार का पूर्ण आशीर्वाद प्राप्त हुआ।'
-          : 'You earned +20 Garbh Sanskar wellness points today.'
-      );
     }
   };
 
@@ -138,7 +92,7 @@ export const KrishnaDailyVedicActivities = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Swipeable Horizontal Cards (Dating-style small card boxes) */}
+      {/* Swipeable Horizontal Cards (Single Activity Name + Photo Only) */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -152,60 +106,35 @@ export const KrishnaDailyVedicActivities = () => {
           return (
             <TouchableOpacity
               key={act.id}
-              style={[styles.activitySwipeCard, isDone && styles.activitySwipeCardDone]}
+              style={styles.activitySwipeCard}
               activeOpacity={0.88}
               onPress={() => handleOpenActivity(act)}
             >
-              {/* Card Top: Category Badge & Time */}
-              <View style={styles.cardTopRow}>
-                <View style={[styles.categoryPill, { backgroundColor: act.iconBg }]}>
-                  <Text style={[styles.categoryPillText, { color: act.color }]}>
-                    {act.category}
-                  </Text>
-                </View>
-
-                {/* Check Button */}
-                <TouchableOpacity
-                  style={styles.checkIconBtn}
-                  onPress={() => handleToggle(act.id)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  {isDone ? (
-                    <CheckCircle2 size={22} color="#16A34A" />
-                  ) : (
-                    <Circle size={22} color="#CBD5E1" />
-                  )}
-                </TouchableOpacity>
+              {/* Photo of the activity */}
+              <View style={styles.imageBox}>
+                <RNImage
+                  source={act.image}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                />
+                {isDone && (
+                  <View style={styles.checkBadge}>
+                    <CheckCircle2 size={14} color="#FFFFFF" />
+                  </View>
+                )}
               </View>
 
-              {/* Card Center: Icon & Title */}
-              <View style={styles.cardCenterCol}>
-                <View style={[styles.iconRing, { backgroundColor: act.iconBg }]}>
-                  {act.icon}
-                </View>
-                <Text style={styles.cardTitle} numberOfLines={2}>
+              {/* Single text of the activity name */}
+              <View style={styles.titleContainer}>
+                <Text style={styles.activityTitleText} numberOfLines={2}>
                   {act.title}
                 </Text>
-                <Text style={styles.cardSubtitle} numberOfLines={1}>
-                  {act.subtitle}
-                </Text>
-              </View>
-
-              {/* Card Bottom: Duration & Tap Prompt */}
-              <View style={styles.cardBottomRow}>
-                <Text style={styles.durationPill}>⏱ {act.duration} • {act.time}</Text>
-                <View style={styles.actionPromptRow}>
-                  <Text style={[styles.actionPromptText, { color: act.color }]}>
-                    {isDone ? (isHindi ? 'पूर्ण ✓' : 'Done ✓') : act.actionPrompt}
-                  </Text>
-                  {!isDone && <ArrowRight size={13} color={act.color} style={{ marginLeft: 2 }} />}
-                </View>
               </View>
             </TouchableOpacity>
           );
         })}
 
-        {/* Final "View All Activities" Card Box */}
+        {/* Final "View All" Card Box */}
         <TouchableOpacity
           style={styles.viewAllCard}
           activeOpacity={0.85}
@@ -217,16 +146,6 @@ export const KrishnaDailyVedicActivities = () => {
           <Text style={styles.viewAllTitle}>
             {isHindi ? 'सभी क्रियाएं देखें' : 'View All Activities'}
           </Text>
-          <Text style={styles.viewAllSub}>
-            {isHindi ? 'दैनिक कैलेंडर, स्ट्रीक व 5 क्रियाएं' : 'Full 5 activities & month calendar'}
-          </Text>
-
-          <View style={styles.openCalendarBtn}>
-            <Sparkles size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.openCalendarBtnText}>
-              {isHindi ? 'कैलेंडर खोलें' : 'Open Calendar'}
-            </Text>
-          </View>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -277,90 +196,61 @@ const styles = StyleSheet.create({
   activitySwipeCard: {
     width: CARD_WIDTH,
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    justifyContent: 'space-between',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 3,
-    minHeight: 195,
   },
-  activitySwipeCardDone: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
+  imageBox: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#F1F5F9',
+    position: 'relative',
   },
-  cardTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  cardImage: {
+    width: '100%',
+    height: '100%',
   },
-  categoryPill: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  categoryPillText: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  checkIconBtn: {
-    padding: 2,
-  },
-  cardCenterCol: {
-    marginVertical: 10,
-  },
-  iconRing: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  checkBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#16A34A',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  cardTitle: {
-    fontSize: 15,
+  titleContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  activityTitleText: {
+    fontSize: 14,
     fontWeight: '800',
     color: '#1E1B4B',
-    lineHeight: 20,
-    marginBottom: 3,
-  },
-  cardSubtitle: {
-    fontSize: 11.5,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  cardBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  durationPill: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
-  },
-  actionPromptRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionPromptText: {
-    fontSize: 11.5,
-    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: 18,
   },
   viewAllCard: {
     width: CARD_WIDTH - 20,
     backgroundColor: '#FDF2F8',
-    borderRadius: 22,
-    padding: 18,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1.5,
     borderColor: '#FCE7F3',
     alignItems: 'center',
@@ -370,7 +260,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-    minHeight: 195,
+    minHeight: 180,
   },
   viewAllIconRing: {
     width: 52,
@@ -387,31 +277,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   viewAllTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: '#831843',
     textAlign: 'center',
-    marginBottom: 4,
-  },
-  viewAllSub: {
-    fontSize: 11.5,
-    color: '#64748B',
-    textAlign: 'center',
-    marginBottom: 14,
-    paddingHorizontal: 8,
-    lineHeight: 16,
-  },
-  openCalendarBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#831843',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
-  },
-  openCalendarBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
+    lineHeight: 18,
   },
 });
