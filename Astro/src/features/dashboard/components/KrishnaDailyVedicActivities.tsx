@@ -1,12 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Dimensions,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
-import { Play, CheckCircle2, Music, Sun, Sparkles, BookOpen, Heart, Clock } from 'lucide-react-native';
+import {
+  CheckCircle2,
+  Circle,
+  Music,
+  Sun,
+  Heart,
+  Calendar,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = Math.min(280, Math.round(width * 0.72));
 
 export const KrishnaDailyVedicActivities = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -14,95 +33,89 @@ export const KrishnaDailyVedicActivities = () => {
   const isHindi = i18n.language === 'hi';
   const [completedList, setCompletedList] = useState<string[]>(['act_1']);
 
-  const ACTIVITIES = [
+  // 3 Curated Feature Activities for the Swipe Carousel
+  const FEATURE_ACTIVITIES = [
     {
       id: 'act_1',
+      detailId: '1',
       time: '07:00 AM',
+      duration: '10 min',
       title: isHindi ? 'प्रातः स्मरण एवं शांति पाठ' : 'Pratah Smaran & Morning Shloka',
       subtitle: isHindi ? 'शिशु के साथ पावन शुरुआत' : 'Sacred sunrise Vedic chanting',
-      duration: '10 min',
-      icon: <Sun size={18} color="#D97706" />,
+      icon: <Sun size={20} color="#D97706" />,
       iconBg: '#FEF3C7',
       category: isHindi ? 'दैनिक मंत्र' : 'Mantra',
+      actionPrompt: isHindi ? 'पाठ शुरू करें' : 'Start Chanting',
+      color: '#D97706',
     },
     {
       id: 'act_2',
+      detailId: '3',
       time: '10:30 AM',
-      title: isHindi ? 'गर्भ संवाद (आज का पावन संवाद)' : 'Garbh Samvad: Daily Womb Talk',
-      subtitle: isHindi ? 'शिशु को प्रेम व संस्कार का संदेश' : 'Deep soul-to-soul womb conversation',
       duration: '12 min',
-      icon: <Heart size={18} color="#E11D48" />,
+      title: isHindi ? 'गर्भ संवाद (पावन संवाद)' : 'Garbh Samvad: Daily Womb Talk',
+      subtitle: isHindi ? 'शिशु को प्रेम व संस्कार का संदेश' : 'Deep soul-to-soul womb conversation',
+      icon: <Heart size={20} color="#E11D48" />,
       iconBg: '#FFE4E6',
       category: isHindi ? 'गर्भ संवाद' : 'Womb Talk',
-      route: 'GarbhSamvad' as const,
+      actionPrompt: isHindi ? 'संवाद शुरू करें' : 'Talk to Baby',
+      color: '#E11D48',
     },
     {
       id: 'act_3',
+      detailId: '4',
       time: '01:00 PM',
-      title: isHindi ? 'राग यमन व 432Hz नाद चिकित्सा' : 'Raag Yaman & 432Hz Healing Music',
-      subtitle: isHindi ? 'शिशु के तंत्रिका तंत्र का विकास' : 'Harmonic frequencies for fetal brain',
       duration: '15 min',
-      icon: <Music size={18} color="#7C3AED" />,
+      title: isHindi ? 'राग यमन व नाद चिकित्सा' : 'Raag Yaman & 432Hz Music',
+      subtitle: isHindi ? 'शिशु के मस्तिष्क का विकास' : 'Harmonic frequencies for fetal brain',
+      icon: <Music size={20} color="#7C3AED" />,
       iconBg: '#F3E8FF',
       category: isHindi ? 'संगीत चिकित्सा' : 'Raaga Therapy',
-      route: 'MoodTherapy' as const,
-    },
-    {
-      id: 'act_4',
-      time: '04:30 PM',
-      title: isHindi ? 'गर्भिणी सूक्ष्म व्यायाम व ध्यान' : 'Pregnancy Yoga & Breathwork',
-      subtitle: isHindi ? 'आसान प्रसव हेतु सुरक्षित आसन' : 'Gentle pelvic floor & relaxation',
-      duration: '18 min',
-      icon: <Sparkles size={18} color="#059669" />,
-      iconBg: '#DCFCE7',
-      category: isHindi ? 'योग व ध्यान' : 'Yoga',
-    },
-    {
-      id: 'act_5',
-      time: '08:30 PM',
-      title: isHindi ? 'पंचतंत्र प्रेरणादायी प्रेरक कथा' : 'Vedic Moral Story & Wisdom',
-      subtitle: isHindi ? 'शिशु के अवचेतन मन में सद्गुण' : 'Subconscious virtues & noble values',
-      duration: '8 min',
-      icon: <BookOpen size={18} color="#2563EB" />,
-      iconBg: '#EFF6FF',
-      category: isHindi ? 'कथा संस्कार' : 'Story',
+      actionPrompt: isHindi ? 'संगीत सुनें' : 'Play Raaga',
+      color: '#7C3AED',
     },
   ];
 
-  const handleToggle = (id: string, route?: keyof AppStackParamList) => {
+  const TOTAL_ACTIVITIES_COUNT = 5;
+
+  const navigateToActivitiesScreen = () => {
+    try {
+      const parent = navigation.getParent();
+      if (parent) {
+        (parent as any).navigate('Activity');
+      } else {
+        (navigation as any).navigate('Activity');
+      }
+    } catch {
+      (navigation as any).navigate('Activity');
+    }
+  };
+
+  const handleToggle = (id: string) => {
     if (completedList.includes(id)) {
-      setCompletedList(prev => prev.filter(x => x !== id));
+      setCompletedList((prev) => prev.filter((x) => x !== id));
     } else {
-      setCompletedList(prev => [...prev, id]);
+      setCompletedList((prev) => [...prev, id]);
       Alert.alert(
         isHindi ? 'संस्कार पूर्ण! 🌸' : 'Activity Completed! 🌸',
-        isHindi 
+        isHindi
           ? 'आपके शिशु को आज के पावन संस्कार का पूर्ण आशीर्वाद प्राप्त हुआ।'
           : 'You earned +20 Garbh Sanskar wellness points today.'
       );
     }
   };
 
-  const handleOpenActivity = (route?: keyof AppStackParamList) => {
-    if (!route) {
-      const parent = navigation.getParent();
-      if (parent) {
-        (parent as any).navigate('Course');
-      } else {
-        (navigation as any).navigate('Course');
-      }
-      return;
-    }
-    const parent = navigation.getParent();
-    if (parent) {
-      (parent as any).navigate(route);
+  const handleOpenActivity = (act: any) => {
+    if (act.detailId) {
+      navigation.navigate('ActivityDetail', { id: act.detailId });
     } else {
-      (navigation as any).navigate(route);
+      navigateToActivitiesScreen();
     }
   };
 
   return (
     <View style={styles.container}>
+      {/* Header Row */}
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.headerBadge}>
@@ -112,68 +125,123 @@ export const KrishnaDailyVedicActivities = () => {
             {isHindi ? 'दैनिक गर्भ संस्कार क्रियाएं' : 'Daily Sanskar Activities'}
           </Text>
         </View>
-        <View style={styles.progressPill}>
-          <Text style={styles.progressText}>
-            {completedList.length}/{ACTIVITIES.length} {isHindi ? 'पूर्ण' : 'Done'}
+
+        {/* Clickable "See All" pill leading to full Activity screen */}
+        <TouchableOpacity
+          style={styles.seeAllPill}
+          activeOpacity={0.7}
+          onPress={navigateToActivitiesScreen}
+        >
+          <Text style={styles.seeAllText}>
+            {isHindi ? 'सभी देखें (5) >' : 'See All (5) →'}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.list}>
-        {ACTIVITIES.map((act) => {
+      {/* Swipeable Horizontal Cards (Dating-style small card boxes) */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.cardsScrollContent}
+        snapToInterval={CARD_WIDTH + 14}
+        decelerationRate="fast"
+      >
+        {FEATURE_ACTIVITIES.map((act) => {
           const isDone = completedList.includes(act.id);
+
           return (
             <TouchableOpacity
               key={act.id}
-              style={[styles.itemCard, isDone && styles.itemCardDone]}
+              style={[styles.activitySwipeCard, isDone && styles.activitySwipeCardDone]}
               activeOpacity={0.88}
-              onPress={() => handleOpenActivity(act.route)}
+              onPress={() => handleOpenActivity(act)}
             >
-              <View style={[styles.iconBox, { backgroundColor: act.iconBg }]}>
-                {act.icon}
+              {/* Card Top: Category Badge & Time */}
+              <View style={styles.cardTopRow}>
+                <View style={[styles.categoryPill, { backgroundColor: act.iconBg }]}>
+                  <Text style={[styles.categoryPillText, { color: act.color }]}>
+                    {act.category}
+                  </Text>
+                </View>
+
+                {/* Check Button */}
+                <TouchableOpacity
+                  style={styles.checkIconBtn}
+                  onPress={() => handleToggle(act.id)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  {isDone ? (
+                    <CheckCircle2 size={22} color="#16A34A" />
+                  ) : (
+                    <Circle size={22} color="#CBD5E1" />
+                  )}
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.contentCol}>
-                <View style={styles.timeCategoryRow}>
-                  <Text style={styles.categoryBadge}>{act.category}</Text>
-                  <Text style={styles.timeText}>• {act.time}</Text>
-                  <Text style={styles.durationText}>⏱ {act.duration}</Text>
+              {/* Card Center: Icon & Title */}
+              <View style={styles.cardCenterCol}>
+                <View style={[styles.iconRing, { backgroundColor: act.iconBg }]}>
+                  {act.icon}
                 </View>
-                <Text style={styles.actTitle} numberOfLines={1}>
+                <Text style={styles.cardTitle} numberOfLines={2}>
                   {act.title}
                 </Text>
-                <Text style={styles.actSubtitle} numberOfLines={1}>
+                <Text style={styles.cardSubtitle} numberOfLines={1}>
                   {act.subtitle}
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.checkBtn}
-                onPress={() => handleToggle(act.id, act.route)}
-              >
-                <CheckCircle2
-                  size={24}
-                  color={isDone ? '#16A34A' : '#D1D5DB'}
-                  fill={isDone ? '#DCFCE7' : 'transparent'}
-                />
-              </TouchableOpacity>
+              {/* Card Bottom: Duration & Tap Prompt */}
+              <View style={styles.cardBottomRow}>
+                <Text style={styles.durationPill}>⏱ {act.duration} • {act.time}</Text>
+                <View style={styles.actionPromptRow}>
+                  <Text style={[styles.actionPromptText, { color: act.color }]}>
+                    {isDone ? (isHindi ? 'पूर्ण ✓' : 'Done ✓') : act.actionPrompt}
+                  </Text>
+                  {!isDone && <ArrowRight size={13} color={act.color} style={{ marginLeft: 2 }} />}
+                </View>
+              </View>
             </TouchableOpacity>
           );
         })}
-      </View>
+
+        {/* Final "View All Activities" Card Box */}
+        <TouchableOpacity
+          style={styles.viewAllCard}
+          activeOpacity={0.85}
+          onPress={navigateToActivitiesScreen}
+        >
+          <View style={styles.viewAllIconRing}>
+            <Calendar size={28} color="#831843" />
+          </View>
+          <Text style={styles.viewAllTitle}>
+            {isHindi ? 'सभी क्रियाएं देखें' : 'View All Activities'}
+          </Text>
+          <Text style={styles.viewAllSub}>
+            {isHindi ? 'दैनिक कैलेंडर, स्ट्रीक व 5 क्रियाएं' : 'Full 5 activities & month calendar'}
+          </Text>
+
+          <View style={styles.openCalendarBtn}>
+            <Sparkles size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.openCalendarBtnText}>
+              {isHindi ? 'कैलेंडर खोलें' : 'Open Calendar'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
     marginVertical: 12,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 16,
     marginBottom: 12,
   },
   headerBadge: {
@@ -188,83 +256,162 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1E1B4B',
   },
-  progressPill: {
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+  seeAllPill: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
   },
-  progressText: {
+  seeAllText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#15803D',
+    color: '#B45309',
   },
-  list: {
-    gap: 10,
+  cardsScrollContent: {
+    paddingHorizontal: 16,
+    gap: 14,
+    paddingBottom: 6,
   },
-  itemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  activitySwipeCard: {
+    width: CARD_WIDTH,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
+    borderRadius: 22,
+    padding: 16,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 5,
-    elevation: 2,
+    justifyContent: 'space-between',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+    minHeight: 195,
   },
-  itemCardDone: {
+  activitySwipeCardDone: {
     backgroundColor: '#F0FDF4',
     borderColor: '#BBF7D0',
   },
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contentCol: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  timeCategoryRow: {
+  cardTopRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
   },
-  categoryBadge: {
+  categoryPill: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  categoryPillText: {
     fontSize: 10.5,
     fontWeight: '800',
-    color: '#6B7280',
     textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  timeText: {
+  checkIconBtn: {
+    padding: 2,
+  },
+  cardCenterCol: {
+    marginVertical: 10,
+  },
+  iconRing: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E1B4B',
+    lineHeight: 20,
+    marginBottom: 3,
+  },
+  cardSubtitle: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  cardBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  durationPill: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#94A3B8',
     fontWeight: '600',
   },
-  durationText: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginLeft: 'auto',
+  actionPromptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  actTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1E1B4B',
-    marginBottom: 2,
-  },
-  actSubtitle: {
+  actionPromptText: {
     fontSize: 11.5,
-    color: '#6B7280',
+    fontWeight: '800',
   },
-  checkBtn: {
-    padding: 4,
-    marginLeft: 8,
+  viewAllCard: {
+    width: CARD_WIDTH - 20,
+    backgroundColor: '#FDF2F8',
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: '#FCE7F3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#831843',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    minHeight: 195,
+  },
+  viewAllIconRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  viewAllTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#831843',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  viewAllSub: {
+    fontSize: 11.5,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 14,
+    paddingHorizontal: 8,
+    lineHeight: 16,
+  },
+  openCalendarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#831843',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  openCalendarBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
   },
 });
