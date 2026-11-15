@@ -1,6 +1,11 @@
 import { profileRepository } from './profile.repository';
 
 export const profileService = {
+  async getProfile(phone: string | undefined) {
+    if (!phone) return null;
+    return profileRepository.findByPhone(phone);
+  },
+
   async updateLanguage(phone: string | undefined, language: string) {
     console.log(`[Backend] Updated language for user ${phone} to: ${language}`);
     if (phone) {
@@ -17,4 +22,3 @@ export const profileService = {
     return details;
   },
 };
-

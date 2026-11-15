@@ -118,7 +118,12 @@ export interface IUserJourney {
   _id?: string;
   userId?: string;
   phone?: string;
-  stage: 'pregnant' | 'planning';
+  name?: string;
+  dob?: string;
+  city?: string;
+  state?: string;
+  language?: string;
+  stage?: 'pregnant' | 'planning';
   lmp_date?: string;
   edd_date?: string;
   confirmed_month?: number;

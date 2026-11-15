@@ -1,36 +1,70 @@
 import jwt from 'jsonwebtoken';
 import { authRepository } from './auth.repository';
-
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('FATAL: JWT_SECRET environment variable is not set. Refusing to start in production.');
-}
-
-const JWT_SECRET = process.env.JWT_SECRET || 'astrobaby-dev-secret-change-me';
-const BYPASS_NUMBER = '9366128220';
-const BYPASS_OTP = '1234';
+import { smsProvider } from './sms/smsProviderFactory';
+import { JWT_SECRET } from '../../shared/config/constants';
 
 export const authService = {
-  sendOtp(phone: string) {
-    if (phone === BYPASS_NUMBER) {
-      console.log('[Backend] Bypass number detected. No actual SMS sent.');
-      return { bypass: true, message: 'OTP sent (bypass)' };
-    }
-    console.log(`[Backend] Mock sending OTP to ${phone}`);
-    return { bypass: false, message: 'OTP sent successfully' };
+  async sendOtp(phone: string) {
+    const cleaned = phone.trim();
+    // 4-digit OTP for mobile input
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    return smsProvider.sendOtp(cleaned, generatedOtp);
   },
 
-  verifyOtp(phone: string, otp: string) {
-    const isValid = phone === BYPASS_NUMBER ? otp === BYPASS_OTP : true;
-    if (!isValid) return null;
+  async verifyOtp(phone: string, otp: string) {
+    const cleaned = phone.trim();
+    const verification = await smsProvider.verifyOtp(cleaned, otp.trim());
 
-    const payload = { id: 'usr_123', phone, role: 'user' };
+    if (!verification.valid) {
+      return null;
+    }
+
+    // Check if user already exists
+    let user = await authRepository.findByPhone(cleaned);
+
+    if (!user) {
+      const generatedUserId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      user = await authRepository.upsertUserJourney(cleaned, {
+        userId: generatedUserId,
+        phone: cleaned,
+      });
+    }
+
+    // A user is considered a new user if their profile (e.g. name) is not yet set
+    const hasProfile = Boolean(user.name && user.name.trim().length > 0);
+    const hasLifeStage = Boolean(user.stage);
+    const isNewUser = !hasProfile;
+
+    const payload = {
+      id: user.userId || user._id || `usr_${Date.now()}`,
+      phone: user.phone || cleaned,
+      role: 'user',
+    };
+
     const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
     const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
 
     return {
       accessToken,
       refreshToken,
-      isNewUser: true,
+      isNewUser,
+      user: {
+        id: user.userId || user._id,
+        phone: user.phone || cleaned,
+        name: user.name || '',
+        dob: user.dob || '',
+        city: user.city || '',
+        state: user.state || '',
+        language: user.language || 'en',
+        stage: user.stage,
+        lmp_date: user.lmp_date,
+        edd_date: user.edd_date,
+        confirmed_month: user.confirmed_month,
+        remaining_months: user.remaining_months,
+        hasProfile,
+        hasLifeStage,
+        subscriptionStatus: user.subscription_status || 'none',
+      },
     };
   },
 
@@ -70,4 +104,3 @@ export const authService = {
     }
   },
 };
-

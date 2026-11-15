@@ -306,7 +306,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       if (response.data.success) {
-        const { accessToken, refreshToken } = response.data.data;
+        const { accessToken, refreshToken, isNewUser, user } = response.data.data;
         
         // Setup API token for subsequent requests globally
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
@@ -317,23 +317,80 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (refreshToken) {
           await AsyncStorage.setItem('@refresh_token', refreshToken);
         }
-        
+
         const hasLang = await AsyncStorage.getItem('@garbhcompanion/has_language');
-        const hasProf = await AsyncStorage.getItem('@garbhcompanion/has_profile');
-        const hasLife = await AsyncStorage.getItem('@garbhcompanion/has_life_stage');
-        const hasPricing = await AsyncStorage.getItem('@garbhcompanion/has_seen_pricing');
-        const hasIntro = await AsyncStorage.getItem('@garbhcompanion/has_seen_intro');
-        
-        set({ 
-          status: 'authenticated', 
-          user: { id: '1', name: 'New Mom', phone: phoneNumber || '' },
-          otpRequestTimestamps: [], // Reset on success
-          hasLanguage: !!hasLang,
-          hasProfile: !!hasProf,
-          hasLifeStage: !!hasLife,
-          hasSeenPricing: !!hasPricing,
-          hasSeenIntro: !!hasIntro
-        });
+
+        if (isNewUser) {
+          // New User: Clear previous profile & stage data so user completes onboarding form
+          await AsyncStorage.removeItem('@garbhcompanion/has_profile');
+          await AsyncStorage.removeItem('@garbhcompanion/profile_data');
+          await AsyncStorage.removeItem('@garbhcompanion/has_life_stage');
+          await AsyncStorage.removeItem('@garbhcompanion/life_stage_data');
+          await AsyncStorage.removeItem('@garbhcompanion/life_stage_extra');
+          await AsyncStorage.removeItem('@garbhcompanion/has_seen_pricing');
+          await AsyncStorage.removeItem('@garbhcompanion/has_seen_intro');
+
+          set({ 
+            status: 'authenticated', 
+            user: { id: user?.id || '1', name: '', phone: phoneNumber || '' },
+            otpRequestTimestamps: [],
+            hasLanguage: !!hasLang,
+            hasProfile: false, // Will navigate to ProfileSetup form
+            hasLifeStage: false,
+            hasSeenPricing: false,
+            hasSeenIntro: false,
+            journeyData: null,
+          });
+        } else {
+          // Returning User: Profile already exists on server
+          await AsyncStorage.setItem('@garbhcompanion/has_profile', 'true');
+          if (user?.name) {
+            await AsyncStorage.setItem(
+              '@garbhcompanion/profile_data',
+              JSON.stringify({
+                name: user.name,
+                dob: user.dob || '',
+                city: user.city || '',
+                state: user.state || '',
+              })
+            );
+          }
+          if (user?.stage) {
+            await AsyncStorage.setItem('@garbhcompanion/has_life_stage', 'true');
+            await AsyncStorage.setItem('@garbhcompanion/life_stage_data', user.stage);
+          }
+          await AsyncStorage.setItem('@garbhcompanion/has_seen_pricing', 'true');
+          await AsyncStorage.setItem('@garbhcompanion/has_seen_intro', 'true');
+          await AsyncStorage.setItem('@garbhcompanion/has_language', 'true');
+
+          const jData: JourneyData | null = user?.stage
+            ? {
+                stage: user.stage,
+                lmp_date: user.lmp_date,
+                edd_date: user.edd_date,
+                confirmed_month: user.confirmed_month || 2,
+                remaining_months: user.remaining_months || 8,
+              }
+            : null;
+
+          set({ 
+            status: 'authenticated', 
+            user: { 
+              id: user?.id || '1', 
+              name: user?.name || 'Mom', 
+              phone: phoneNumber || user?.phone || '',
+              lmp_date: user?.lmp_date,
+            },
+            otpRequestTimestamps: [],
+            hasLanguage: true,
+            hasProfile: true, // Bypasses ProfileSetup form straight to MainTabs
+            hasLifeStage: !!user?.stage,
+            hasSeenPricing: true,
+            hasSeenIntro: true,
+            journeyData: jData,
+            subscriptionStatus: user?.subscriptionStatus || 'none',
+          });
+        }
       } else {
         set({ status: 'error', errorReason: 'invalid_otp' });
       }

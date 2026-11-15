@@ -7,8 +7,12 @@ export const authController = {
       const { phone } = req.body;
       if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
 
-      const result = authService.sendOtp(String(phone));
-      return res.status(200).json({ success: true, message: result.message });
+      const result = await authService.sendOtp(String(phone));
+      return res.status(200).json({
+        success: result.success,
+        message: result.message,
+        ...(result.devOtp ? { devOtp: result.devOtp } : {}),
+      });
     } catch (error) {
       next(error);
     }
@@ -21,12 +25,12 @@ export const authController = {
         return res.status(400).json({ success: false, error: 'Phone and OTP required' });
       }
 
-      const tokens = authService.verifyOtp(String(phone), String(otp));
-      if (!tokens) {
-        return res.status(401).json({ success: false, error: 'Invalid OTP' });
+      const result = await authService.verifyOtp(String(phone), String(otp));
+      if (!result) {
+        return res.status(401).json({ success: false, error: 'Invalid or expired OTP' });
       }
 
-      return res.status(200).json({ success: true, data: tokens });
+      return res.status(200).json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
@@ -78,4 +82,3 @@ export const authController = {
     }
   },
 };
-

@@ -88,10 +88,9 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
   const handleResend = async () => {
     if (phoneNumber) {
       dispatch(resetState());
-      // --- LOCAL MOCK BYPASS ---
-      setTimeout(() => {
-        setTimer(28);
-      }, 500);
+      const { useAuthStore } = require('~/store/useAuthStore');
+      await useAuthStore.getState().sendOtp(phoneNumber);
+      setTimer(28);
     }
   };
 

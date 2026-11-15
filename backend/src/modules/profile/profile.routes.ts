@@ -5,8 +5,9 @@ import { authMiddleware } from '../../shared/middlewares/authMiddleware';
 const router = Router();
 
 router.use(authMiddleware);
+router.get('/', profileController.getProfile);
+router.get('/me', profileController.getProfile);
 router.post('/language', profileController.updateLanguage);
 router.post('/details', profileController.saveDetails);
 
 export default router;
-

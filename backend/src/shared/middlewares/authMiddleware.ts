@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/constants';
 
 // Extend Express Request to include user
 declare global {
@@ -9,8 +10,6 @@ declare global {
     }
   }
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'astrobaby-super-secret-key-2026';
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
