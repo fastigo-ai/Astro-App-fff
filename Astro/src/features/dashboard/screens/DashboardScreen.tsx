@@ -7,6 +7,7 @@ import { DashboardHeader } from '../components/DashboardHeader';
 import { BabyDailyGrowthTracker } from '../components/BabyDailyGrowthTracker';
 import { PregnancyPowerPack } from '../components/PregnancyPowerPack';
 import { KrishnaDailyVedicActivities } from '../components/KrishnaDailyVedicActivities';
+import { GarbhSanskarLibraryBanners } from '../components/GarbhSanskarLibraryBanners';
 import { KrishnaLiveMasterclassBanner } from '../components/KrishnaLiveMasterclassBanner';
 import { QuickToolsSection } from '../components/QuickToolsSection';
 import { UsersExperience } from '../components/UsersExperience';
@@ -35,7 +36,10 @@ export const DashboardScreen = () => {
         {/* 2. Today's Vedic Routine / Daily Sanskar Activities */}
         <KrishnaDailyVedicActivities />
 
-        {/* 3. Maa & Baby Daily Connect (Common Mom Support Tools: Kick Counter, Samvad, Bump, Puzzles, Mood, Kundli) */}
+        {/* 3. Garbh Sanskar Audio & Story Library Banners */}
+        <GarbhSanskarLibraryBanners />
+
+        {/* 4. Maa & Baby Daily Connect (Common Mom Support Tools: Kick Counter, Samvad, Bump, Puzzles, Mood, Kundli) */}
         <QuickToolsSection />
 
         {/* 4. Live Doctor Masterclass Banner */}

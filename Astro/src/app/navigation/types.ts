@@ -54,6 +54,7 @@ export type AppStackParamList = {
   WeightTracker: undefined;
   DadiNuskha: undefined;
   PregnancyGames: { initialGame?: 'cravings' | 'kick' | 'myths' | 'memory' | 'riddle' } | undefined;
+  GarbhSanskarLibrary: undefined;
 };
 
 export type RootStackParamList = {
