@@ -10,6 +10,12 @@ function createMockRes() {
   const res: any = {};
   res.statusCode = 200;
   res.data = null;
+  res.headers = {};
+  res.setHeader = (key: string, val: any) => {
+    res.headers[key.toLowerCase()] = String(val);
+    return res;
+  };
+  res.getHeader = (key: string) => res.headers[key.toLowerCase()];
   res.status = (code: number) => {
     res.statusCode = code;
     return res;
@@ -320,6 +326,141 @@ async function runTests() {
       throw new Error(`Unexpected Swagger summary: ${deletePath.summary}`);
     }
     if (!postDeletePath) throw new Error('Missing POST /api/v1/profile/delete-account in Swagger spec');
+  });
+
+  // 14. Test Send OTP Rate Limiting (Account-based: 30s Cooldown & Max 3 requests in 10 mins)
+  await assert('sendOtpRateLimiter enforces 30s cooldown and account rate limit (429 Too Many Requests)', async () => {
+    const { sendOtpRateLimiter } = await import('../shared/middlewares/rateLimitMiddleware');
+    const { cacheService } = await import('../shared/services/redis.service');
+    const targetPhone = `91234${Math.floor(10000 + Math.random() * 90000)}`;
+
+    // 1st request succeeds
+    const req1: any = { body: { phone: targetPhone }, headers: {}, socket: { remoteAddress: '10.0.0.1' } };
+    const res1 = createMockRes();
+    let next1 = false;
+    await sendOtpRateLimiter(req1, res1, () => { next1 = true; });
+    if (!next1) throw new Error('First sendOtp request should have passed rate limiter');
+
+    // Immediate 2nd request within 30s triggers cooldown limit
+    const req2: any = { body: { phone: targetPhone }, headers: {}, socket: { remoteAddress: '10.0.0.1' } };
+    const res2 = createMockRes();
+    let next2 = false;
+    await sendOtpRateLimiter(req2, res2, () => { next2 = true; });
+    if (next2) throw new Error('Expected 2nd immediate request to be blocked by 30s cooldown');
+    if (res2.statusCode !== 429) throw new Error(`Expected 429, got ${res2.statusCode}`);
+    if (res2.data.code !== 'OTP_COOLDOWN_ACTIVE') {
+      throw new Error(`Expected code 'OTP_COOLDOWN_ACTIVE', got ${res2.data.code}`);
+    }
+    if (!res2.headers['retry-after']) throw new Error('Expected Retry-After header');
+
+    // Simulate cooldown passing by clearing cooldown key, then send 2 more to hit 3 max limit
+    await cacheService.del(`rl:otp:cooldown:${targetPhone}`);
+    const req3: any = { body: { phone: targetPhone }, headers: {}, socket: { remoteAddress: '10.0.0.1' } };
+    const res3 = createMockRes();
+    await sendOtpRateLimiter(req3, res3, () => {});
+
+    await cacheService.del(`rl:otp:cooldown:${targetPhone}`);
+    const req4: any = { body: { phone: targetPhone }, headers: {}, socket: { remoteAddress: '10.0.0.1' } };
+    const res4 = createMockRes();
+    await sendOtpRateLimiter(req4, res4, () => {});
+
+    // 4th request exceeds max 3 limit in window
+    await cacheService.del(`rl:otp:cooldown:${targetPhone}`);
+    const req5: any = { body: { phone: targetPhone }, headers: {}, socket: { remoteAddress: '10.0.0.1' } };
+    const res5 = createMockRes();
+    let next5 = false;
+    await sendOtpRateLimiter(req5, res5, () => { next5 = true; });
+    if (next5) throw new Error('Expected 4th request to exceed RATE_LIMIT_OTP_MAX_PER_PHONE');
+    if (res5.statusCode !== 429) throw new Error(`Expected 429, got ${res5.statusCode}`);
+    if (res5.data.code !== 'ACCOUNT_RATE_LIMIT_EXCEEDED') {
+      throw new Error(`Expected code 'ACCOUNT_RATE_LIMIT_EXCEEDED', got ${res5.data.code}`);
+    }
+  });
+
+  // 15. Test Send OTP Rate Limiting (IP-based: Max 10 requests per 15 mins)
+  await assert('sendOtpRateLimiter blocks IP after exceeding max requests across different accounts', async () => {
+    const { sendOtpRateLimiter } = await import('../shared/middlewares/rateLimitMiddleware');
+    const attackIp = `192.168.100.${Math.floor(10 + Math.random() * 80)}`;
+
+    for (let i = 0; i < 10; i++) {
+      const dummyPhone = `95555${Math.floor(10000 + Math.random() * 90000)}`;
+      const req: any = { body: { phone: dummyPhone }, headers: {}, socket: { remoteAddress: attackIp } };
+      const res = createMockRes();
+      await sendOtpRateLimiter(req, res, () => {});
+    }
+
+    // 11th request from same IP should be blocked
+    const dummyPhone11 = `95555${Math.floor(10000 + Math.random() * 90000)}`;
+    const req11: any = { body: { phone: dummyPhone11 }, headers: {}, socket: { remoteAddress: attackIp } };
+    const res11 = createMockRes();
+    let next11 = false;
+    await sendOtpRateLimiter(req11, res11, () => { next11 = true; });
+
+    if (next11) throw new Error('Expected 11th request from same IP to be blocked');
+    if (res11.statusCode !== 429) throw new Error(`Expected 429, got ${res11.statusCode}`);
+    if (res11.data.code !== 'IP_RATE_LIMIT_EXCEEDED') {
+      throw new Error(`Expected code 'IP_RATE_LIMIT_EXCEEDED', got ${res11.data.code}`);
+    }
+  });
+
+  // 16. Test Verify OTP Account Lockout on 5 Consecutive Failed Attempts
+  await assert('verifyOtp locks account for 15 minutes after 5 consecutive failed attempts', async () => {
+    const { verifyOtpRateLimiter } = await import('../shared/middlewares/rateLimitMiddleware');
+    const victimPhone = `97777${Math.floor(10000 + Math.random() * 90000)}`;
+
+    // Generate valid OTP first so user exists in mock store
+    mockSmsProvider.sendOtp(victimPhone, '5555');
+
+    // Fail 4 times: returns 401 with remaining attempts
+    for (let i = 1; i <= 4; i++) {
+      const verifyReq: any = { body: { phone: victimPhone, otp: '9999' } };
+      const verifyRes = createMockRes();
+      await authController.verifyOtp(verifyReq, verifyRes, () => {});
+      if (verifyRes.statusCode !== 401) throw new Error(`Expected 401, got ${verifyRes.statusCode}`);
+      if (verifyRes.data.remainingAttempts !== 5 - i) {
+        throw new Error(`Expected remainingAttempts ${5 - i}, got ${verifyRes.data.remainingAttempts}`);
+      }
+    }
+
+    // 5th failed attempt: locks account and returns 429
+    const verifyReq5: any = { body: { phone: victimPhone, otp: '9999' } };
+    const verifyRes5 = createMockRes();
+    await authController.verifyOtp(verifyReq5, verifyRes5, () => {});
+    if (verifyRes5.statusCode !== 429) throw new Error(`Expected 429 on 5th failure, got ${verifyRes5.statusCode}`);
+    if (verifyRes5.data.code !== 'ACCOUNT_TEMPORARILY_LOCKED') {
+      throw new Error(`Expected 'ACCOUNT_TEMPORARILY_LOCKED', got ${verifyRes5.data.code}`);
+    }
+
+    // Subsequent verifyOtpRateLimiter middleware blocks before processing
+    const verifyLimiterReq: any = { body: { phone: victimPhone, otp: '5555' }, headers: {}, socket: { remoteAddress: '127.0.0.1' } };
+    const verifyLimiterRes = createMockRes();
+    let limiterPassed = false;
+    await verifyOtpRateLimiter(verifyLimiterReq, verifyLimiterRes, () => { limiterPassed = true; });
+    if (limiterPassed) throw new Error('Expected verifyOtpRateLimiter to block locked account');
+    if (verifyLimiterRes.statusCode !== 429) throw new Error(`Expected 429, got ${verifyLimiterRes.statusCode}`);
+  });
+
+  // 17. Test Bypass Phone is immune to rate limits
+  await assert('Bypass phone number 9366128220 is exempt from rate limits and lockout', async () => {
+    const { sendOtpRateLimiter, verifyOtpRateLimiter } = await import('../shared/middlewares/rateLimitMiddleware');
+
+    // Multiple rapid requests on bypass phone pass without cooldown or limit
+    for (let i = 0; i < 5; i++) {
+      const req: any = { body: { phone: BYPASS_PHONE }, headers: {}, socket: { remoteAddress: '127.0.0.1' } };
+      const res = createMockRes();
+      let nextCalled = false;
+      await sendOtpRateLimiter(req, res, () => { nextCalled = true; });
+      if (!nextCalled) throw new Error(`Bypass phone request ${i + 1} blocked by sendOtpRateLimiter`);
+    }
+
+    // Multiple verify requests on bypass phone pass without lockout
+    for (let i = 0; i < 7; i++) {
+      const req: any = { body: { phone: BYPASS_PHONE, otp: '0000' }, headers: {}, socket: { remoteAddress: '127.0.0.1' } };
+      const res = createMockRes();
+      let nextCalled = false;
+      await verifyOtpRateLimiter(req, res, () => { nextCalled = true; });
+      if (!nextCalled) throw new Error(`Bypass phone verify request ${i + 1} blocked by verifyOtpRateLimiter`);
+    }
   });
 
   console.log(`\n========================================`);

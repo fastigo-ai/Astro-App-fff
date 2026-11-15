@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
+import {
+  recordFailedOtpAttempt,
+  clearOtpVerificationFailures,
+} from '../../shared/middlewares/rateLimitMiddleware';
 
 export const authController = {
   sendOtp: async (req: Request, res: Response, next: NextFunction) => {
@@ -27,8 +31,25 @@ export const authController = {
 
       const result = await authService.verifyOtp(String(phone), String(otp));
       if (!result) {
-        return res.status(401).json({ success: false, error: 'Invalid or expired OTP' });
+        const { locked, remainingAttempts } = await recordFailedOtpAttempt(String(phone));
+        if (locked) {
+          return res.status(429).json({
+            success: false,
+            error: 'Account temporarily locked due to 5 consecutive failed OTP attempts. Please wait 15 minutes or request a fresh OTP.',
+            code: 'ACCOUNT_TEMPORARILY_LOCKED',
+            scope: 'account',
+            retryAfter: 900,
+          });
+        }
+        return res.status(401).json({
+          success: false,
+          error: `Invalid or expired OTP. ${remainingAttempts} attempt(s) remaining before temporary lockout.`,
+          remainingAttempts,
+        });
       }
+
+      // Successful verification: clear failed count
+      await clearOtpVerificationFailures(String(phone));
 
       return res.status(200).json({ success: true, data: result });
     } catch (error) {

@@ -291,8 +291,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ status: 'error', errorReason: 'network' });
       }
-    } catch (error) {
-      set({ status: 'error', errorReason: 'network' });
+    } catch (error: any) {
+      if (error?.response?.status === 429) {
+        set({ status: 'error', errorReason: 'rate_limit_exceeded' });
+      } else {
+        set({ status: 'error', errorReason: 'network' });
+      }
     }
   },
 
@@ -396,7 +400,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ status: 'error', errorReason: 'invalid_otp' });
       }
     } catch (error: any) {
-      if (error.response?.status === 401) {
+      if (error?.response?.status === 429) {
+        set({ status: 'error', errorReason: 'rate_limit_exceeded' });
+      } else if (error?.response?.status === 401) {
         set({ status: 'error', errorReason: 'invalid_otp' });
       } else {
         set({ status: 'error', errorReason: 'network' });

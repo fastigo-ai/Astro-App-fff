@@ -146,6 +146,56 @@ class CacheService {
     this.memoryCache.delete(key);
   }
 
+  /**
+   * Atomic increment for rate-limiting.
+   * Increments key value and sets expiry if key was newly created.
+   * Returns current count.
+   */
+  async incr(key: string, ttlSeconds = 60): Promise<number> {
+    if (this.isRedisConnected && this.redisClient) {
+      try {
+        const count = await this.redisClient.incr(key);
+        if (count === 1) {
+          await this.redisClient.expire(key, ttlSeconds);
+        }
+        return count;
+      } catch (err) {
+        // Fall through to in-memory fallback
+      }
+    }
+
+    const now = Date.now();
+    const entry = this.memoryCache.get(key);
+    if (!entry || now > entry.expiresAt) {
+      this.memoryCache.set(key, {
+        value: 1,
+        expiresAt: now + ttlSeconds * 1000,
+      });
+      return 1;
+    }
+
+    const newCount = (Number(entry.value) || 0) + 1;
+    entry.value = newCount;
+    return newCount;
+  }
+
+  /**
+   * Get remaining TTL in seconds for a key
+   */
+  async getTtl(key: string): Promise<number> {
+    if (this.isRedisConnected && this.redisClient) {
+      try {
+        const ttl = await this.redisClient.ttl(key);
+        if (ttl > 0) return ttl;
+      } catch (err) {}
+    }
+
+    const entry = this.memoryCache.get(key);
+    if (!entry) return -2;
+    const diff = Math.ceil((entry.expiresAt - Date.now()) / 1000);
+    return diff > 0 ? diff : -2;
+  }
+
   isRedisActive(): boolean {
     return this.isRedisConnected;
   }

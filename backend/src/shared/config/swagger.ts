@@ -229,8 +229,9 @@ export const swaggerSpec: any = {
     '/api/v1/auth/send-otp': {
       post: {
         tags: ['Authentication & OTP'],
-        summary: 'Send 4-Digit OTP to Phone Number',
-        description: 'Dispatches OTP via Twilio (if credentials configured in .env) or Mock SMS provider. Prints OTP to terminal in dev mode.',
+        summary: 'Send 4-Digit OTP to Phone Number (Rate-Limited: IP & Account)',
+        description:
+          'Dispatches OTP via Twilio or Mock provider. Protected by dual-layer rate limiting: max 10 requests per 15 min per IP, max 3 requests per 10 min per phone number, and a 30-second button cooldown.',
         requestBody: {
           required: true,
           content: {
@@ -246,15 +247,18 @@ export const swaggerSpec: any = {
           400: {
             description: 'Phone number is required',
           },
+          429: {
+            description: 'Rate limit exceeded (IP or Account level). Includes Retry-After header.',
+          },
         },
       },
     },
     '/api/v1/auth/verify-otp': {
       post: {
         tags: ['Authentication & OTP'],
-        summary: 'Verify OTP & Login / Sign-up',
+        summary: 'Verify OTP & Login / Sign-up (Rate-Limited: IP & Account Lockout)',
         description:
-          'Verifies the 4-digit code. Returns JWT tokens, user profile info, and `isNewUser: true` if the user has not completed the details form.',
+          'Verifies the 4-digit code. Protected against brute-force attacks: max 25 attempts per 15 min per IP, and 5 consecutive failed attempts lock the account for 15 minutes. Returns JWT tokens, user profile info, and `isNewUser: true` if the user has not completed onboarding.',
         requestBody: {
           required: true,
           content: {
@@ -268,7 +272,10 @@ export const swaggerSpec: any = {
             description: 'Verified successfully. Returns accessToken, isNewUser, and user data.',
           },
           401: {
-            description: 'Invalid or expired OTP',
+            description: 'Invalid or expired OTP (returns remaining attempts before lockout)',
+          },
+          429: {
+            description: 'Account locked due to 5 consecutive failed attempts or IP rate limit exceeded',
           },
         },
       },
