@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -89,6 +90,33 @@ export const KundliScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleViewReport = () => {
+    const url = kundliRecord?.kundliPdfUrl || 'https://krishnacoming.com/reports/sample_garbh_kundli.pdf';
+    Alert.alert(
+      'Vedic Horoscope Analysis',
+      kundliRecord?.astrologerNotes 
+        ? `${kundliRecord.astrologerNotes}\n\nTap View to open the complete astrological PDF report.`
+        : 'Open the complete planetary chart and Vedic analysis report?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'View Report', 
+          onPress: () => {
+            Linking.canOpenURL(url).then(supported => {
+              if (supported) {
+                Linking.openURL(url);
+              } else {
+                Alert.alert('Report Analysis', kundliRecord?.astrologerNotes || 'Astrological analysis ready.');
+              }
+            }).catch(() => {
+              Alert.alert('Report Analysis', kundliRecord?.astrologerNotes || 'Astrological analysis ready.');
+            });
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -132,10 +160,16 @@ export const KundliScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.statusNotes}>
               "{kundliRecord.astrologerNotes || 'Planetary alignment indicates noble intellect (Dhi Shakti) and calm temperament.'}"
             </Text>
-            <View style={styles.reportRow}>
+            <TouchableOpacity 
+              style={styles.reportRow}
+              onPress={handleViewReport}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Vedic Horoscope Analysis"
+            >
               <FileText size={16} color={theme.colors.primary} />
               <Text style={styles.reportText}>Vedic Horoscope Analysis (PDF Available)</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         )}
 

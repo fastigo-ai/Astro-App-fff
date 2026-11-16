@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage, Dimensions,
 import { useNavigation } from '@react-navigation/native';
 import { CheckCircle2, Sparkles } from 'lucide-react-native';
 import { useAuthStore } from '~/store/useAuthStore';
+import { pastelPalette } from '~/shared/theme';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75; 
@@ -13,60 +14,90 @@ const COURSES = [
     id: 'beej_sanskar',
     title: 'Beej Sanskar',
     subtitle: 'Fertility & Conception',
-    description: 'A comprehensive 90-day program with Ayurveda, Yoga, and holistic support to overcome fertility issues naturally.',
-    badge: 'PROGRAM',
+    bullets: [
+      '• 90-Day Natural Conception Care',
+      '• Ayurveda & Fertility Yoga Therapy',
+      '• Personalized Diet & Shuddhi Plan',
+    ],
+    badge: 'PLANNING',
+    badgeBg: pastelPalette.softSlateBlue,
     price: '₹25,000',
-    color: '#EC4899', 
+    color: pastelPalette.softSlateBlue, 
     image: require('../../../assets/programs/beej_sanskar.jpg'), 
   },
   {
     id: 'garbhdhaan_sanskar',
     title: 'Garbhdhaan Sanskar',
     subtitle: 'Pre-Pregnancy Planning',
-    description: 'Auspicious planning with Muhurat Aadharit Tithiya, diet plans, and expert gynecologist guidance.',
-    badge: 'PROGRAM',
+    bullets: [
+      '• Auspicious Muhurat Dates',
+      '• Vedic Beej Shuddhi Guidance',
+      '• Gynecologist & Doctor Sessions',
+    ],
+    badge: 'PRE-PREGNANCY',
+    badgeBg: pastelPalette.softSlateBlue,
     price: '₹11,000',
-    color: '#3B82F6', 
+    color: pastelPalette.softSlateBlue, 
     image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'), 
   },
   {
     id: 'garbh_sanskar',
     title: 'Garbh Sanskar',
     subtitle: 'Positive Pregnancy',
-    description: 'Diamond, Gold, and Silver tiers featuring daily prayers, music therapy, and month-by-month doctor support.',
+    bullets: [
+      '• Daily Womb Music & Mantras',
+      '• Month-by-Month Doctor Care',
+      '• Positive Mindset Practices',
+    ],
     badge: 'POPULAR',
+    badgeBg: pastelPalette.softCoralRose,
     price: 'From ₹5,000',
-    color: '#65A30D', 
+    color: pastelPalette.softCoralRose, 
     image: require('../../../assets/programs/garbh_sanskar.jpg'), 
   },
   {
     id: 'bal_sanskar',
     title: 'Bal Sanskar',
     subtitle: 'Newborn Nurturing',
-    description: 'Traditional ceremonies including Namkaran, Nishkraman, and Annaprashan for your baby’s holistic start.',
+    bullets: [
+      '• Vedic Infant Ceremonies',
+      '• 0-2 Yrs Brain Stimulation',
+      '• Newborn Parenting Guidance',
+    ],
     badge: 'CEREMONY',
+    badgeBg: pastelPalette.softMutedTeal,
     price: '₹6,000',
-    color: '#06B6D4', 
+    color: pastelPalette.softMutedTeal, 
     image: require('../../../assets/programs/bal_sanskar.jpg'), 
   },
   {
     id: 'infant_care',
     title: 'Infant Care',
     subtitle: 'Parenting Support',
-    description: 'Complete post-delivery care with a personal parenting coach, lactation experts, and custom diet plans.',
+    bullets: [
+      '• Dedicated Parenting Coach',
+      '• Lactation & Postpartum Care',
+      '• Baby Sleep & Nutrition Plans',
+    ],
     badge: 'COACHING',
+    badgeBg: pastelPalette.softTaupeMocha,
     price: '₹5,000',
-    color: '#F59E0B', 
+    color: pastelPalette.softTaupeMocha, 
     image: require('../../../assets/programs/infant_care.jpg'), 
   },
   {
     id: 'consultations',
     title: 'A La Carte Consults',
     subtitle: 'Targeted Guidance',
-    description: 'Book 1-on-1 sessions with verified doctors, specialist astrologers, and expert dietitians instantly.',
-    badge: 'FLEXIBLE',
+    bullets: [
+      '• 1-on-1 Gynecologist Consult',
+      '• Vedic Jyotish & Chart Analysis',
+      '• Nutritionist & Yoga Experts',
+    ],
+    badge: 'CONSULT',
+    badgeBg: pastelPalette.softPlumOrchid,
     price: 'From ₹2,100',
-    color: '#854D0E', 
+    color: pastelPalette.softPlumOrchid, 
     image: require('../../../assets/programs/consultations.jpg'), 
   },
 ];
@@ -173,10 +204,10 @@ export const CourseGrid = () => {
                       resizeMode="cover"
                     />
                     <View style={styles.floatingIconBadge}>
-                      <Sparkles size={14} color={isSubscribed ? '#16A34A' : '#EC4899'} />
+                      <Sparkles size={14} color={isSubscribed ? '#16A34A' : item.badgeBg} />
                     </View>
-                    <View style={[styles.floatingTextBadge, isSubscribed && { backgroundColor: '#DCFCE7' }]}>
-                      <Text style={[styles.floatingBadgeText, isSubscribed && { color: '#15803D' }]}>
+                    <View style={[styles.floatingTextBadge, { backgroundColor: isSubscribed ? '#DCFCE7' : item.badgeBg }]}>
+                      <Text style={[styles.floatingBadgeText, { color: isSubscribed ? '#15803D' : '#FFFFFF' }]}>
                         {isSubscribed ? '✓ ACTIVE MEMBER' : item.badge}
                       </Text>
                     </View>
@@ -184,15 +215,20 @@ export const CourseGrid = () => {
                   
                   <View style={styles.cardContent}>
                     <Text style={styles.courseTitle}>{item.title}</Text>
-                    <Text style={styles.courseSubtitle}>{item.subtitle}</Text>
+                    <Text style={[styles.courseSubtitle, { color: item.badgeBg }]}>{item.subtitle}</Text>
                     
-                    <Text style={styles.courseDescription} numberOfLines={3}>
-                      {item.description}
-                    </Text>
+                    {/* Concise 2-3 Bullet Points */}
+                    <View style={styles.bulletsContainer}>
+                      {item.bullets.map((bullet, bIdx) => (
+                        <Text key={bIdx} style={styles.bulletItem} numberOfLines={1}>
+                          {bullet}
+                        </Text>
+                      ))}
+                    </View>
 
                     <View style={styles.cardFooter}>
                       <View style={styles.checkRow}>
-                        <CheckCircle2 size={14} color={isSubscribed ? '#16A34A' : '#EC4899'} />
+                        <CheckCircle2 size={14} color={isSubscribed ? '#16A34A' : item.badgeBg} />
                         <Text style={[styles.checkText, isSubscribed && { color: '#15803D', fontWeight: '700' }]}>
                           {isSubscribed ? 'Access Unlocked' : `Enroll from ${item.price}`}
                         </Text>
@@ -223,7 +259,7 @@ export const CourseGrid = () => {
 
           const dotColor = scrollX.interpolate({
             inputRange,
-            outputRange: ['#FBCFE8', '#EC4899', '#FBCFE8'], 
+            outputRange: ['#F3E8FF', pastelPalette.softCoralRose, '#F3E8FF'], 
             extrapolate: 'clamp',
           });
 
@@ -263,7 +299,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#EC4899',
+    color: pastelPalette.softCoralRose,
   },
   cardWrapper: {
     flex: 1,
@@ -271,22 +307,22 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: '#FEE2E2', 
-    shadowColor: '#EC4899', 
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB', 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
     flex: 1,
   },
   imageContainer: {
     position: 'relative',
     width: '100%',
     height: 160,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    borderTopLeftRadius: 19,
+    borderTopRightRadius: 19,
     overflow: 'hidden',
   },
   cardImage: {
@@ -312,7 +348,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -320,36 +355,39 @@ const styles = StyleSheet.create({
   floatingBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#EC4899',
     letterSpacing: 0.5,
   },
   cardContent: {
-    padding: 20,
+    padding: 16,
     flex: 1,
   },
   courseTitle: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '800',
     color: '#1E1B4B', 
-    marginBottom: 4,
+    marginBottom: 2,
+    letterSpacing: -0.2,
   },
   courseSubtitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
-    color: '#EC4899',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  courseDescription: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 20,
+  bulletsContainer: {
+    marginVertical: 4,
+    gap: 3,
+  },
+  bulletItem: {
+    fontSize: 11.5,
+    color: '#4B5563',
+    lineHeight: 17,
+    fontWeight: '500',
   },
   cardFooter: {
     marginTop: 'auto',
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
-    paddingTop: 16,
+    paddingTop: 12,
   },
   checkRow: {
     flexDirection: 'row',

@@ -23,8 +23,14 @@ import { useAuthStore } from '~/store/useAuthStore';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 44) / 2;
 
-export const WelcomeCourseSelectionScreen = () => {
-  const navigation = useNavigation<any>();
+interface WelcomeCourseSelectionScreenProps {
+  navigation?: any;
+  route?: any;
+}
+
+export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreenProps> = ({ navigation: propNavigation }) => {
+  const hookNavigation = useNavigation<any>();
+  const navigation = propNavigation || hookNavigation;
   const { i18n } = useTranslation();
   const isHindi = i18n.language?.startsWith('hi') ?? false;
 

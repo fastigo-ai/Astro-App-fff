@@ -113,7 +113,7 @@ const getDynamicPrice = (remMonths: number) => {
   return pricingMap[remMonths] || { price: 5999, original: 8994, save: 2995 };
 };
 
-export const LifeStageScreen = () => {
+export const LifeStageScreen: React.FC<any> = ({ navigation: propNavigation }) => {
   const { t, i18n } = useTranslation();
   const isHindi = i18n.language === 'hi';
 
@@ -132,7 +132,8 @@ export const LifeStageScreen = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const navigation = useNavigation<any>();
+  const hookNavigation = useNavigation<any>();
+  const navigation = propNavigation || hookNavigation;
   const setHasLifeStage = useAuthStore(state => state.setHasLifeStage);
   const setHasProfile = useAuthStore(state => state.setHasProfile);
 
@@ -224,18 +225,14 @@ export const LifeStageScreen = () => {
       // 2. Save in local store and advance to Subscription (Pricing) Screen
       setHasLifeStage(true, selectedStage, payload);
 
-      if (navigation.canGoBack()) {
-        navigation.navigate('Pricing');
-      }
+      navigation.navigate('Pricing');
     } catch (error) {
       console.error('Failed to submit journey:', error);
       setHasLifeStage(true, selectedStage, {
         confirmed_month: confirmedMonth,
         remaining_months: remainingMonths,
       });
-      if (navigation.canGoBack()) {
-        navigation.navigate('Pricing');
-      }
+      navigation.navigate('Pricing');
     } finally {
       setIsLoading(false);
     }

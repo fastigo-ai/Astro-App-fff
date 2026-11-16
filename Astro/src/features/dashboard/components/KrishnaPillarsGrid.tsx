@@ -3,69 +3,21 @@ import { View, Text, StyleSheet, TouchableOpacity, Image as RNImage, Dimensions 
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
-import { Sparkles, ArrowRight, ShieldCheck } from 'lucide-react-native';
+import { ArrowRight, Sparkles } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { pastelPalette } from '~/shared/theme';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 44) / 2;
+const HORIZONTAL_PADDING = 16;
+const CARD_GAP = 12;
+const CARD_WIDTH = (width - (HORIZONTAL_PADDING * 2) - CARD_GAP) / 2;
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 export const KrishnaPillarsGrid = () => {
   const navigation = useNavigation<NavigationProp>();
   const { i18n } = useTranslation();
-  const isHindi = i18n.language === 'hi';
-
-  const PILLARS = [
-    {
-      id: 'garbhsanskar',
-      title: isHindi ? 'गर्भ संस्कार' : 'Garbh Sanskar',
-      hindiSub: 'माह 1 से 9 तक संपूर्ण संस्कार',
-      englishSub: 'Month 1 to 9 Complete Care',
-      badge: 'POPULAR',
-      color: '#E11D48',
-      bgColor: '#FFF1F2',
-      badgeBg: '#F43F5E',
-      image: require('../../../assets/programs/garbh_sanskar.jpg'),
-      route: 'Course' as const,
-    },
-    {
-      id: 'preplanner',
-      title: isHindi ? 'गर्भधान संस्कार' : 'Pre-Pregnancy',
-      hindiSub: 'बीज शुद्धि व उत्तम संतान योग',
-      englishSub: 'Beej Shuddhi & Auspicious Muhurat',
-      badge: 'PLANNING',
-      color: '#2563EB',
-      bgColor: '#EFF6FF',
-      badgeBg: '#3B82F6',
-      image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
-      route: 'Garbhadhaan' as const,
-    },
-    {
-      id: 'balsanskar',
-      title: isHindi ? 'बाल संस्कार' : 'Bal Sanskar',
-      hindiSub: '0 से 2 वर्ष शिशु विकास',
-      englishSub: '0 to 2 Years Infant Brain Care',
-      badge: '0-2 YRS',
-      color: '#0D9488',
-      bgColor: '#F0FDFA',
-      badgeBg: '#14B8A6',
-      image: require('../../../assets/programs/bal_sanskar.jpg'),
-      route: 'BalSanskar' as const,
-    },
-    {
-      id: 'jyotish',
-      title: isHindi ? 'गर्भ कुंडली' : 'Garbh Kundli',
-      hindiSub: 'ग्रह-नक्षत्र व वैदिक ज्योतिष',
-      englishSub: 'Planetary Charts & Astrologers',
-      badge: 'JYOTISH',
-      color: '#7C3AED',
-      bgColor: '#FAF5FF',
-      badgeBg: '#8B5CF6',
-      image: require('../../../assets/programs/consultations.jpg'),
-      route: 'Kundli' as const,
-    },
-  ];
+  const isHindi = i18n.language?.startsWith('hi') ?? false;
 
   const handlePress = (route: keyof AppStackParamList) => {
     const parent = navigation.getParent();
@@ -76,172 +28,330 @@ export const KrishnaPillarsGrid = () => {
     }
   };
 
+  const PILLARS_2X2 = [
+    {
+      id: 'prepregnancy',
+      category: isHindi ? 'गर्भधारण पूर्व' : 'Before Pregnancy',
+      categoryColor: pastelPalette.softSlateBlue, // #6B8EB9
+      title: isHindi ? 'गर्भधान संस्कार' : 'Pre Pregnancy',
+      titleColor: '#3B5B88',
+      bullets: [
+        isHindi ? '• शिशु योजना' : '• Baby Planning',
+        isHindi ? '• प्राकृतिक गर्भधारण' : '• Natural Conception',
+      ],
+      image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+      route: 'Garbhadhaan' as const,
+      isPremium: false,
+    },
+    {
+      id: 'garbhsanskar',
+      category: isHindi ? 'गर्भावस्था के दौरान' : 'During Pregnancy',
+      categoryColor: pastelPalette.softCoralRose, // #DE6B81
+      title: isHindi ? 'गर्भ संस्कार' : 'Garbh Sanskar',
+      titleColor: '#C24168',
+      bullets: [
+        isHindi ? '• सकारात्मक गर्भावस्था' : '• Positive Pregnancy',
+        isHindi ? '• सुरक्षित प्रसव' : '• Safe Delivery',
+        isHindi ? '• श्रेष्ठ संतान' : '• Great Child',
+      ],
+      image: require('../../../assets/programs/garbh_sanskar.jpg'),
+      route: 'Course' as const,
+      isPremium: true,
+    },
+    {
+      id: 'balsanskar',
+      category: isHindi ? 'प्रसव के बाद' : 'After Delivery',
+      categoryColor: pastelPalette.softMutedTeal, // #47A9A3
+      title: isHindi ? 'बाल संस्कार' : 'Bal Sanskar',
+      titleColor: '#28807A',
+      bullets: [
+        isHindi ? '• नवजात शिशु संस्कार' : '• Sanskar for Newborn',
+        isHindi ? '• 0-2 वर्ष शिशु देखभाल' : '• 0-2 Yrs Infant Care',
+      ],
+      image: require('../../../assets/programs/bal_sanskar.jpg'),
+      route: 'BalSanskar' as const,
+      isPremium: false,
+    },
+    {
+      id: 'jyotish',
+      category: isHindi ? 'सभी के लिए' : 'For Everyone',
+      categoryColor: pastelPalette.softTaupeMocha, // #7D6855
+      title: isHindi ? 'ज्योतिष' : 'Jyotish',
+      titleColor: '#5A4634',
+      bullets: [
+        isHindi ? '• ज्योतिषीय मार्गदर्शन' : '• Astrological Guidance',
+        isHindi ? '• कुंडली विश्लेषण' : '• Chart Analysis',
+      ],
+      image: require('../../../assets/programs/consultations.jpg'),
+      route: 'Kundli' as const,
+      isPremium: false,
+    },
+  ];
+
+  const CARD_5 = {
+    id: 'anandam',
+    category: isHindi ? 'सभी महिलाओं के लिए' : 'For All Women',
+    categoryColor: pastelPalette.softPlumOrchid, // #9C477B
+    title: isHindi ? 'आनंदम' : 'Anandam',
+    titleColor: '#7E2B5A',
+    bullets: [
+      isHindi ? '• आनंदमय जीवन का मार्ग' : '• Your Path to a blissful life',
+      isHindi ? '• दैनिक गर्भ सामंजस्य' : '• Daily Womb Harmony',
+    ],
+    image: require('../../../assets/images/hero-1.png'),
+    route: 'LiveSessions' as const,
+  };
+
   return (
     <View style={styles.container}>
-      {/* Title Header */}
-      <View style={styles.sectionHeader}>
-        <View>
-          <View style={styles.badgeRow}>
-            <Sparkles size={14} color="#E11D48" />
-            <Text style={styles.badgeLabel}>
-              {isHindi ? 'वैदिक गर्भ संस्कार स्तंभ' : '4 VEDIC SANSCAR PILLARS'}
-            </Text>
-          </View>
-          <Text style={styles.sectionTitle}>
-            {isHindi ? 'संस्कार कार्यक्रम चयन करें' : 'Select Sanskar Program'}
-          </Text>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.viewAllBtn}
-          onPress={() => handlePress('AllPrograms')}
-        >
-          <Text style={styles.viewAllText}>{isHindi ? 'सभी देखें' : 'View All'}</Text>
-          <ArrowRight size={14} color="#E11D48" />
-        </TouchableOpacity>
-      </View>
-
       {/* 2x2 Grid Matching Krishna Coming Layout */}
       <View style={styles.grid}>
-        {PILLARS.map((item) => (
+        {PILLARS_2X2.map((item) => (
           <TouchableOpacity
             key={item.id}
-            style={[styles.card, { backgroundColor: item.bgColor }]}
+            style={styles.card}
             activeOpacity={0.88}
             onPress={() => handlePress(item.route)}
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
           >
-            {/* Image Header with Badge */}
-            <View style={styles.imageWrapper}>
-              <RNImage source={item.image} style={styles.cardImage} resizeMode="cover" />
-              <View style={[styles.cardBadge, { backgroundColor: item.badgeBg }]}>
-                <Text style={styles.cardBadgeText}>{item.badge}</Text>
+            {/* Category Badge Pill & Premium Pill */}
+            <View style={styles.badgesRow}>
+              <View style={[styles.categoryBadge, { backgroundColor: item.categoryColor }]}>
+                <Text style={styles.categoryBadgeText}>{item.category}</Text>
               </View>
             </View>
 
-            {/* Card Content */}
-            <View style={styles.cardBody}>
-              <Text style={[styles.cardTitle, { color: item.color }]}>
-                {item.title}
-              </Text>
-              <Text style={styles.cardSub} numberOfLines={2}>
-                {isHindi ? item.hindiSub : item.englishSub}
-              </Text>
+            {/* Title */}
+            <Text style={[styles.cardTitle, { color: item.titleColor }]}>
+              {item.title}
+            </Text>
 
-              <View style={styles.cardFooter}>
-                <Text style={[styles.actionText, { color: item.color }]}>
-                  {isHindi ? 'प्रारंभ करें →' : 'Explore →'}
+            {/* Concise Bullets */}
+            <View style={styles.bulletsList}>
+              {item.bullets.map((bullet, idx) => (
+                <Text key={idx} style={styles.bulletItem} numberOfLines={1}>
+                  {bullet}
                 </Text>
+              ))}
+            </View>
+
+            {/* Bottom Row: Premium badge (if any) & Circular Arrow Button */}
+            <View style={styles.cardBottomRow}>
+              <View style={styles.bottomLeftCol}>
+                {item.isPremium && (
+                  <View style={styles.premiumPill}>
+                    <Text style={styles.premiumPillText}>PREMIUM</Text>
+                  </View>
+                )}
+                <View style={styles.arrowCircle}>
+                  <ArrowRight size={14} color="#6B7280" />
+                </View>
               </View>
             </View>
+
+            {/* Bottom-right Cutout Image */}
+            <RNImage
+              source={item.image}
+              style={styles.cutoutImage}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* 5th Wide Bottom Card: Anandam */}
+      <TouchableOpacity
+        style={styles.wideCard}
+        activeOpacity={0.88}
+        onPress={() => handlePress(CARD_5.route)}
+        accessibilityRole="button"
+        accessibilityLabel={CARD_5.title}
+      >
+        <View style={styles.wideCardContent}>
+          {/* Category Badge Pill */}
+          <View style={[styles.categoryBadge, { backgroundColor: CARD_5.categoryColor, alignSelf: 'flex-start' }]}>
+            <Text style={styles.categoryBadgeText}>{CARD_5.category}</Text>
+          </View>
+
+          {/* Title */}
+          <Text style={[styles.wideCardTitle, { color: CARD_5.titleColor }]}>
+            {CARD_5.title}
+          </Text>
+
+          {/* Concise Bullets */}
+          <View style={styles.bulletsList}>
+            {CARD_5.bullets.map((bullet, idx) => (
+              <Text key={idx} style={styles.wideBulletItem} numberOfLines={1}>
+                {bullet}
+              </Text>
+            ))}
+          </View>
+
+          {/* Circular Arrow Button */}
+          <View style={[styles.arrowCircle, { marginTop: 8 }]}>
+            <ArrowRight size={14} color="#6B7280" />
+          </View>
+        </View>
+
+        {/* Bottom-right Cutout Image for Anandam */}
+        <RNImage
+          source={CARD_5.image}
+          style={styles.wideCutoutImage}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: HORIZONTAL_PADDING,
     marginVertical: 12,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 2,
-  },
-  badgeLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#E11D48',
-    letterSpacing: 0.6,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1E1B4B',
-  },
-  viewAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFE4E6',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  viewAllText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#E11D48',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: CARD_GAP,
   },
   card: {
     width: CARD_WIDTH,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    minHeight: 220,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 12,
+    position: 'relative',
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 2,
+    justifyContent: 'space-between',
   },
-  imageWrapper: {
-    height: 105,
-    width: '100%',
-    position: 'relative',
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
-  cardBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  cardBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
-  cardBody: {
-    padding: 12,
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  cardSub: {
-    fontSize: 11.5,
-    color: '#4B5563',
-    lineHeight: 16,
-    marginBottom: 8,
-  },
-  cardFooter: {
+  badgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  actionText: {
-    fontSize: 12,
+  categoryBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  categoryBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10.5,
     fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  premiumPill: {
+    backgroundColor: '#F59E0B', // Muted amber
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+  },
+  premiumPillText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 6,
+    letterSpacing: -0.2,
+  },
+  bulletsList: {
+    marginBottom: 8,
+    zIndex: 2,
+  },
+  bulletItem: {
+    fontSize: 11,
+    color: '#4B5563',
+    fontWeight: '500',
+    lineHeight: 16,
+    maxWidth: '65%',
+  },
+  cardBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    zIndex: 2,
+  },
+  bottomLeftCol: {
+    alignItems: 'flex-start',
+  },
+  arrowCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  cutoutImage: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 78,
+    height: 96,
+    borderBottomRightRadius: 19,
+    opacity: 0.95,
+  },
+  wideCard: {
+    width: '100%',
+    minHeight: 140,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 14,
+    marginTop: CARD_GAP,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  wideCardContent: {
+    maxWidth: '65%',
+    zIndex: 2,
+  },
+  wideCardTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    marginTop: 6,
+    marginBottom: 4,
+    letterSpacing: -0.2,
+  },
+  wideBulletItem: {
+    fontSize: 11.5,
+    color: '#4B5563',
+    fontWeight: '500',
+    lineHeight: 17,
+  },
+  wideCutoutImage: {
+    position: 'absolute',
+    right: 8,
+    bottom: -6,
+    width: 110,
+    height: 120,
+    opacity: 0.95,
   },
 });

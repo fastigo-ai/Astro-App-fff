@@ -8,6 +8,7 @@ import { setStatus, setErrorReason, resetState, setAuthenticated } from '../stor
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '~/shared/components/Button';
 import SmsRetriever from 'react-native-sms-retriever';
+import { useAuthStore } from '~/store/useAuthStore';
 
 const { width } = Dimensions.get('window');
 
@@ -88,10 +89,12 @@ export const OtpVerificationScreen: React.FC<Props> = ({ navigation }) => {
   const handleResend = async () => {
     if (phoneNumber) {
       dispatch(resetState());
-      // --- LOCAL MOCK BYPASS ---
-      setTimeout(() => {
-        setTimer(28);
-      }, 500);
+      try {
+        await useAuthStore.getState().sendOtp(phoneNumber);
+      } catch (err) {
+        console.error('Failed to resend OTP:', err);
+      }
+      setTimer(28);
     }
   };
 

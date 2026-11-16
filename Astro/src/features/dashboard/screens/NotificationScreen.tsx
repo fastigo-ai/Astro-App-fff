@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,9 +11,21 @@ const MOCK_NOTIFICATIONS = [
   { id: '4', title: 'Welcome to Astro Baby! ✨', message: 'Thank you for joining our community. We are excited to be part of your journey.', time: '3 days ago', read: true, type: 'system' },
 ];
 
-export const NotificationScreen = () => {
-  const navigation = useNavigation();
+export const NotificationScreen: React.FC<any> = ({ navigation: propNavigation }) => {
+  const hookNavigation = useNavigation();
+  const navigation = propNavigation || hookNavigation;
   const insets = useSafeAreaInsets();
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+  };
+
+  const handleMarkSingleRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, read: true } : item))
+    );
+  };
 
   const getIconForType = (type: string) => {
     switch (type) {
@@ -32,16 +44,26 @@ export const NotificationScreen = () => {
           <ChevronLeft size={24} color="#374151" strokeWidth={2.5} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        <TouchableOpacity style={styles.placeholder}>
+        <TouchableOpacity 
+          style={styles.placeholder} 
+          onPress={handleMarkAllRead}
+          accessibilityRole="button"
+          accessibilityLabel="Mark all read"
+        >
           <Text style={styles.markAllText}>Mark all read</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {MOCK_NOTIFICATIONS.map((notif) => {
+        {notifications.map((notif) => {
           const { icon, bgColor } = getIconForType(notif.type);
           return (
-            <View key={notif.id} style={[styles.notifCard, notif.read && styles.notifCardRead]}>
+            <TouchableOpacity 
+              key={notif.id} 
+              style={[styles.notifCard, notif.read && styles.notifCardRead]}
+              onPress={() => handleMarkSingleRead(notif.id)}
+              activeOpacity={0.8}
+            >
               {!notif.read && <View style={styles.unreadDot} />}
               <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
                 <Text style={styles.icon}>{icon}</Text>
@@ -53,7 +75,7 @@ export const NotificationScreen = () => {
                 </Text>
                 <Text style={styles.notifTime}>{notif.time}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>

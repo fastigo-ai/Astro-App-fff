@@ -2,13 +2,14 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { theme } from '~/shared/theme';
 
-interface CardProps {
+export interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
+  testID?: string;
 }
 
-export const Card: React.FC<CardProps> = ({ children, style }) => {
-  return <View style={[styles.card, style]}>{children}</View>;
+export const Card: React.FC<CardProps> = ({ children, style, testID }) => {
+  return <View style={[styles.card, style]} testID={testID}>{children}</View>;
 };
 
 const styles = StyleSheet.create({

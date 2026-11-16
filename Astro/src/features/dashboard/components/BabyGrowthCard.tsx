@@ -46,7 +46,20 @@ export const BabyGrowthCard = () => {
         {/* Top section */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>{t('dashboard.babyGrowthToday', { name: userName })}</Text>
-          <TouchableOpacity style={styles.arrowButton}>
+          <TouchableOpacity 
+            style={styles.arrowButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent) {
+                (parent as any).navigate('Activity');
+              } else {
+                (navigation as any).navigate('Activity');
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="View Growth Details"
+          >
             <ChevronRight size={18} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
@@ -69,8 +82,12 @@ export const BabyGrowthCard = () => {
           </View>
         </View>
 
-        {/* Bottom Text */}
-        <Text style={styles.footerText}>Mumma, It has been {totalDays} days in your womb.</Text>
+        {/* Concise Bulleted Metrics (Replacing paragraph text) */}
+        <View style={styles.metricsBox}>
+          <Text style={styles.metricItem}>• Gestation: {totalDays} days in womb ({trimester} Trimester)</Text>
+          <Text style={styles.metricItem}>• Est. Size: 1.5mm • Weight: &lt;1g</Text>
+          <Text style={styles.metricItem}>• Stage: Week {weeks}, Day {days}</Text>
+        </View>
 
         {/* Quick Interaction Links Row */}
         <View style={styles.quickLinksRow}>
@@ -149,18 +166,18 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   card: {
-    backgroundColor: '#FFFDF9', // Very soft, warm creamy ethereal background
-    borderRadius: 24,
-    paddingTop: 32, 
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingTop: 24, 
     paddingHorizontal: 16,
     paddingBottom: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#FEF3C7', // Faint warm border
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.03,
-    shadowRadius: 20,
+    borderColor: '#E5E7EB', // Clean light border
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
     elevation: 2,
   },
   headerRow: {
@@ -168,22 +185,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   title: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#4B5563',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    color: '#1E1B4B',
+    letterSpacing: -0.2,
   },
   arrowButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
     padding: 6,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
-    shadowRadius: 3,
+    shadowRadius: 2,
     elevation: 1,
   },
   statsRow: {
@@ -191,7 +210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   statPill: {
     backgroundColor: '#FDFBF7', // Cream pill
@@ -221,6 +240,22 @@ const styles = StyleSheet.create({
   },
   emojiArt: {
     fontSize: 40,
+  },
+  metricsBox: {
+    width: '100%',
+    backgroundColor: '#FAF9F6',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 3,
+  },
+  metricItem: {
+    fontSize: 12,
+    color: '#4B5563',
+    fontWeight: '500',
+    lineHeight: 18,
   },
   footerText: {
     fontSize: 13,

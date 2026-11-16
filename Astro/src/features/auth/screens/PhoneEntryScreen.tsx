@@ -31,6 +31,14 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
     dispatch(resetState());
   }, [dispatch]);
 
+  const handleTermsPress = () => {
+    (navigation as any).navigate('TermsConditions');
+  };
+
+  const handlePrivacyPress = () => {
+    (navigation as any).navigate('PrivacyPolicy');
+  };
+
   const handleSendOtp = async () => {
     const fullNumber = `${countryCode}${phone}`;
     
@@ -123,11 +131,26 @@ export const PhoneEntryScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              By continuing, you agree to our{' '}
-              <Text style={styles.link}>Terms of Service</Text>{' '}and{' '}
-              <Text style={styles.link}>Privacy Policy</Text>
-            </Text>
+            <View style={styles.footerRow}>
+              <Text style={styles.footerText}>By continuing, you agree to our </Text>
+              <TouchableOpacity 
+                onPress={handleTermsPress} 
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Terms of Service"
+              >
+                <Text style={styles.link} onPress={handleTermsPress}>Terms of Service</Text>
+              </TouchableOpacity>
+              <Text style={styles.footerText}> and </Text>
+              <TouchableOpacity 
+                onPress={handlePrivacyPress} 
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Privacy Policy"
+              >
+                <Text style={styles.link} onPress={handlePrivacyPress}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
         </View>
@@ -283,6 +306,12 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 32,
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   footerText: {
     textAlign: 'center',

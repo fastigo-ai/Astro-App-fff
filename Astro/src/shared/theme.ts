@@ -10,6 +10,53 @@ export const palette = {
   success: '#38A169',
 };
 
+export const pastelPalette = {
+  softSlateBlue: '#6B8EB9',
+  softCoralRose: '#DE6B81',
+  softMutedTeal: '#47A9A3',
+  softTaupeMocha: '#7D6855',
+  softPlumOrchid: '#9C477B',
+  mutedAmber: '#F59E0B',
+  goldDivider: '#D4AF37',
+  goldAccent: '#D4AF37',
+  warmBackground: '#FAF9F6',
+  cardSurface: '#FFFFFF',
+  borderLight: '#E5E7EB',
+
+  // Category mapping per PROJECT.md interface contract
+  beforePregnancy: {
+    badge: '#6B8EB9',
+    title: '#3B5B88',
+    bg: '#F4F7FB',
+  },
+  duringPregnancy: {
+    badge: '#DE6B81',
+    title: '#C24168',
+    premium: '#F59E0B',
+    bg: '#FDF6F8',
+  },
+  afterDelivery: {
+    badge: '#47A9A3',
+    title: '#28807A',
+    bg: '#F2FAF9',
+  },
+  forEveryone: {
+    badge: '#7D6855',
+    title: '#5A4634',
+    bg: '#F8F6F4',
+  },
+  forAllWomen: {
+    badge: '#9C477B',
+    title: '#7E2B5A',
+    bg: '#F9F4F7',
+  },
+  neutrals: {
+    background: '#FAF9F6',
+    card: '#FFFFFF',
+    border: '#E5E7EB',
+  },
+};
+
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -38,6 +85,7 @@ export const typography = {
 export const theme = {
   colors: {
     ...palette,
+    pastelPalette,
     primary: palette.primary,
     background: palette.backgroundLight,
     surface: palette.surfaceLight,

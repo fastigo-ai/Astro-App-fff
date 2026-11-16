@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Platform, ScrollView, Dimensions, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Platform, ScrollView, Dimensions, BackHandler, Image as RNImage, Alert } from 'react-native';
+import ImagePicker from 'react-native-image-crop-picker';
 import { useTranslation } from 'react-i18next';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
@@ -23,9 +24,33 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedState, setSelectedState] = useState('');
   const [city, setCity] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const setHasProfile = useAuthStore(state => state.setHasProfile);
   const setHasLanguage = useAuthStore(state => state.setHasLanguage);
+
+  const handlePickPhoto = async () => {
+    try {
+      const image = await ImagePicker.openPicker({
+        width: 400,
+        height: 400,
+        cropping: true,
+        cropperCircleOverlay: true,
+        includeBase64: true,
+        compressImageQuality: 0.8,
+      });
+
+      if (image && (image.path || (image as any).data)) {
+        const uri = (image as any).data ? `data:${image.mime};base64,${(image as any).data}` : image.path;
+        setAvatar(uri);
+        await useAuthStore.getState().setUserAvatar(uri);
+      }
+    } catch (err: any) {
+      if (err?.message !== 'User cancelled image selection') {
+        console.warn('Photo picker error:', err);
+      }
+    }
+  };
 
   const handleBack = () => {
     setHasLanguage(false);
@@ -100,10 +125,22 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.card}>
 
           <View style={styles.photoSection}>
-            <TouchableOpacity style={styles.photoPlaceholder}>
-              <Text style={styles.cameraIcon}>📸</Text>
+            <TouchableOpacity 
+              style={styles.photoPlaceholder}
+              onPress={handlePickPhoto}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={t('profileSetup.addPhoto')}
+            >
+              {avatar ? (
+                <RNImage source={{ uri: avatar }} style={styles.photoImage} />
+              ) : (
+                <Text style={styles.cameraIcon}>📸</Text>
+              )}
             </TouchableOpacity>
-            <Text style={styles.photoText}>{t('profileSetup.addPhoto')}</Text>
+            <Text style={styles.photoText}>
+              {avatar ? (t('profileSetup.changePhoto') || 'Change Photo') : t('profileSetup.addPhoto')}
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -289,6 +326,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E0E7FF',
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
   },
   cameraIcon: {
     fontSize: 32,
