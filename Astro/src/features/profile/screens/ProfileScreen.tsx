@@ -63,6 +63,12 @@ export const ProfileScreen: React.FC<any> = ({ navigation: propNavigation }) => 
     const nextLang = i18n.language?.startsWith('hi') ? 'en' : 'hi';
     await i18n.changeLanguage(nextLang);
     await AsyncStorage.setItem('@garbhcompanion/language', nextLang);
+    try {
+      const { api } = require('~/shared/api');
+      await api.post('/api/v1/profile/language', { language: nextLang });
+    } catch (e) {
+      console.warn('Backend language sync optional error:', e);
+    }
   };
 
   const name = user?.name || t('profile.newMom');

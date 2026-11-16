@@ -929,6 +929,38 @@
           </table>
         </div>
       </div>
+
+      <div class="panel" style="margin-top: 24px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🎬 Recorded Masterclasses Library</span>
+            <span class="badge badge-purple" id="recorded-count-badge">0 Videos</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openRecordedModal()">
+            ➕ Add Recorded Class
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Course</th>
+                <th>Instructor</th>
+                <th>Duration</th>
+                <th>Views</th>
+                <th>Access</th>
+                <th>Video</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recorded-table-body">
+              <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Loading recorded classes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- TAB 5: KIT DELIVERIES -->
@@ -1254,6 +1286,60 @@
     </div>
   </div>
 
+  <!-- MODAL: ADD / PUBLISH RECORDED CLASS -->
+  <div class="modal-overlay" id="recorded-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="recorded-modal-title">🎬 Add Recorded Masterclass</div>
+        <button class="close-btn" onclick="closeRecordedModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="recorded-source-live-id" value="">
+        <div class="form-group">
+          <label class="form-label">Recorded Class Title</label>
+          <input type="text" id="recorded-title" class="form-control" placeholder="Spiritual Preparation for Gentle Birth">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Related Course</label>
+            <select id="recorded-program" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Doctor / Instructor</label>
+            <input type="text" id="recorded-doctor" class="form-control" placeholder="Dr. Sunita Sharma, MD">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Duration Label</label>
+            <input type="text" id="recorded-duration" class="form-control" value="45 mins">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Trimester / Stage</label>
+            <input type="text" id="recorded-trimester" class="form-control" value="All Trimesters">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Video URL (CDN / YouTube Embed / MP4)</label>
+          <input type="url" id="recorded-video-url" class="form-control" placeholder="https://www.youtube.com/embed/...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Summary / Description</label>
+          <textarea id="recorded-summary" class="form-control" rows="2" placeholder="Key takeaways and overview..."></textarea>
+        </div>
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="recorded-free-preview"> Free Preview (visible without paid subscription)
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRecordedModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitSaveRecorded()">Publish Recorded Class</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: CREATE KIT SHIPMENT -->
   <div class="modal-overlay" id="dispatch-modal">
     <div class="modal">
@@ -1402,6 +1488,7 @@
     let currentSchemes = [];
     let currentCoupons = [];
     let currentClasses = [];
+    let currentRecorded = [];
     let currentDispatches = [];
     let currentPayments = [];
     let currentSupportTickets = [];
@@ -1431,6 +1518,7 @@
           loadSchemes(),
           loadCoupons(),
           loadClasses(),
+          loadRecorded(),
           loadDispatches(),
           loadPayments(),
           loadSupportTickets()
@@ -1570,6 +1658,7 @@
       const options = schemes.map(s => `<option value="${s.id}">${s.title} (${s.id})</option>`).join('');
       document.getElementById('grant-program').innerHTML = options;
       document.getElementById('class-program').innerHTML = options;
+      document.getElementById('recorded-program').innerHTML = options;
       onGrantProgramChanged();
     }
 
@@ -1632,25 +1721,89 @@
       }
 
       tbody.innerHTML = classes.map(cls => {
+        const dtLabel = isNaN(new Date(cls.dateTime).getTime())
+          ? cls.dateTime
+          : new Date(cls.dateTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         return `
           <tr>
             <td>
               <div style="font-weight: 700; color: #fff;">${cls.title}</div>
+              <div style="font-size: 11px; color: var(--text-dim);">Registered: ${cls.registeredCount || cls.attendeesCount || 0}</div>
             </td>
             <td><span class="code-pill">${cls.programId}</span></td>
             <td>${cls.instructor || 'Astro Mentor'}</td>
-            <td>${new Date(cls.dateTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+            <td>${dtLabel}</td>
             <td>${cls.durationMinutes} mins</td>
-            <td><span class="badge badge-primary">● ${cls.status}</span></td>
+            <td>
+              <select class="form-control" style="padding: 4px 8px; font-size: 11px;" onchange="updateClassStatus('${cls.id}', this.value)">
+                <option value="upcoming" ${cls.status === 'upcoming' ? 'selected' : ''}>upcoming</option>
+                <option value="live_today" ${cls.status === 'live_today' ? 'selected' : ''}>live_today</option>
+                <option value="live" ${cls.status === 'live' ? 'selected' : ''}>live</option>
+                <option value="completed" ${cls.status === 'completed' ? 'selected' : ''}>completed</option>
+                <option value="cancelled" ${cls.status === 'cancelled' ? 'selected' : ''}>cancelled</option>
+              </select>
+            </td>
             <td>
               <a href="${cls.joinUrl}" target="_blank" class="code-pill" style="color: #60a5fa; text-decoration: none;">Join Link ↗</a>
             </td>
-            <td>
+            <td style="display:flex; gap:6px;">
+              <button class="btn btn-secondary btn-sm" onclick="openPublishRecordingModal('${cls.id}')">🎬 Record</button>
               <button class="btn btn-danger btn-sm" onclick="deleteClass('${cls.id}')">Delete</button>
             </td>
           </tr>
         `;
       }).join('');
+    }
+
+    async function updateClassStatus(id, status) {
+      const res = await fetch(`/api/v1/admin/classes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`Class status updated to ${status}`);
+        loadClasses();
+        loadStats();
+      }
+    }
+
+    // 5b. RECORDED CLASSES
+    async function loadRecorded() {
+      const res = await fetch('/api/v1/admin/recorded');
+      const json = await res.json();
+      if (json.success && json.data) {
+        currentRecorded = json.data;
+        document.getElementById('recorded-count-badge').innerText = `${currentRecorded.length} Videos`;
+        renderRecorded(currentRecorded);
+      }
+    }
+
+    function renderRecorded(items) {
+      const tbody = document.getElementById('recorded-table-body');
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">No recorded classes yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = items.map(rec => `
+        <tr>
+          <td>
+            <div style="font-weight: 700; color: #fff;">${rec.title}</div>
+            <div style="font-size: 11px; color: var(--text-dim);">${rec.trimester || 'All Trimesters'}</div>
+          </td>
+          <td><span class="code-pill">${rec.programId}</span></td>
+          <td>${rec.doctorName || rec.instructor || 'Mentor'}</td>
+          <td>${rec.duration}</td>
+          <td>${rec.viewsCount || '0 views'}</td>
+          <td><span class="badge ${rec.isFreePreview ? 'badge-success' : 'badge-purple'}">${rec.isFreePreview ? 'Free Preview' : 'Subscribed'}</span></td>
+          <td><a href="${rec.videoUrl}" target="_blank" class="code-pill" style="color: #60a5fa; text-decoration: none;">Watch ↗</a></td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="deleteRecorded('${rec.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
     }
 
     // 6. KIT DISPATCHES
@@ -1924,6 +2077,85 @@
       await fetch(`/api/v1/admin/classes/${id}`, { method: 'DELETE' });
       showToast('Class deleted');
       loadClasses();
+    }
+
+    function openRecordedModal() {
+      document.getElementById('recorded-modal-title').innerText = '🎬 Add Recorded Masterclass';
+      document.getElementById('recorded-source-live-id').value = '';
+      document.getElementById('recorded-title').value = '';
+      document.getElementById('recorded-doctor').value = '';
+      document.getElementById('recorded-duration').value = '45 mins';
+      document.getElementById('recorded-trimester').value = 'All Trimesters';
+      document.getElementById('recorded-video-url').value = '';
+      document.getElementById('recorded-summary').value = '';
+      document.getElementById('recorded-free-preview').checked = false;
+      document.getElementById('recorded-modal').classList.add('open');
+    }
+
+    function openPublishRecordingModal(liveClassId) {
+      const cls = currentClasses.find(c => c.id === liveClassId);
+      if (!cls) return;
+      document.getElementById('recorded-modal-title').innerText = '🎬 Publish Recording from Live Class';
+      document.getElementById('recorded-source-live-id').value = cls.id;
+      document.getElementById('recorded-title').value = cls.title;
+      document.getElementById('recorded-program').value = cls.programId;
+      document.getElementById('recorded-doctor').value = cls.doctorName || cls.instructor || '';
+      document.getElementById('recorded-duration').value = `${cls.durationMinutes || 45} mins`;
+      document.getElementById('recorded-trimester').value = cls.trimester || 'All Trimesters';
+      document.getElementById('recorded-video-url').value = cls.recordingUrl || '';
+      document.getElementById('recorded-summary').value = cls.overview || '';
+      document.getElementById('recorded-free-preview').checked = Boolean(cls.isFreePreview);
+      document.getElementById('recorded-modal').classList.add('open');
+    }
+
+    function closeRecordedModal() {
+      document.getElementById('recorded-modal').classList.remove('open');
+    }
+
+    async function submitSaveRecorded() {
+      const sourceLiveId = document.getElementById('recorded-source-live-id').value;
+      const title = document.getElementById('recorded-title').value.trim();
+      const programId = document.getElementById('recorded-program').value;
+      const doctorName = document.getElementById('recorded-doctor').value.trim();
+      const duration = document.getElementById('recorded-duration').value.trim();
+      const trimester = document.getElementById('recorded-trimester').value.trim();
+      const videoUrl = document.getElementById('recorded-video-url').value.trim();
+      const summary = document.getElementById('recorded-summary').value.trim();
+      const isFreePreview = document.getElementById('recorded-free-preview').checked;
+
+      if (!videoUrl) return alert('Video URL is required');
+      if (!sourceLiveId && !title) return alert('Title is required');
+
+      const endpoint = sourceLiveId
+        ? `/api/v1/admin/classes/${sourceLiveId}/publish-recording`
+        : '/api/v1/admin/recorded';
+
+      const payload = sourceLiveId
+        ? { videoUrl, duration, trimester, summary, isFreePreview }
+        : { title, programId, doctorName, duration, trimester, videoUrl, summary, isFreePreview };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(sourceLiveId ? 'Recording published & live class completed!' : 'Recorded class added!');
+        closeRecordedModal();
+        loadClasses();
+        loadRecorded();
+        loadStats();
+      } else {
+        alert(json.error?.message || json.error || 'Failed to save recorded class');
+      }
+    }
+
+    async function deleteRecorded(id) {
+      if (!confirm('Delete this recorded class?')) return;
+      await fetch(`/api/v1/admin/recorded/${id}`, { method: 'DELETE' });
+      showToast('Recorded class deleted');
+      loadRecorded();
     }
 
     // DISPATCH MODAL

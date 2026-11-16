@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { subscriptionController } from '../controllers/subscriptionController';
-import { UserJourneysCollection, SubscriptionsCollection } from '../services/dbStore';
+import { subscriptionController } from '../modules/subscription/subscription.controller';
+import { UserJourneysCollection, SubscriptionsCollection } from '../shared/db/dbStore';
 
 function createMockRes() {
   const res: any = {};
