@@ -213,8 +213,6 @@ export const ProfileSettingsScreen: React.FC<any> = ({ navigation: propNavigatio
                       },
                     ]
                   );
-                    ]
-                  );
                 }
               }}
             >
