@@ -20,6 +20,8 @@ import {
   BookMarked,
   X,
   Search,
+  Droplets,
+  CalendarHeart,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -56,6 +58,20 @@ export const PregnancyPowerPack: React.FC = () => {
 
   // 6 Premium Course Tools (Unlocked with Course Purchase)
   const POWER_TOOLS = [
+    {
+      id: 'water',
+      title: isHindi ? 'जल सेवन' : 'Water Intake',
+      icon: <Droplets size={26} color="#0284C7" />,
+      bg: '#E0F2FE',
+      action: () => navigation.navigate('WaterIntake'),
+    },
+    {
+      id: 'fertility',
+      title: isHindi ? 'ऋतु चक्र' : 'Fertility Wheel',
+      icon: <CalendarHeart size={26} color="#059669" />,
+      bg: '#ECFDF5',
+      action: () => navigation.navigate('FertilityTracker'),
+    },
     {
       id: 'safety',
       title: isHindi ? 'खाद्य सुरक्षा' : 'Food Safety',

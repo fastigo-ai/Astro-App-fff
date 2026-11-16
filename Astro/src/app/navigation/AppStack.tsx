@@ -39,6 +39,8 @@ import { PregnancyGamesScreen } from '~/features/games/screens/PregnancyGamesScr
 import { GarbhSanskarLibraryScreen } from '~/features/library/screens/GarbhSanskarLibraryScreen';
 import { GarbhSanskarAudioScreen } from '~/features/library/screens/GarbhSanskarAudioScreen';
 import { PregnancyDetailsScreen } from '~/features/profile/screens/PregnancyDetailsScreen';
+import { WaterIntakeScreen } from '~/features/interactions/screens/WaterIntakeScreen';
+import { FertilityTrackerScreen } from '~/features/interactions/screens/FertilityTrackerScreen';
 
 import { useAuthStore } from '~/store/useAuthStore';
 
@@ -172,6 +174,14 @@ export const AppStack = () => {
       <Stack.Screen 
         name="PregnancyDetails" 
         component={PregnancyDetailsScreen} 
+      />
+      <Stack.Screen 
+        name="WaterIntake" 
+        component={WaterIntakeScreen} 
+      />
+      <Stack.Screen 
+        name="FertilityTracker" 
+        component={FertilityTrackerScreen} 
       />
     </Stack.Navigator>
   );

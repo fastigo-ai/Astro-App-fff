@@ -32,9 +32,22 @@ const FEATURES_DATA: CourseFeature[] = [
   { id: '11', title: "Vipin Joshi Sir's special Sessions", description: 'Special live sessions.' },
 ];
 
-export const GarbhadhaanScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+export const GarbhadhaanScreen: React.FC<any> = ({ navigation: propNavigation }) => {
+  let hookNavigation: any = null;
+  try {
+    hookNavigation = useNavigation<any>();
+  } catch {}
+  const navigation = propNavigation || hookNavigation;
   const [selectedFeature, setSelectedFeature] = useState<CourseFeature | null>(null);
+  const [expandedTab, setExpandedTab] = useState<'why' | 'helpful' | null>(null);
+
+  const toggleWhyTab = () => {
+    setExpandedTab(prev => prev === 'why' ? null : 'why');
+  };
+
+  const toggleHelpfulTab = () => {
+    setExpandedTab(prev => prev === 'helpful' ? null : 'helpful');
+  };
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -66,26 +79,72 @@ export const GarbhadhaanScreen: React.FC = () => {
           {/* Tabs Area */}
           <View style={styles.tabsRow}>
             {/* Tab 1 */}
-            <View style={styles.tabCard}>
+            <TouchableOpacity 
+              style={styles.tabCard}
+              onPress={toggleWhyTab}
+              activeOpacity={0.9}
+              accessibilityRole="button"
+              accessibilityLabel="Why plan for your baby from today"
+            >
               <Text style={styles.tabTitleText}>Why plan{'\n'}for your baby{'\n'}from today</Text>
               <Text style={styles.bgQuestionMark}>?</Text>
-              <TouchableOpacity style={styles.tabButton}>
-                <Text style={styles.tabButtonText}>Tap to Read ⌄</Text>
-              </TouchableOpacity>
-            </View>
+              {expandedTab === 'why' && (
+                <Text style={styles.expandedDescText}>
+                  Pre-conception planning purifies parents' mind and body 3 months in advance to invite a divine and healthy soul.
+                </Text>
+              )}
+              <View style={styles.tabButton}>
+                <Text style={styles.tabButtonText}>
+                  {expandedTab === 'why' ? 'Tap to Close ⌃' : 'Tap to Read ⌄'}
+                </Text>
+              </View>
+            </TouchableOpacity>
 
             {/* Divider Line */}
             <View style={styles.tabDivider} />
 
             {/* Tab 2 */}
-            <View style={styles.tabCard}>
+            <TouchableOpacity 
+              style={styles.tabCard}
+              onPress={toggleHelpfulTab}
+              activeOpacity={0.9}
+              accessibilityRole="button"
+              accessibilityLabel="Krishna-Coming, how will it be helpful?"
+            >
               <Text style={styles.tabTitleText}>Krishna-Coming,{'\n'}how will{'\n'}it be helpful?</Text>
               <Text style={styles.bgQuestionMark}>?</Text>
-              <TouchableOpacity style={styles.tabButton}>
-                <Text style={styles.tabButtonText}>Tap to Read ⌄</Text>
-              </TouchableOpacity>
-            </View>
+              {expandedTab === 'helpful' && (
+                <Text style={styles.expandedDescText}>
+                  Provides personalized conception muhurtas, Ayurvedic nutrition, and daily shlokas guided by expert Vedic acharyas.
+                </Text>
+              )}
+              <View style={styles.tabButton}>
+                <Text style={styles.tabButtonText}>
+                  {expandedTab === 'helpful' ? 'Tap to Close ⌃' : 'Tap to Read ⌄'}
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
+
+          {/* Quick Fertility Tracker Access */}
+          <TouchableOpacity
+            style={styles.fertilityBannerBtn}
+            onPress={() => navigation.navigate('FertilityTracker')}
+            activeOpacity={0.88}
+          >
+            <View style={styles.fertilityBannerIcon}>
+              <Text style={{ fontSize: 20 }}>🧬</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fertilityBannerTitle}>
+                Fertility & Ovulation Tracker
+              </Text>
+              <Text style={styles.fertilityBannerSub}>
+                Track peak conception window & Beej Shuddhi cycle
+              </Text>
+            </View>
+            <Text style={styles.fertilityBannerArrow}>Open ↗</Text>
+          </TouchableOpacity>
 
           {/* Features Section */}
           <Text style={styles.featuresSectionTitle}>Features of this course</Text>
@@ -289,6 +348,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     minHeight: 50,
   },
+  expandedDescText: {
+    fontSize: 11,
+    color: '#4B5563',
+    lineHeight: 16,
+    marginBottom: 12,
+    zIndex: 2,
+  },
   bgQuestionMark: {
     position: 'absolute',
     right: 5,
@@ -444,5 +510,45 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     color: '#1F2937',
+  },
+  fertilityBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: '#C7D2FE',
+  },
+  fertilityBannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
+  },
+  fertilityBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#312E81',
+  },
+  fertilityBannerSub: {
+    fontSize: 11,
+    color: '#4338CA',
+    marginTop: 2,
+  },
+  fertilityBannerArrow: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#4F46E5',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
 });

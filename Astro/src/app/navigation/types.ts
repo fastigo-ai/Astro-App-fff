@@ -57,6 +57,8 @@ export type AppStackParamList = {
   GarbhSanskarLibrary: undefined;
   GarbhSanskarAudio: undefined;
   PregnancyDetails: undefined;
+  WaterIntake: undefined;
+  FertilityTracker: undefined;
 };
 
 export type RootStackParamList = {
