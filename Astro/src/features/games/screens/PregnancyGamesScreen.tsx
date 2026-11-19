@@ -719,6 +719,34 @@ export const PregnancyGamesScreen: React.FC = () => {
                 </View>
               )}
             </View>
+
+            {/* Launch Full Fetal Womb Game & Clinical Counter */}
+            <TouchableOpacity
+              style={styles.fullKickGameBanner}
+              activeOpacity={0.88}
+              onPress={() => (navigation as any).navigate('KickCounter', { initialTab: 'game' })}
+            >
+              <View style={styles.fullKickIconWrap}>
+                <Text style={{ fontSize: 28 }}>👣</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.fullKickBadgeRow}>
+                  <Text style={styles.fullKickBadge}>CLINICAL & VEDIC</Text>
+                  <Sparkles size={12} color="#E11D48" />
+                </View>
+                <Text style={styles.fullKickTitle}>
+                  {isHindi ? 'पूर्ण गर्भ खेल, संवाद व डॉक्टर रिकॉर्डर' : 'Full Womb Kick & Play Game'}
+                </Text>
+                <Text style={styles.fullKickDesc}>
+                  {isHindi
+                    ? '6-स्पॉट बेली टच, 432Hz बांसुरी, गर्भ संवाद फुसफुसाहट और डॉक्टर सारांश रिपोर्ट!'
+                    : '6-spot interactive belly touch, 432Hz flute, baby whispers & OB-GYN summary!'}
+                </Text>
+              </View>
+              <View style={styles.fullKickArrowBtn}>
+                <ArrowLeft size={16} color="#FFFFFF" style={{ transform: [{ rotate: '180deg' }] }} />
+              </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -1424,5 +1452,55 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 17,
     fontWeight: '500',
+  },
+  fullKickGameBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF1F2',
+    borderRadius: 18,
+    padding: 14,
+    marginTop: 14,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    gap: 12,
+  },
+  fullKickIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFE4E6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullKickBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  fullKickBadge: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#E11D48',
+    letterSpacing: 0.5,
+  },
+  fullKickTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#881337',
+    marginBottom: 2,
+  },
+  fullKickDesc: {
+    fontSize: 11,
+    color: '#475569',
+    lineHeight: 15,
+  },
+  fullKickArrowBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E11D48',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
