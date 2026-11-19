@@ -3,6 +3,7 @@ import { adminController } from './admin.controller';
 import { supportController } from '../support/support.controller';
 import { classesController } from '../classes/classes.controller';
 import { coursesController } from '../courses/courses.controller';
+import { activityController } from '../activity/activity.controller';
 import { authMiddleware, requireAdmin, requireSuperAdmin } from '../../shared/middlewares/authMiddleware';
 
 const router = Router();
@@ -21,6 +22,19 @@ router.post('/users/revoke', requireSuperAdmin, adminController.revokeUser);
 router.get('/stats', adminController.getStats);
 router.get('/users', adminController.getUsers);
 router.get('/payments', adminController.getPayments);
+
+// Course Programs Management
+router.post('/courses', coursesController.adminCreateCourse);
+router.put('/courses/:id', coursesController.adminUpdateCourse);
+router.delete('/courses/:id', coursesController.adminDeleteCourse);
+
+// Daily Garbh Sanskar Activities Calendar (Month 1-9 & Day 1-30)
+router.get('/activities/daily', activityController.getDailySchedule);
+router.post('/activities/daily', activityController.saveDailySchedule);
+
+// Daily Care Notes & Guidelines (Do's, Don'ts, Father duties, Hydration)
+router.get('/care-notes', activityController.getCareNotes);
+router.post('/care-notes', activityController.saveCareNotes);
 
 // Coupons
 router.get('/coupons', adminController.getCoupons);

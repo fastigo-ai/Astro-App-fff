@@ -119,5 +119,43 @@ export const coursesController = {
       next(error);
     }
   },
+
+  adminCreateCourse: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await coursesService.adminCreateCourse(req.body);
+      return res.status(201).json({
+        success: true,
+        message: 'Course created successfully',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  adminUpdateCourse: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await coursesService.adminUpdateCourse(String(req.params.id), req.body);
+      return res.status(200).json({
+        success: true,
+        message: 'Course updated successfully',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  adminDeleteCourse: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await coursesService.adminDeleteCourse(String(req.params.id));
+      return res.status(200).json({
+        success: true,
+        message: 'Course deleted successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 

@@ -34,7 +34,7 @@ export default function CreateCoursePage() {
 
     try {
       setLoading(true);
-      // In the backend, admin can create program scheme or lesson
+      await api.createCourse(formData);
       router.push('/dashboard/courses');
     } catch (err: any) {
       setError(err.message || 'Failed to create course');

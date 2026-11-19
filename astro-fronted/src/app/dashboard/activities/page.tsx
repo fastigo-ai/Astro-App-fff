@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import { VEDIC_MONTH_MILESTONES } from '@/lib/constants';
+import { api } from '@/lib/api';
 
 interface DailySchedule {
   day: number;
@@ -73,31 +74,50 @@ export default function DailyActivitiesPage() {
   const activeMilestone =
     VEDIC_MONTH_MILESTONES.find((m) => m.month === selectedMonth) || VEDIC_MONTH_MILESTONES[3]!;
 
-  const handleDaySelect = (dayNum: number) => {
-    setSelectedDay(dayNum);
-    setSchedule(
-      DEFAULT_DAYS_SCHEDULE[dayNum] || {
-        day: dayNum,
-        mantraTitle: `Day ${dayNum} Vedic Shloka & Chanting`,
+  const fetchSchedule = async (m: number, d: number) => {
+    try {
+      const res = await api.getDailySchedule(m, d);
+      if (res.success && res.data) {
+        setSchedule(res.data);
+      }
+    } catch {
+      // Fallback to local template
+      setSchedule(DEFAULT_DAYS_SCHEDULE[d] || {
+        day: d,
+        mantraTitle: `Day ${d} Vedic Shloka & Chanting`,
         mantraText: 'ॐ नमो भगवते वासुदेवाय॥',
         mantraAudioUrl: '',
-        samvadTopic: `Day ${dayNum} Womb Talk: Gratitude & Love`,
+        samvadTopic: `Day ${d} Womb Talk: Gratitude & Love`,
         samvadAudioUrl: '',
         gameType: 'Brain Game',
-        gameTitle: `Day ${dayNum} Cognitive Stimulation`,
+        gameTitle: `Day ${d} Cognitive Stimulation`,
         yogaPose: 'Tadasana & Gentle Breathwork',
         yogaVideoUrl: '',
         dietTip: 'High-fiber seasonal fruits & iron-rich spinach soup.',
         bedtimeRaaga: 'Raag Bageshri Classical Lullaby',
-      }
-    );
-    setSavedSuccess(false);
+      });
+    }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleDaySelect = (dayNum: number) => {
+    setSelectedDay(dayNum);
+    setSavedSuccess(false);
+    fetchSchedule(selectedMonth, dayNum);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    try {
+      await api.saveDailySchedule({
+        ...schedule,
+        month: selectedMonth,
+        day: selectedDay,
+      });
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err: any) {
+      alert(err.message || 'Failed to save daily schedule');
+    }
   };
 
   return (

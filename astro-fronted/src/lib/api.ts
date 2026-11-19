@@ -174,8 +174,53 @@ class ApiClient {
     });
   }
 
+  async createCourse(data: any) {
+    return this.request('/admin/courses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCourse(id: string, data: any) {
+    return this.request(`/admin/courses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCourse(id: string) {
+    return this.request(`/admin/courses/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // ==========================
-  // 4. Live Zoom Classes & Webinars
+  // 4. Daily Activities & Care Notes
+  // ==========================
+  async getDailySchedule(month: number, day: number) {
+    return this.request<{ success: boolean; data: any }>(`/admin/activities/daily?month=${month}&day=${day}`);
+  }
+
+  async saveDailySchedule(data: any) {
+    return this.request('/admin/activities/daily', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getCareNotes(month: number, day: number) {
+    return this.request<{ success: boolean; data: any }>(`/admin/care-notes?month=${month}&day=${day}`);
+  }
+
+  async saveCareNotes(data: any) {
+    return this.request('/admin/care-notes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // ==========================
+  // 5. Live Zoom Classes & Webinars
   // ==========================
   async listClasses() {
     return this.request<{ success: boolean; data: any[] }>('/admin/classes');

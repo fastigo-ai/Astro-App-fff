@@ -297,5 +297,72 @@ export const coursesService = {
     }
     await courseLessonRepository.deleteById(lessonId);
   },
+
+  async adminCreateCourse(body: Record<string, any>) {
+    const id = body.id || `prog_${Date.now()}`;
+    const price = Number(body.price) || 2499;
+    const originalPrice = Number(body.originalPrice) || 4499;
+    const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
+    const durationMonths = Number(body.durationMonths) || 6;
+
+    const record: any = {
+      _id: id,
+      id,
+      title: body.title || 'Vedic Garbh Sanskar Program',
+      subtitle: body.subtitle || '',
+      category: body.category || 'Vedic Garbh Sanskar',
+      stage: body.stage || 'pregnant',
+      durationMonths,
+      duration: `${durationMonths} Months Program`,
+      whoIsItFor: body.whoIsItFor || 'Pregnant mothers and families seeking authentic Vedic Garbh Sanskar.',
+      pricing: {
+        currentPrice: price,
+        originalPrice,
+        discountPercent,
+      },
+      tiers: [
+        {
+          id: `${id}-full`,
+          name: 'Utkarsh (Full Access)',
+          tagline: 'Complete Program till delivery',
+          duration: `${durationMonths} Months`,
+          durationMonths,
+          originalPrice,
+          calculatedPrice: price,
+          discountPercent,
+          monthlyRate: `₹${Math.round(price / durationMonths)}/mo`,
+          highlightText: `Complete ${durationMonths}-month curriculum`,
+          features: [
+            'Daily Vedic Mantras & Garbh Samvad audios',
+            'Pregnancy Brain Stimulation cognitive puzzles',
+            'Live Doctor Zoom sessions & recorded masterclasses',
+          ],
+        },
+      ],
+      status: body.status || 'active',
+      overview: body.overview || '',
+      unlockedModules: ['kicks', 'bump', 'samvad', 'mood', 'activities', 'diet', 'doctor_chat', 'live'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return courseRepository.create(record);
+  },
+
+  async adminUpdateCourse(id: string, body: Record<string, any>) {
+    const existing = courseRepository.findById(id);
+    if (!existing) {
+      throw new AppError(`Course ${id} not found`, 404, 'COURSE_NOT_FOUND');
+    }
+    return courseRepository.updateById(id, { ...body, updatedAt: new Date().toISOString() });
+  },
+
+  async adminDeleteCourse(id: string) {
+    const existing = courseRepository.findById(id);
+    if (!existing) {
+      throw new AppError(`Course ${id} not found`, 404, 'COURSE_NOT_FOUND');
+    }
+    return courseRepository.deleteById(id);
+  },
 };
 

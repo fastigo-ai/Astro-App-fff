@@ -663,6 +663,41 @@ export const FaqsCollection = new JsonCollection<IFaqRecord>('faqs');
 export const DoctorsCollection = new JsonCollection<IDoctorRecord>('doctors');
 export const SupportTicketsCollection = new JsonCollection<ISupportTicket>('support_tickets');
 
+export interface IDailyActivityRecord {
+  _id?: string;
+  id: string;
+  month: number;
+  day: number;
+  mantraTitle: string;
+  mantraText: string;
+  mantraAudioUrl?: string;
+  samvadTopic: string;
+  samvadAudioUrl?: string;
+  gameType: string;
+  gameTitle: string;
+  yogaPose: string;
+  yogaVideoUrl?: string;
+  dietTip: string;
+  bedtimeRaaga?: string;
+  updatedAt?: string;
+}
+
+export interface IDailyCareNoteRecord {
+  _id?: string;
+  id: string;
+  month: number;
+  day: number;
+  dos: string;
+  donts: string;
+  fatherDuties: string;
+  medicalAdvice: string;
+  hydrationLiters: number;
+  updatedAt?: string;
+}
+
+export const DailyActivitiesCollection = new JsonCollection<IDailyActivityRecord>('daily_activities');
+export const DailyCareNotesCollection = new JsonCollection<IDailyCareNoteRecord>('daily_care_notes');
+
 // Auto-seed default 6 programs if empty
 export const seedDefaultPrograms = () => {
   const existing = ProgramSchemesCollection.read();
@@ -1352,6 +1387,63 @@ export const seedDefaultPrograms = () => {
         ],
         assignedAdmin: null,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }
+
+  // Seed default daily activities if empty
+  if (DailyActivitiesCollection.read().length === 0) {
+    DailyActivitiesCollection.write([
+      {
+        id: 'act_m4_d1',
+        month: 4,
+        day: 1,
+        mantraTitle: 'Pratah Smaran & Gayatri Shloka (ॐ भूर्भुवः स्वः)',
+        mantraText: 'ॐ भूर्भुवः स्वः तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि धियो यो नः प्रचोदयात्॥',
+        mantraAudioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_c89013e896.mp3',
+        samvadTopic: 'Welcoming Baby to a Peaceful Home (स्नेह संवाद)',
+        samvadAudioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_2492161f52.mp3',
+        gameType: 'Vedic Memory Match',
+        gameTitle: 'Lotus & Sacred Geometry Concentration Challenge',
+        yogaPose: 'Marjaryasana (Cat-Cow Pose) for Spine Flexibility',
+        yogaVideoUrl: 'https://www.youtube.com/watch?v=sample1',
+        dietTip: 'Soaked almonds (5) + saffron lukewarm organic cow milk.',
+        bedtimeRaaga: 'Raag Yaman in 432Hz (Pure Flute for Deep Sleep)',
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'act_m4_d2',
+        month: 4,
+        day: 2,
+        mantraTitle: 'Santan Gopal Stotra for Divine Radiance',
+        mantraText: 'देवकीसुत गोविन्द वासुदेव जगत्पते। देहि मे तनयं कृष्ण त्वामहं शरणं गतः॥',
+        mantraAudioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_c89013e896.mp3',
+        samvadTopic: 'Father’s Touch & Gentle Womb Greeting (पिता का संवाद)',
+        samvadAudioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_2492161f52.mp3',
+        gameType: 'Math & Logic Riddle',
+        gameTitle: 'Visual Pattern Sequence & Memory Card Boost',
+        yogaPose: 'Baddha Konasana (Butterfly Pose) for Pelvic Circulation',
+        yogaVideoUrl: 'https://www.youtube.com/watch?v=sample2',
+        dietTip: 'Fresh coconut water + handful of soaked walnuts for brain DHA.',
+        bedtimeRaaga: 'Raag Bhairav Instrumental (Calming Brainwaves)',
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }
+
+  // Seed default daily care notes if empty
+  if (DailyCareNotesCollection.read().length === 0) {
+    DailyCareNotesCollection.write([
+      {
+        id: 'care_m4_d1',
+        month: 4,
+        day: 1,
+        dos: '• Sleep in left-lateral (left side) position for optimal uterine blood flow.\n• Drink 2.5 to 3 liters of lukewarm water throughout the day.\n• Chant or listen to soothing Raag Yaman for 15 minutes before sleep.\n• Wear comfortable, breathable loose cotton clothing.',
+        donts: '• Do NOT skip meals or stay hungry for more than 3 hours.\n• Avoid sleeping completely flat on your back (supine position).\n• Strictly avoid unpasteurized cheeses, raw papaya, and excessive caffeine.\n• Avoid stressful debates, loud negative news, and violent television.',
+        fatherDuties: '• Sit beside your wife at 8:00 PM and read the Garbh Samvad script aloud to baby.\n• Offer a gentle 10-minute warm sesame oil foot massage to relieve swelling.\n• Ensure her water bottle is always replenished beside her bedside.\n• Accompany her on a calm, conversational 20-minute evening walk in fresh air.',
+        medicalAdvice: '• Fetal movement (quickening) becomes noticeable in Month 4-5. Log all baby flutters.\n• Normal blood pressure range: 110/70 to 120/80 mmHg.\n• If experiencing persistent severe headaches or sudden ankle swelling, immediately alert doctor.',
+        hydrationLiters: 2.8,
         updatedAt: new Date().toISOString(),
       },
     ]);

@@ -12,6 +12,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import Header from '@/components/Header';
+import { api } from '@/lib/api';
 
 export default function DailyCareNotesPage() {
   const [selectedMonth, setSelectedMonth] = useState(4);
@@ -26,10 +27,42 @@ export default function DailyCareNotesPage() {
     hydrationLiters: 2.8,
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  const loadNotes = async (m: number, d: number) => {
+    try {
+      const res = await api.getCareNotes(m, d);
+      if (res.success && res.data) {
+        setNotes(res.data);
+      }
+    } catch {
+      // Keep existing default
+    }
+  };
+
+  const handleMonthChange = (m: number) => {
+    setSelectedMonth(m);
+    setSaved(false);
+    loadNotes(m, selectedDay);
+  };
+
+  const handleDayChange = (d: number) => {
+    setSelectedDay(d);
+    setSaved(false);
+    loadNotes(selectedMonth, d);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      await api.saveCareNotes({
+        ...notes,
+        month: selectedMonth,
+        day: selectedDay,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      alert(err.message || 'Failed to save care notes');
+    }
   };
 
   return (
@@ -67,7 +100,7 @@ export default function DailyCareNotesPage() {
           <div className="flex items-center space-x-3">
             <select
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              onChange={(e) => handleMonthChange(Number(e.target.value))}
               className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((m) => (
@@ -79,7 +112,7 @@ export default function DailyCareNotesPage() {
 
             <select
               value={selectedDay}
-              onChange={(e) => setSelectedDay(Number(e.target.value))}
+              onChange={(e) => handleDayChange(Number(e.target.value))}
               className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold"
             >
               {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
