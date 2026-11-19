@@ -235,7 +235,12 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
     return cat.replace(/[^\w\s]/gi, '').trim().split(' ')[0] || 'Garbh Sanskar';
   };
 
-  const handleJoinClass = (zoomUrl: string, title: string) => {
+  const handleJoinClass = async (zoomUrl: string, title: string, id?: string) => {
+    if (id) {
+      try {
+        await api.post(`/api/v1/classes/${id}/join`).catch(() => {});
+      } catch (e) {}
+    }
     Linking.openURL(zoomUrl).catch(() => {
       Alert.alert(
         'Live Class Link',
@@ -244,12 +249,15 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
     });
   };
 
-  const handleToggleReminder = (id: string) => {
+  const handleToggleReminder = async (id: string) => {
     if (reminders.includes(id)) {
       setReminders(reminders.filter(r => r !== id));
       Alert.alert('Reminder Removed', 'Notification turned off for this class.');
     } else {
       setReminders([...reminders, id]);
+      try {
+        await api.post(`/api/v1/classes/${id}/register`).catch(() => {});
+      } catch (e) {}
       Alert.alert('Reminder Set! 🌸', 'We will notify you 15 minutes before the live class starts.');
     }
   };
@@ -403,7 +411,7 @@ export const LiveSessionsScreen: React.FC<{ isTabMode?: boolean }> = ({ isTabMod
                     <View style={styles.actionRow}>
                       <TouchableOpacity
                         style={styles.joinBtn}
-                        onPress={() => handleJoinClass(item.zoomLink, item.title)}
+                        onPress={() => handleJoinClass(item.zoomLink, item.title, item.id)}
                         activeOpacity={0.88}
                       >
                         <Video size={14} color="#FFFFFF" />

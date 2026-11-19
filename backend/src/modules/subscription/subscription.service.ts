@@ -306,10 +306,24 @@ export const subscriptionService = {
   },
 
   async getStatus(phone: string) {
-    const activeSub = await subscriptionRepository.findActiveByPhone(phone);
+    const allSubs = await subscriptionRepository.find({ phone });
+    const activeSubs = allSubs.filter((s) => s.status === 'active' && !s.is_deleted);
+    const activeSub = activeSubs[0] || null;
+    const subscribedPrograms = Array.from(
+      new Set(activeSubs.map((s) => s.programId || 'garbh_sanskar'))
+    );
+    const activeSubscriptionsMap: Record<string, any> = {};
+    activeSubs.forEach((s) => {
+      const prog = s.programId || 'garbh_sanskar';
+      activeSubscriptionsMap[prog] = s;
+    });
+
     return {
       hasActiveSubscription: !!activeSub,
+      status: activeSub ? 'active' : 'none',
       subscription: activeSub || null,
+      subscribedPrograms,
+      activeSubscriptions: activeSubscriptionsMap,
     };
   },
 

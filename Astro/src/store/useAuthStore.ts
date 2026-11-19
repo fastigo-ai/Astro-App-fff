@@ -296,6 +296,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         subscribedPrograms: parsedPrograms,
         activeSubscriptions: parsedActiveSubs,
       });
+
+      // Synchronize latest live subscription from backend
+      get().fetchSubscriptionStatus().catch(() => {});
     } else {
       set({ 
         status: 'idle', 
@@ -355,6 +358,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       journeyData: merged,
       user: state.user ? { ...state.user, lmp_date: merged.lmp_date } : null,
     }));
+
+    try {
+      await api.post('/api/v1/profile/details', {
+        name: get().user?.name || 'Loving Mother',
+        ...merged,
+      }).catch(() => {});
+    } catch (e) {}
   },
 
   fetchFamilyDetails: async () => {
@@ -619,18 +629,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setSubscriptionStatus: (status: SubscriptionStatus) => set({ subscriptionStatus: status }),
 
   fetchSubscriptionStatus: async () => {
-    // Mock network delay for pull to refresh
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Randomly assign 'active' or 'expired' in a real app, here we just keep it as is or default to none
-        const current = get().subscriptionStatus;
-        if (current === 'none') {
-          // just mock it fetching something
-          set({ subscriptionStatus: 'expired' });
+    try {
+      const res = await api.get('/api/v1/subscription/status');
+      if (res.data?.success && res.data.data) {
+        const subData = res.data.data;
+        const status: SubscriptionStatus =
+          subData.hasActiveSubscription || subData.status === 'active'
+            ? 'active'
+            : get().isDemoActive
+            ? 'trial'
+            : 'none';
+
+        const programs: string[] =
+          subData.subscribedPrograms ||
+          (subData.subscription?.programId ? [subData.subscription.programId] : []);
+        const activeSubs: Record<string, any> =
+          subData.activeSubscriptions ||
+          (subData.subscription
+            ? { [subData.subscription.programId || 'garbh_sanskar']: subData.subscription }
+            : {});
+
+        await AsyncStorage.setItem('@garbhcompanion/subscription_status', status);
+        if (programs.length > 0) {
+          await AsyncStorage.setItem('@garbhcompanion/subscribed_programs', JSON.stringify(programs));
         }
-        resolve();
-      }, 1000);
-    });
+        if (Object.keys(activeSubs).length > 0) {
+          await AsyncStorage.setItem('@garbhcompanion/active_subscriptions', JSON.stringify(activeSubs));
+        }
+
+        set({
+          subscriptionStatus: status,
+          subscribedPrograms: programs.length > 0 ? programs : get().subscribedPrograms,
+          activeSubscriptions:
+            Object.keys(activeSubs).length > 0 ? activeSubs : get().activeSubscriptions,
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to fetch subscription status from server:', e);
+    }
   },
 
   incrementBabyKicks: () => {

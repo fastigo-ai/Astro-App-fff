@@ -60,7 +60,7 @@ export const profileController = {
 
   saveDetails: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, dob, city, state } = req.body;
+      const { name, dob, city, state, ...extra } = req.body;
       const user = req.user;
       const phone = user?.phone || req.body.phone;
 
@@ -68,7 +68,7 @@ export const profileController = {
         return res.status(400).json({ success: false, error: 'Name is required' });
       }
 
-      await profileService.saveDetails(phone, { name, dob, city, state });
+      await profileService.saveDetails(phone, { name, dob, city, state, ...extra });
       return res.status(200).json({
         success: true,
         message: 'Profile details saved successfully',

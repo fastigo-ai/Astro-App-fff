@@ -400,14 +400,34 @@ export const classesService = {
   },
 
   async adminCreateClass(payload: CreateLiveClassInput) {
-    const effectiveJoinUrl = (payload.joinUrl || payload.zoomLink || '').trim();
+    const effectiveJoinUrl = (
+      payload.joinUrl ||
+      payload.zoomLink ||
+      (payload as any).meetingUrl ||
+      ''
+    ).trim();
     if (!effectiveJoinUrl) {
       throw new AppError('Meeting joinUrl or zoomLink is required', 400, 'JOIN_URL_REQUIRED');
     }
 
-    const effectiveInstructor = payload.instructor || payload.doctorName || 'AstroBaby Senior Mentor';
+    const effectiveInstructor =
+      payload.instructor ||
+      payload.doctorName ||
+      (payload as any).mentorName ||
+      'AstroBaby Senior Mentor';
     const effectiveDateTime =
-      payload.dateTime || payload.scheduledAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      payload.dateTime ||
+      payload.scheduledAt ||
+      (payload as any).startTime ||
+      new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const effectiveOverview =
+      payload.overview || (payload as any).description || (payload as any).subtitle || '';
+    const effectiveCapacity =
+      payload.maxCapacity || (payload as any).maxAttendees || 200;
+    const effectiveThumbnail =
+      payload.thumbnail ||
+      (payload as any).coverImageUrl ||
+      'https://images.unsplash.com/photo-1544126592-807ade215a0b?w=700';
 
     const saved = await liveClassRepository.create({
       id: `live_${Date.now()}`,
@@ -415,8 +435,8 @@ export const classesService = {
       title: payload.title,
       hindiTitle: payload.hindiTitle,
       instructor: effectiveInstructor,
-      doctorName: payload.doctorName || effectiveInstructor,
-      credentials: payload.credentials,
+      doctorName: payload.doctorName || (payload as any).mentorName || effectiveInstructor,
+      credentials: payload.credentials || (payload as any).mentorRole,
       institution: payload.institution,
       dateTime: effectiveDateTime,
       scheduledAt: payload.scheduledAt || effectiveDateTime,
@@ -426,14 +446,15 @@ export const classesService = {
       status: payload.status,
       trimester: payload.trimester || 'All Trimesters',
       category: payload.category || 'general',
-      categoryLabel: payload.categoryLabel || 'Live Masterclass 🎥',
-      overview: payload.overview,
+      categoryLabel: payload.categoryLabel || `${payload.category || 'Live Masterclass'} 🎥`,
+      overview: effectiveOverview,
       learningPoints: payload.learningPoints || [],
       attendeesCount: 0,
       registeredCount: 0,
-      maxCapacity: payload.maxCapacity,
+      maxCapacity: effectiveCapacity,
       isFreePreview: payload.isFreePreview,
       notesUrl: payload.notesUrl,
+      thumbnail: effectiveThumbnail,
     });
 
     return normalizeLiveClass(saved);
@@ -470,20 +491,30 @@ export const classesService = {
       throw new AppError(`Live class ${classId} not found`, 404, 'LIVE_CLASS_NOT_FOUND');
     }
 
-    const durationStr = payload.duration || `${liveClass.durationMinutes || 45} mins`;
+    const durationStr =
+      payload.duration ||
+      ((payload as any).durationMinutes ? `${(payload as any).durationMinutes} mins` : `${liveClass.durationMinutes || 45} mins`);
+    const durationSec =
+      payload.durationSeconds ??
+      ((payload as any).durationMinutes ? (payload as any).durationMinutes * 60 : (liveClass.durationMinutes || 45) * 60);
+    const summaryStr = payload.summary || (payload as any).description || liveClass.overview || liveClass.title;
+    const thumbnailStr =
+      payload.thumbnail ||
+      (payload as any).thumbnailUrl ||
+      liveClass.thumbnail ||
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600';
 
     let recorded: IRecordedClass;
     if (liveClass.recordedClassId) {
       const updated = await recordedClassRepository.updateById(liveClass.recordedClassId, {
         videoUrl: payload.videoUrl,
         duration: durationStr,
-        durationSeconds: payload.durationSeconds ?? (liveClass.durationMinutes || 45) * 60,
-        summary: payload.summary || liveClass.overview || liveClass.title,
+        durationSeconds: durationSec,
+        summary: summaryStr,
         takeaways: payload.takeaways || liveClass.learningPoints || [],
         notesUrl: payload.notesUrl ?? liveClass.notesUrl,
         notesAvailable: Boolean(payload.notesUrl ?? liveClass.notesUrl),
-        thumbnail:
-          payload.thumbnail || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600',
+        thumbnail: thumbnailStr,
         isFreePreview: payload.isFreePreview ?? liveClass.isFreePreview ?? false,
         status: 'published',
       });
@@ -498,7 +529,7 @@ export const classesService = {
         doctorName: liveClass.doctorName || liveClass.instructor,
         instructor: liveClass.instructor,
         duration: durationStr,
-        durationSeconds: payload.durationSeconds ?? (liveClass.durationMinutes || 45) * 60,
+        durationSeconds: durationSec,
         category: payload.category || liveClass.category || 'general',
         categoryLabel: payload.categoryLabel || liveClass.categoryLabel || 'Recorded Masterclass 🎬',
         trimester: payload.trimester || liveClass.trimester || 'All Trimesters',
@@ -506,10 +537,9 @@ export const classesService = {
         viewsNumeric: 0,
         notesAvailable: Boolean(payload.notesUrl ?? liveClass.notesUrl),
         notesUrl: payload.notesUrl ?? liveClass.notesUrl,
-        thumbnail:
-          payload.thumbnail || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600',
+        thumbnail: thumbnailStr,
         videoUrl: payload.videoUrl,
-        summary: payload.summary || liveClass.overview || liveClass.title,
+        summary: summaryStr,
         takeaways: payload.takeaways || liveClass.learningPoints || [],
         isFreePreview: payload.isFreePreview ?? liveClass.isFreePreview ?? false,
         status: 'published',
@@ -545,7 +575,20 @@ export const classesService = {
   },
 
   async adminCreateRecorded(payload: CreateRecordedClassInput) {
-    const doctorName = payload.doctorName || payload.instructor || 'AstroBaby Senior Mentor';
+    const doctorName =
+      payload.doctorName ||
+      payload.instructor ||
+      (payload as any).mentorName ||
+      'AstroBaby Senior Mentor';
+    const duration =
+      payload.duration ||
+      ((payload as any).durationMinutes ? `${(payload as any).durationMinutes} mins` : '45 mins');
+    const thumbnail =
+      payload.thumbnail ||
+      (payload as any).thumbnailUrl ||
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600';
+    const summary = payload.summary || (payload as any).description || '';
+
     const created = await recordedClassRepository.create({
       id: `rec_${Date.now()}`,
       programId: payload.programId,
@@ -554,19 +597,19 @@ export const classesService = {
       hindiTitle: payload.hindiTitle,
       doctorName,
       instructor: payload.instructor || doctorName,
-      duration: payload.duration,
-      durationSeconds: payload.durationSeconds,
+      duration,
+      durationSeconds: payload.durationSeconds || ((payload as any).durationMinutes ? (payload as any).durationMinutes * 60 : 2700),
       category: payload.category,
-      categoryLabel: payload.categoryLabel,
+      categoryLabel: payload.categoryLabel || `${payload.category || 'Recorded Masterclass'} 🎬`,
       trimester: payload.trimester,
       viewsCount: '0 views',
       viewsNumeric: 0,
       notesAvailable: payload.notesAvailable ?? Boolean(payload.notesUrl),
       notesUrl: payload.notesUrl,
-      thumbnail: payload.thumbnail,
+      thumbnail,
       videoUrl: payload.videoUrl,
-      summary: payload.summary,
-      takeaways: payload.takeaways,
+      summary,
+      takeaways: payload.takeaways || [],
       isFreePreview: payload.isFreePreview,
       status: payload.status,
     });

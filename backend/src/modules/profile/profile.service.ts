@@ -30,7 +30,7 @@ export const profileService = {
     return { language };
   },
 
-  async saveDetails(phone: string | undefined, details: { name: string; dob?: string; city?: string; state?: string }) {
+  async saveDetails(phone: string | undefined, details: Record<string, any>) {
     console.log(`[Backend] Saved Profile for ${phone}: Name=${details.name}, DOB=${details.dob}`);
     if (phone) {
       await profileRepository.updatePreferencesByPhone(phone, details);
