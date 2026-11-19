@@ -136,4 +136,68 @@ export const profileController = {
       next(error);
     }
   },
+
+  getFamilyDetails: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || (req.query.phone as string);
+      if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
+
+      const family = await profileService.getFamilyDetails(String(phone));
+      return res.status(200).json({ success: true, data: family });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  updateMotherDetails: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || req.body.phone;
+      if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
+
+      const result = await profileService.saveMotherDetails(String(phone), req.body);
+      return res.status(200).json({
+        success: true,
+        message: 'Mother details updated successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  updateFatherDetails: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || req.body.phone;
+      if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
+
+      const result = await profileService.saveFatherDetails(String(phone), req.body);
+      return res.status(200).json({
+        success: true,
+        message: 'Father / Husband details updated successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  updateDoctorDetails: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user;
+      const phone = user?.phone || req.body.phone;
+      if (!phone) return res.status(400).json({ success: false, error: 'Phone number is required' });
+
+      const result = await profileService.saveDoctorDetails(String(phone), req.body);
+      return res.status(200).json({
+        success: true,
+        message: 'Doctor details updated successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

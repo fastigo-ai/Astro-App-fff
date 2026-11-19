@@ -1,6 +1,9 @@
 import { profileRepository } from './profile.repository';
 import {
   IAvatarHistoryItem,
+  IMotherDetails,
+  IFatherDetails,
+  IDoctorDetails,
   SubscriptionsCollection,
   KickSessionsCollection,
   MoodLogsCollection,
@@ -80,6 +83,103 @@ export const profileService = {
       avatarUpdatedAt: nowIso,
       historyCount: (updated?.avatarHistory || []).length,
     };
+  },
+
+  /**
+   * Family Details: Mother, Father (Husband), and Doctor
+   */
+  async getFamilyDetails(phone: string | undefined) {
+    if (!phone) throw new Error('Phone number is required');
+    const user = await profileRepository.findByPhone(phone);
+    if (!user) throw new Error('User profile not found');
+
+    return {
+      mother: user.mother_details || {
+        name: user.name || '',
+        dob: user.dob || '',
+        bloodGroup: '',
+        height: '',
+        weight: '',
+        occupation: '',
+        emergencyContact: '',
+        medicalHistory: '',
+        allergies: '',
+      },
+      father: user.father_details || {
+        name: '',
+        phone: '',
+        email: '',
+        dob: '',
+        bloodGroup: '',
+        occupation: '',
+        notes: '',
+      },
+      doctor: user.doctor_details || {
+        doctorName: '',
+        hospitalName: '',
+        doctorPhone: '',
+        clinicAddress: '',
+        speciality: 'Obstetrics & Gynecology',
+      },
+    };
+  },
+
+  async saveMotherDetails(phone: string | undefined, data: IMotherDetails) {
+    if (!phone) throw new Error('Phone number is required');
+    const user = await profileRepository.findByPhone(phone);
+    if (!user) throw new Error('User profile not found');
+
+    const updatedMother: IMotherDetails = {
+      ...(user.mother_details || {}),
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatePayload: Record<string, any> = {
+      mother_details: updatedMother,
+    };
+    if (data.name) updatePayload.name = data.name;
+    if (data.dob) updatePayload.dob = data.dob;
+
+    await profileRepository.updatePreferencesByPhone(phone, updatePayload);
+    console.log(`[Backend] Saved Mother details for ${phone}: Name=${data.name}, BloodGroup=${data.bloodGroup}`);
+    return updatedMother;
+  },
+
+  async saveFatherDetails(phone: string | undefined, data: IFatherDetails) {
+    if (!phone) throw new Error('Phone number is required');
+    const user = await profileRepository.findByPhone(phone);
+    if (!user) throw new Error('User profile not found');
+
+    const updatedFather: IFatherDetails = {
+      ...(user.father_details || {}),
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await profileRepository.updatePreferencesByPhone(phone, {
+      father_details: updatedFather,
+    });
+    console.log(`[Backend] Saved Father / Husband details for ${phone}: Name=${data.name}, Phone=${data.phone}`);
+    return updatedFather;
+  },
+
+  async saveDoctorDetails(phone: string | undefined, data: IDoctorDetails) {
+    if (!phone) throw new Error('Phone number is required');
+    const user = await profileRepository.findByPhone(phone);
+    if (!user) throw new Error('User profile not found');
+
+    const updatedDoctor: IDoctorDetails = {
+      ...(user.doctor_details || {}),
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await profileRepository.updatePreferencesByPhone(phone, {
+      doctor_details: updatedDoctor,
+    });
+    console.log(`[Backend] Saved Doctor details for ${phone}: Doctor=${data.doctorName}, Hospital=${data.hospitalName}`);
+    return updatedDoctor;
   },
 
   /**

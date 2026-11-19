@@ -49,6 +49,8 @@ export type AppStackParamList = {
   LiveSessions: undefined;
   ReferEarn: undefined;
   MedicalProfile: undefined;
+  MotherProfile: undefined;
+  FatherProfile: undefined;
   SupportChat: undefined;
   PregnancySafety: undefined;
   WeightTracker: undefined;

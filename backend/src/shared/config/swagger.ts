@@ -91,6 +91,42 @@ export const swaggerSpec: any = {
           },
         },
       },
+      MotherDetailsRequest: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', example: 'Aaditi Sharma' },
+          dob: { type: 'string', example: '14/08/1996' },
+          bloodGroup: { type: 'string', example: 'B+' },
+          height: { type: 'string', example: '5 ft 4 in' },
+          weight: { type: 'string', example: '58 kg' },
+          occupation: { type: 'string', example: 'Software Engineer' },
+          emergencyContact: { type: 'string', example: '+91 98765 43210' },
+          medicalHistory: { type: 'string', example: 'Mild morning sickness' },
+          allergies: { type: 'string', example: 'None' },
+        },
+      },
+      FatherDetailsRequest: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', example: 'Vipul Sharma' },
+          phone: { type: 'string', example: '+91 98765 12345' },
+          email: { type: 'string', example: 'vipul@example.com' },
+          dob: { type: 'string', example: '22/11/1993' },
+          bloodGroup: { type: 'string', example: 'O+' },
+          occupation: { type: 'string', example: 'Architect' },
+          notes: { type: 'string', example: 'Supportive partner, practices daily meditation' },
+        },
+      },
+      DoctorDetailsRequest: {
+        type: 'object',
+        properties: {
+          doctorName: { type: 'string', example: 'Dr. Radhika Sen' },
+          hospitalName: { type: 'string', example: 'Apollo Cradle Maternity Hospital' },
+          doctorPhone: { type: 'string', example: '+91 98765 43210' },
+          clinicAddress: { type: 'string', example: 'Bandra West, Mumbai' },
+          speciality: { type: 'string', example: 'Obstetrics & Gynecology' },
+        },
+      },
       JourneyRequest: {
         type: 'object',
         required: ['stage'],
@@ -391,6 +427,90 @@ export const swaggerSpec: any = {
         responses: {
           200: {
             description: 'Account successfully soft-deleted',
+          },
+          401: {
+            description: 'Unauthorized',
+          },
+        },
+      },
+    },
+    '/api/v1/profile/family': {
+      get: {
+        tags: ['User Profile'],
+        summary: 'Get Family Details (Mother, Father/Husband, Doctor)',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Returns consolidated family profile details',
+          },
+          401: {
+            description: 'Unauthorized',
+          },
+        },
+      },
+    },
+    '/api/v1/profile/mother': {
+      put: {
+        tags: ['User Profile'],
+        summary: 'Update Details of Pregnant Woman (Mother)',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/MotherDetailsRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Mother details updated successfully',
+          },
+          401: {
+            description: 'Unauthorized',
+          },
+        },
+      },
+    },
+    '/api/v1/profile/father': {
+      put: {
+        tags: ['User Profile'],
+        summary: 'Update Details of Husband / Partner (Father)',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/FatherDetailsRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Father / Husband details updated successfully',
+          },
+          401: {
+            description: 'Unauthorized',
+          },
+        },
+      },
+    },
+    '/api/v1/profile/doctor': {
+      put: {
+        tags: ['User Profile'],
+        summary: 'Update Details of Consulting Doctor / Gynecologist',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/DoctorDetailsRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Doctor details updated successfully',
           },
           401: {
             description: 'Unauthorized',

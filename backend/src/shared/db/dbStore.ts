@@ -162,6 +162,39 @@ export interface IAvatarHistoryItem {
   userAgent?: string;
 }
 
+export interface IMotherDetails {
+  name?: string;
+  dob?: string;
+  bloodGroup?: string;
+  height?: string;
+  weight?: string;
+  occupation?: string;
+  emergencyContact?: string;
+  medicalHistory?: string;
+  allergies?: string;
+  updatedAt?: string;
+}
+
+export interface IFatherDetails {
+  name?: string;
+  phone?: string;
+  email?: string;
+  dob?: string;
+  bloodGroup?: string;
+  occupation?: string;
+  notes?: string;
+  updatedAt?: string;
+}
+
+export interface IDoctorDetails {
+  doctorName?: string;
+  hospitalName?: string;
+  doctorPhone?: string;
+  clinicAddress?: string;
+  speciality?: string;
+  updatedAt?: string;
+}
+
 export interface IUserJourney {
   _id?: string;
   userId?: string;
@@ -182,6 +215,9 @@ export interface IUserJourney {
   avatarUpdateCount?: number;
   avatarUpdatedAt?: string;
   avatarHistory?: IAvatarHistoryItem[];
+  mother_details?: IMotherDetails;
+  father_details?: IFatherDetails;
+  doctor_details?: IDoctorDetails;
   is_deleted?: boolean;
   deleted_at?: string;
   deletion_reason?: string;

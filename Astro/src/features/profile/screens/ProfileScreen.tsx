@@ -91,24 +91,7 @@ export const ProfileScreen: React.FC<any> = ({ navigation: propNavigation }) => 
   };
 
   const handlePartnerProfile = () => {
-    Alert.alert(
-      t('profile.partnerProfile'),
-      isHindi 
-        ? 'अपने साथी को जोड़ें और अपनी गर्भावस्था यात्रा को एक साथ साझा करें।' 
-        : 'Connect with your partner to share baby development updates, Garbh Samvad, and Vedic activities together.',
-      [
-        { text: isHindi ? 'रद्द करें' : 'Cancel', style: 'cancel' },
-        { 
-          text: isHindi ? 'साथी जोड़ें' : 'Invite Partner', 
-          onPress: () => {
-            Alert.alert(
-              isHindi ? 'निमंत्रण भेजा गया 🌸' : 'Invitation Sent 🌸',
-              isHindi ? 'साथी को जोड़ने का निमंत्रण लिंक साझा किया गया है।' : 'An invitation link has been generated to sync your journey with your partner.'
-            );
-          } 
-        }
-      ]
-    );
+    navigateToScreen('FatherProfile');
   };
 
   const handleHelpCenter = () => {

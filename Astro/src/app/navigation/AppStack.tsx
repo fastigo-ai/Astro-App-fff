@@ -31,6 +31,8 @@ import { BalSanskarScreen } from '~/features/course/screens/BalSanskarScreen';
 import { LiveSessionsScreen } from '~/features/course/screens/LiveSessionsScreen';
 import { ReferEarnScreen } from '~/features/profile/screens/ReferEarnScreen';
 import { MedicalProfileScreen } from '~/features/profile/screens/MedicalProfileScreen';
+import { MotherProfileScreen } from '~/features/profile/screens/MotherProfileScreen';
+import { FatherProfileScreen } from '~/features/profile/screens/FatherProfileScreen';
 import { SupportChatScreen } from '~/features/support/screens/SupportChatScreen';
 import { PregnancySafetyScreen } from '~/features/interactions/screens/PregnancySafetyScreen';
 import { WeightTrackerScreen } from '~/features/interactions/screens/WeightTrackerScreen';
@@ -142,6 +144,14 @@ export const AppStack = () => {
       <Stack.Screen 
         name="MedicalProfile" 
         component={MedicalProfileScreen} 
+      />
+      <Stack.Screen 
+        name="MotherProfile" 
+        component={MotherProfileScreen} 
+      />
+      <Stack.Screen 
+        name="FatherProfile" 
+        component={FatherProfileScreen} 
       />
       <Stack.Screen 
         name="SupportChat" 

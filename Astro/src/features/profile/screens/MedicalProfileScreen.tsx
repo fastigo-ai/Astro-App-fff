@@ -14,6 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '~/app/navigation/types';
 import { theme } from '~/shared/theme';
 import { api } from '~/shared/api';
+import { useAuthStore } from '~/store/useAuthStore';
 import {
   Stethoscope,
   ArrowLeft,
@@ -65,9 +66,14 @@ export const MedicalProfileScreen: React.FC<Props> = ({ navigation }) => {
         medicalConditions: [medicalConditions],
         allergies: [allergies],
       });
-      Alert.alert('Saved', 'Your medical records have been updated successfully.');
+      await useAuthStore.getState().updateDoctorDetails({
+        doctorName,
+        hospitalName,
+        doctorPhone,
+      });
+      Alert.alert('Saved 👨‍⚕️', 'Your doctor and medical records have been updated successfully.');
     } catch (e) {
-      Alert.alert('Saved', 'Your medical records have been updated.');
+      Alert.alert('Saved 👨‍⚕️', 'Your doctor and medical records have been updated.');
     } finally {
       setIsSaving(false);
     }

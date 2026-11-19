@@ -183,8 +183,10 @@ export const ProfileSettingsScreen: React.FC<any> = ({ navigation: propNavigatio
               ]}
               onPress={() => {
                 if (item.id === 'mother') {
-                  navigation.navigate('PregnancyDetails');
-                } else if (item.id === 'doctor' || item.id === 'husband') {
+                  navigation.navigate('MotherProfile');
+                } else if (item.id === 'husband') {
+                  navigation.navigate('FatherProfile');
+                } else if (item.id === 'doctor') {
                   navigation.navigate('MedicalProfile');
                 } else if (item.id === 'refer') {
                   navigation.navigate('ReferEarn');

@@ -463,6 +463,98 @@ async function runTests() {
     }
   });
 
+  // 18. Test Update Mother Details (Pregnant Woman)
+  await assert('profileController.updateMotherDetails saves personal and medical profile for mother', async () => {
+    const req: any = {
+      user: { phone: testNewUserPhone },
+      body: {
+        name: 'Aaditi Sharma',
+        dob: '14/08/1996',
+        bloodGroup: 'B+',
+        height: '5 ft 4 in',
+        weight: '58 kg',
+        occupation: 'Software Engineer',
+        emergencyContact: '+91 98765 43210',
+        medicalHistory: 'Mild Morning Sickness',
+        allergies: 'None',
+      },
+    };
+    const res = createMockRes();
+    await profileController.updateMotherDetails(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.data.success !== true) throw new Error('Expected success true');
+    if (res.data.data.bloodGroup !== 'B+') throw new Error(`Expected B+, got ${res.data.data.bloodGroup}`);
+    if (res.data.data.height !== '5 ft 4 in') throw new Error(`Expected 5 ft 4 in, got ${res.data.data.height}`);
+  });
+
+  // 19. Test Update Father / Husband Details
+  await assert('profileController.updateFatherDetails saves father contact, blood group & routine notes', async () => {
+    const req: any = {
+      user: { phone: testNewUserPhone },
+      body: {
+        name: 'Vipul Sharma',
+        phone: '+91 98765 12345',
+        email: 'vipul@astrobaby.in',
+        dob: '22/11/1993',
+        bloodGroup: 'O+',
+        occupation: 'Architect',
+        notes: 'Chants mantras and reads Garbh Samvad daily',
+      },
+    };
+    const res = createMockRes();
+    await profileController.updateFatherDetails(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.data.success !== true) throw new Error('Expected success true');
+    if (res.data.data.name !== 'Vipul Sharma') throw new Error(`Expected Vipul Sharma, got ${res.data.data.name}`);
+    if (res.data.data.bloodGroup !== 'O+') throw new Error(`Expected O+, got ${res.data.data.bloodGroup}`);
+  });
+
+  // 20. Test Update Doctor Details
+  await assert('profileController.updateDoctorDetails saves consulting gynecologist & maternity clinic info', async () => {
+    const req: any = {
+      user: { phone: testNewUserPhone },
+      body: {
+        doctorName: 'Dr. Radhika Sen',
+        hospitalName: 'Apollo Cradle Maternity Hospital',
+        doctorPhone: '+91 98765 43210',
+        clinicAddress: 'Bandra West, Mumbai',
+        speciality: 'Obstetrics & Gynecology',
+      },
+    };
+    const res = createMockRes();
+    await profileController.updateDoctorDetails(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (res.data.success !== true) throw new Error('Expected success true');
+    if (res.data.data.doctorName !== 'Dr. Radhika Sen') throw new Error(`Expected Dr. Radhika Sen, got ${res.data.data.doctorName}`);
+  });
+
+  // 21. Test Consolidated Family Details & Swagger Spec
+  await assert('profileController.getFamilyDetails returns all 3 profiles & Swagger registers family endpoints', async () => {
+    const req: any = { user: { phone: testNewUserPhone }, query: { phone: testNewUserPhone } };
+    const res = createMockRes();
+    await profileController.getFamilyDetails(req, res, () => {});
+
+    if (res.statusCode !== 200) throw new Error(`Expected 200, got ${res.statusCode}`);
+    if (!res.data.data.mother || res.data.data.mother.name !== 'Aaditi Sharma') {
+      throw new Error('Mother details missing in family response');
+    }
+    if (!res.data.data.father || res.data.data.father.name !== 'Vipul Sharma') {
+      throw new Error('Father details missing in family response');
+    }
+    if (!res.data.data.doctor || res.data.data.doctor.doctorName !== 'Dr. Radhika Sen') {
+      throw new Error('Doctor details missing in family response');
+    }
+
+    const { swaggerSpec } = await import('../shared/config/swagger');
+    if (!swaggerSpec.paths['/api/v1/profile/family']?.get) throw new Error('Missing /api/v1/profile/family in Swagger');
+    if (!swaggerSpec.paths['/api/v1/profile/mother']?.put) throw new Error('Missing /api/v1/profile/mother in Swagger');
+    if (!swaggerSpec.paths['/api/v1/profile/father']?.put) throw new Error('Missing /api/v1/profile/father in Swagger');
+    if (!swaggerSpec.paths['/api/v1/profile/doctor']?.put) throw new Error('Missing /api/v1/profile/doctor in Swagger');
+  });
+
   console.log(`\n========================================`);
   console.log(`🏁 Auth & Profile Tests Completed: ${passed} Passed, ${failed} Failed`);
   console.log(`========================================\n`);

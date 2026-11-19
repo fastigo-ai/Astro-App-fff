@@ -20,6 +20,36 @@ export interface User {
   partnerName?: string;
 }
 
+export interface MotherDetails {
+  name: string;
+  dob?: string;
+  bloodGroup?: string;
+  height?: string;
+  weight?: string;
+  occupation?: string;
+  emergencyContact?: string;
+  medicalHistory?: string;
+  allergies?: string;
+}
+
+export interface FatherDetails {
+  name: string;
+  phone?: string;
+  email?: string;
+  dob?: string;
+  bloodGroup?: string;
+  occupation?: string;
+  notes?: string;
+}
+
+export interface DoctorDetails {
+  doctorName: string;
+  hospitalName?: string;
+  doctorPhone?: string;
+  clinicAddress?: string;
+  speciality?: string;
+}
+
 export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'none';
 
 export interface JourneyData {
@@ -48,8 +78,15 @@ interface AuthState {
   activeSubscriptions: Record<string, any>;
   babyKicks: number;
   isDemoActive: boolean;
+  motherDetails: MotherDetails | null;
+  fatherDetails: FatherDetails | null;
+  doctorDetails: DoctorDetails | null;
   
   // Actions
+  fetchFamilyDetails: () => Promise<void>;
+  updateMotherDetails: (details: Partial<MotherDetails>) => Promise<boolean>;
+  updateFatherDetails: (details: Partial<FatherDetails>) => Promise<boolean>;
+  updateDoctorDetails: (details: Partial<DoctorDetails>) => Promise<boolean>;
   activateDemo: (month?: number) => Promise<void>;
   setHasLanguage: (val: boolean) => void;
   setHasProfile: (val: boolean, data?: { name: string; dob: string; city: string; state: string }) => void;
@@ -94,6 +131,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   activeSubscriptions: {},
   babyKicks: 0,
   isDemoActive: false,
+  motherDetails: null,
+  fatherDetails: null,
+  doctorDetails: null,
 
   activateDemo: async (month = 2) => {
     await AsyncStorage.setItem('@garbhcompanion/has_seen_pricing', 'true');
@@ -313,6 +353,63 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       journeyData: merged,
       user: state.user ? { ...state.user, lmp_date: merged.lmp_date } : null,
     }));
+  },
+
+  fetchFamilyDetails: async () => {
+    try {
+      const res = await api.get('/api/v1/profile/family');
+      if (res.data?.success && res.data?.data) {
+        set({
+          motherDetails: res.data.data.mother,
+          fatherDetails: res.data.data.father,
+          doctorDetails: res.data.data.doctor,
+        });
+      }
+    } catch (e) {
+      console.warn('Fetch family details optional error:', e);
+    }
+  },
+
+  updateMotherDetails: async (details: Partial<MotherDetails>) => {
+    try {
+      const current = get().motherDetails || { name: get().user?.name || 'Loving Mother' };
+      const updated = { ...current, ...details } as MotherDetails;
+      set({ motherDetails: updated });
+      if (details.name) {
+        set(state => ({ user: state.user ? { ...state.user, name: details.name! } : state.user }));
+      }
+      await api.put('/api/v1/profile/mother', updated);
+      return true;
+    } catch (e) {
+      console.warn('Update mother details error:', e);
+      return false;
+    }
+  },
+
+  updateFatherDetails: async (details: Partial<FatherDetails>) => {
+    try {
+      const current = get().fatherDetails || { name: 'Supportive Partner' };
+      const updated = { ...current, ...details } as FatherDetails;
+      set({ fatherDetails: updated });
+      await api.put('/api/v1/profile/father', updated);
+      return true;
+    } catch (e) {
+      console.warn('Update father details error:', e);
+      return false;
+    }
+  },
+
+  updateDoctorDetails: async (details: Partial<DoctorDetails>) => {
+    try {
+      const current = get().doctorDetails || { doctorName: 'Consulting Gynecologist' };
+      const updated = { ...current, ...details } as DoctorDetails;
+      set({ doctorDetails: updated });
+      await api.put('/api/v1/profile/doctor', updated);
+      return true;
+    } catch (e) {
+      console.warn('Update doctor details error:', e);
+      return false;
+    }
   },
 
   setUserAvatar: async (avatarUri: string) => {
