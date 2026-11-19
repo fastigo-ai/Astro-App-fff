@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { authRepository } from './auth.repository';
 import { smsProvider } from './sms/smsProviderFactory';
-import { JWT_SECRET } from '../../shared/config/constants';
+import { JWT_SECRET, SUPER_ADMIN_PHONE, UserRole } from '../../shared/config/constants';
 
 export const authService = {
   async sendOtp(phone: string) {
@@ -19,6 +19,9 @@ export const authService = {
       return null;
     }
 
+    // Determine initial role: if phone matches SUPER_ADMIN_PHONE, grant super_admin
+    const defaultRole: UserRole = cleaned === SUPER_ADMIN_PHONE ? 'super_admin' : 'user';
+
     // Check if user already exists
     let user = await authRepository.findByPhone(cleaned);
 
@@ -27,6 +30,7 @@ export const authService = {
       user = await authRepository.upsertUserJourney(cleaned, {
         userId: generatedUserId,
         phone: cleaned,
+        role: defaultRole,
         is_deleted: false,
       });
     } else if (user.is_deleted) {
@@ -40,9 +44,15 @@ export const authService = {
         confirmed_month: undefined,
         remaining_months: undefined,
         subscription_status: 'none',
+        role: user.role || defaultRole,
       });
       console.log(`[Reactivation] Soft-deleted user ${cleaned} reactivated upon successful OTP verification.`);
+    } else if (!user.role || (cleaned === SUPER_ADMIN_PHONE && user.role !== 'super_admin')) {
+      const assignedRole: UserRole = cleaned === SUPER_ADMIN_PHONE ? 'super_admin' : (user.role || 'user');
+      user = await authRepository.upsertUserJourney(cleaned, { role: assignedRole });
     }
+
+    const currentRole: UserRole = user.role || defaultRole;
 
     // A user is considered a new user if their profile (e.g. name) is not yet set
     const hasProfile = Boolean(user.name && user.name.trim().length > 0);
@@ -52,7 +62,7 @@ export const authService = {
     const payload = {
       id: user.userId || user._id || `usr_${Date.now()}`,
       phone: user.phone || cleaned,
-      role: 'user',
+      role: currentRole,
     };
 
     const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
@@ -65,6 +75,7 @@ export const authService = {
       user: {
         id: user.userId || user._id,
         phone: user.phone || cleaned,
+        role: currentRole,
         name: user.name || '',
         dob: user.dob || '',
         city: user.city || '',
@@ -111,7 +122,7 @@ export const authService = {
   refreshAccessToken(refreshToken: string): string | null {
     try {
       const decoded: any = jwt.verify(refreshToken, JWT_SECRET);
-      const payload = { id: decoded.id, phone: decoded.phone, role: decoded.role };
+      const payload = { id: decoded.id, phone: decoded.phone, role: decoded.role || 'user' };
       return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
     } catch {
       return null;

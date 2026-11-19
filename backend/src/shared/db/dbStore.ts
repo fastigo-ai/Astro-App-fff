@@ -199,6 +199,7 @@ export interface IUserJourney {
   _id?: string;
   userId?: string;
   phone?: string;
+  role?: 'user' | 'admin' | 'super_admin';
   name?: string;
   dob?: string;
   city?: string;

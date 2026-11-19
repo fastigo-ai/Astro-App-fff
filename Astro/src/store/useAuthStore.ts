@@ -4,11 +4,13 @@ import { api } from '~/shared/api';
 
 export type AuthStatus = 'idle' | 'sending_otp' | 'otp_sent' | 'verifying' | 'authenticated' | 'error';
 export type AuthErrorReason = 'network' | 'invalid_phone' | 'invalid_otp' | 'expired_otp' | 'rate_limit_exceeded' | null;
+export type UserRole = 'user' | 'admin' | 'super_admin';
 
 export interface User {
   id: string;
   name: string;
   phone: string;
+  role?: UserRole;
   lmp_date?: string;
   avatar?: string;
   dob?: string;

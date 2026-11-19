@@ -3,14 +3,23 @@ import { adminController } from './admin.controller';
 import { supportController } from '../support/support.controller';
 import { classesController } from '../classes/classes.controller';
 import { coursesController } from '../courses/courses.controller';
+import { authMiddleware, requireAdmin, requireSuperAdmin } from '../../shared/middlewares/authMiddleware';
 
 const router = Router();
 
-// Stats & Users
+// Protect ALL admin routes with authMiddleware and requireAdmin by default
+router.use(authMiddleware, requireAdmin);
+
+// Super-admin exclusive: 3-Tier Role Management (Assign / Promote / Demote)
+router.post('/roles/assign', requireSuperAdmin, adminController.assignRole);
+
+// Super-admin exclusive: Manual Subscription Grant & Revoke
+router.post('/users/grant', requireSuperAdmin, adminController.grantUser);
+router.post('/users/revoke', requireSuperAdmin, adminController.revokeUser);
+
+// Stats & Users (Admins & Super Admins)
 router.get('/stats', adminController.getStats);
 router.get('/users', adminController.getUsers);
-router.post('/users/grant', adminController.grantUser);
-router.post('/users/revoke', adminController.revokeUser);
 router.get('/payments', adminController.getPayments);
 
 // Coupons

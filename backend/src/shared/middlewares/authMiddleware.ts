@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/constants';
+import { JWT_SECRET, UserRole } from '../config/constants';
 import { profileRepository } from '../../modules/profile/profile.repository';
 
 // Extend Express Request to include user
@@ -25,7 +25,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     const decoded: any = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
 
-    // Check if account has been soft-deleted
+    // Check if account has been soft-deleted or role updated
     if (decoded?.phone) {
       const user = await profileRepository.findByPhone(decoded.phone);
       if (user && user.is_deleted) {
@@ -35,6 +35,10 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
           is_deleted: true,
         });
       }
+      // Populate latest role from DB
+      if (user && user.role) {
+        req.user.role = user.role;
+      }
     }
 
     next();
@@ -42,6 +46,37 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     return res.status(401).json({ success: false, error: 'Unauthorized, invalid token' });
   }
 };
+
+/**
+ * Role-Based Access Control (RBAC) middleware
+ * Allows fine-grained access checks based on 3-tier hierarchy:
+ * user -> admin -> super_admin
+ */
+export const requireRole = (allowedRoles: UserRole | UserRole[]) => {
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized, user identity missing' });
+    }
+
+    const userRole: UserRole = req.user.role || 'user';
+
+    // super_admin has master authority across all roles
+    if (userRole === 'super_admin' || roles.includes(userRole)) {
+      return next();
+    }
+
+    return res.status(403).json({
+      success: false,
+      error: `Access denied. Requires one of [${roles.join(', ')}] role(s).`,
+      currentRole: userRole,
+    });
+  };
+};
+
+export const requireAdmin = requireRole(['admin', 'super_admin']);
+export const requireSuperAdmin = requireRole('super_admin');
 
 export const optionalAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;

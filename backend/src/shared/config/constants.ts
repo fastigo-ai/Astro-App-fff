@@ -1,5 +1,9 @@
 export const JWT_SECRET = process.env.JWT_SECRET || 'astrobaby-super-secret-key-2026';
 
+// 3-Tier Role-Based Access Control (RBAC)
+export type UserRole = 'user' | 'admin' | 'super_admin';
+export const SUPER_ADMIN_PHONE = process.env.SUPER_ADMIN_PHONE || '9366128220';
+
 // Loaded dynamically from .env so developers can easily change or disable bypass credentials
 export const BYPASS_PHONE = process.env.BYPASS_PHONE || '9366128220';
 export const BYPASS_OTP = process.env.BYPASS_OTP || '1234';

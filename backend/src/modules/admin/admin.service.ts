@@ -1,4 +1,5 @@
 import { adminRepository } from './admin.repository';
+import { SUPER_ADMIN_PHONE, UserRole } from '../../shared/config/constants';
 
 export const adminService = {
   getStats() {
@@ -235,6 +236,46 @@ export const adminService = {
       targetAudience: targetAudience as any,
       sentAt: new Date().toISOString(),
     });
+  },
+
+  async assignRole(targetPhone: string, newRole: UserRole) {
+    const validRoles: UserRole[] = ['user', 'admin', 'super_admin'];
+    if (!validRoles.includes(newRole)) {
+      return {
+        status: 400 as const,
+        error: `Invalid role '${newRole}'. Allowed roles are: ${validRoles.join(', ')}`,
+      };
+    }
+
+    const cleanPhone = targetPhone.trim();
+    const user = adminRepository.getUserByPhone(cleanPhone);
+    if (!user) {
+      return {
+        status: 404 as const,
+        error: `User with phone ${cleanPhone} not found`,
+      };
+    }
+
+    // Safety guard: Prevent demoting primary root SUPER_ADMIN_PHONE
+    if (cleanPhone === SUPER_ADMIN_PHONE && newRole !== 'super_admin') {
+      return {
+        status: 403 as const,
+        error: `The root super administrator (${SUPER_ADMIN_PHONE}) cannot be demoted`,
+      };
+    }
+
+    const updated = await adminRepository.updateUserRole(cleanPhone, newRole);
+
+    return {
+      status: 200 as const,
+      data: {
+        phone: cleanPhone,
+        userId: updated.userId,
+        name: updated.name,
+        role: updated.role,
+        message: `Role successfully updated to '${newRole}' for user ${cleanPhone}`,
+      },
+    };
   },
 };
 

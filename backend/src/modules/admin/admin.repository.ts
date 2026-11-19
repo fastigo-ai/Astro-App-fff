@@ -1,3 +1,4 @@
+import { UserRole } from '../../shared/config/constants';
 import {
   BroadcastNotificationsCollection,
   CouponsCollection,
@@ -21,6 +22,14 @@ import {
 export class AdminRepository {
   getAllUsers() {
     return UserJourneysCollection.read();
+  }
+
+  getUserByPhone(phone: string) {
+    return UserJourneysCollection.read().find((u) => u.phone === phone);
+  }
+
+  async updateUserRole(phone: string, role: UserRole) {
+    return UserJourneysCollection.upsert({ phone }, { role });
   }
 
   getAllSubscriptions() {

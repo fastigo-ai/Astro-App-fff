@@ -127,6 +127,19 @@ export const swaggerSpec: any = {
           speciality: { type: 'string', example: 'Obstetrics & Gynecology' },
         },
       },
+      AssignRoleRequest: {
+        type: 'object',
+        required: ['phone', 'role'],
+        properties: {
+          phone: { type: 'string', example: '9876543210', description: 'Target user phone number' },
+          role: {
+            type: 'string',
+            enum: ['user', 'admin', 'super_admin'],
+            example: 'admin',
+            description: 'Assigned 3-tier role: user (mother/customer), admin (management staff), super_admin (master authority)',
+          },
+        },
+      },
       JourneyRequest: {
         type: 'object',
         required: ['stage'],
@@ -759,6 +772,70 @@ export const swaggerSpec: any = {
         responses: {
           200: {
             description: 'Subscription status (active, trial, none)',
+          },
+        },
+      },
+    },
+
+    // ==========================================
+    // 7. Role-Based Access Control (RBAC) & Admin
+    // ==========================================
+    '/api/v1/admin/roles/assign': {
+      post: {
+        tags: ['Admin & Operations'],
+        summary: 'Assign / Promote / Demote User Role (Super Admin Only)',
+        description: 'Allows a super_admin to grant roles (user, admin, super_admin) to any user account by phone number.',
+        security: [{ BearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/AssignRoleRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Role successfully updated',
+          },
+          400: {
+            description: 'Invalid role or missing parameters',
+          },
+          403: {
+            description: 'Forbidden - Requires super_admin role',
+          },
+          404: {
+            description: 'User phone not found',
+          },
+        },
+      },
+    },
+    '/api/v1/admin/stats': {
+      get: {
+        tags: ['Admin & Operations'],
+        summary: 'Get Operational Dashboard Metrics (Admin & Super Admin)',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Comprehensive platform statistics',
+          },
+          403: {
+            description: 'Forbidden - Requires admin or super_admin role',
+          },
+        },
+      },
+    },
+    '/api/v1/admin/users': {
+      get: {
+        tags: ['Admin & Operations'],
+        summary: 'List All Registered Users with Subscription Status (Admin & Super Admin)',
+        security: [{ BearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'User list with subscription and activity telemetry',
+          },
+          403: {
+            description: 'Forbidden - Requires admin or super_admin role',
           },
         },
       },

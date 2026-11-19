@@ -555,6 +555,110 @@ async function runTests() {
     if (!swaggerSpec.paths['/api/v1/profile/doctor']?.put) throw new Error('Missing /api/v1/profile/doctor in Swagger');
   });
 
+  // 22. Test 3-Tier RBAC: Role assignment in verifyOtp for normal user and super_admin
+  await assert('authController.verifyOtp issues role=user for normal users and role=super_admin for SUPER_ADMIN_PHONE', async () => {
+    // Normal user
+    const normalPhone = `91111${Math.floor(10000 + Math.random() * 90000)}`;
+    await authService.sendOtp(normalPhone);
+    const otp = mockSmsProvider.getStoredOtp(normalPhone);
+    const normalVerifyReq: any = { body: { phone: normalPhone, otp } };
+    const normalVerifyRes = createMockRes();
+    await authController.verifyOtp(normalVerifyReq, normalVerifyRes, () => {});
+
+    if (normalVerifyRes.statusCode !== 200) throw new Error(`Expected 200, got ${normalVerifyRes.statusCode}`);
+    if (normalVerifyRes.data.data.user.role !== 'user') {
+      throw new Error(`Expected role 'user', got ${normalVerifyRes.data.data.user.role}`);
+    }
+
+    // Super Admin user
+    const superAdminVerifyReq: any = { body: { phone: BYPASS_PHONE, otp: BYPASS_OTP } };
+    const superAdminVerifyRes = createMockRes();
+    await authController.verifyOtp(superAdminVerifyReq, superAdminVerifyRes, () => {});
+
+    if (superAdminVerifyRes.statusCode !== 200) throw new Error(`Expected 200, got ${superAdminVerifyRes.statusCode}`);
+    if (superAdminVerifyRes.data.data.user.role !== 'super_admin') {
+      throw new Error(`Expected role 'super_admin', got ${superAdminVerifyRes.data.data.user.role}`);
+    }
+  });
+
+  // 23. Test RBAC Middleware: Normal user blocked from admin routes (403 Forbidden)
+  await assert('RBAC middleware requireAdmin blocks normal user (role=user) with 403 Forbidden', async () => {
+    const { requireAdmin } = await import('../shared/middlewares/authMiddleware');
+    const req: any = { user: { phone: testNewUserPhone, role: 'user' } };
+    const res = createMockRes();
+    let nextCalled = false;
+    requireAdmin(req, res, () => { nextCalled = true; });
+
+    if (nextCalled) throw new Error('Expected requireAdmin to block role=user');
+    if (res.statusCode !== 403) throw new Error(`Expected 403 Forbidden, got ${res.statusCode}`);
+    if (res.data.success !== false) throw new Error('Expected success false');
+  });
+
+  // 24. Test RBAC Middleware: Admin can access admin routes, but blocked from super_admin routes
+  await assert('RBAC middleware allows admin for requireAdmin, but blocks admin from requireSuperAdmin', async () => {
+    const { requireAdmin, requireSuperAdmin } = await import('../shared/middlewares/authMiddleware');
+    const adminReq: any = { user: { phone: '9876543210', role: 'admin' } };
+    const adminRes = createMockRes();
+    let adminPassed = false;
+    requireAdmin(adminReq, adminRes, () => { adminPassed = true; });
+    if (!adminPassed) throw new Error('Expected requireAdmin to allow role=admin');
+
+    // Admin tries to access super_admin endpoint
+    const superReq: any = { user: { phone: '9876543210', role: 'admin' } };
+    const superRes = createMockRes();
+    let superPassed = false;
+    requireSuperAdmin(superReq, superRes, () => { superPassed = true; });
+    if (superPassed) throw new Error('Expected requireSuperAdmin to block role=admin');
+    if (superRes.statusCode !== 403) throw new Error(`Expected 403 Forbidden, got ${superRes.statusCode}`);
+  });
+
+  // 25. Test Super Admin assignRole: Promote user to admin and demote back to user
+  await assert('adminService.assignRole promotes user to admin, validates input, and protects root super_admin', async () => {
+    const { adminService } = await import('../modules/admin/admin.service');
+    const { adminController } = await import('../modules/admin/admin.controller');
+
+    // 1. Promote test user to admin
+    const promoteReq: any = { body: { phone: testNewUserPhone, role: 'admin' } };
+    const promoteRes = createMockRes();
+    await adminController.assignRole(promoteReq, promoteRes);
+    if (promoteRes.statusCode !== 200) throw new Error(`Expected 200, got ${promoteRes.statusCode}`);
+    if (promoteRes.data.data.role !== 'admin') throw new Error(`Expected role admin, got ${promoteRes.data.data.role}`);
+
+    // 2. Reject invalid role
+    const invalidRoleRes = await adminService.assignRole(testNewUserPhone, 'moderator' as any);
+    if (invalidRoleRes.status !== 400) throw new Error(`Expected 400 for invalid role, got ${invalidRoleRes.status}`);
+
+    // 3. Reject non-existent user phone
+    const notFoundRes = await adminService.assignRole('9000000000', 'admin');
+    if (notFoundRes.status !== 404) throw new Error(`Expected 404 for unknown user, got ${notFoundRes.status}`);
+
+    // 4. Prevent demoting root SUPER_ADMIN_PHONE
+    const demoteRootRes = await adminService.assignRole(BYPASS_PHONE, 'user');
+    if (demoteRootRes.status !== 403) throw new Error(`Expected 403 when trying to demote root super admin, got ${demoteRootRes.status}`);
+
+    // 5. Demote test user back to user
+    const demoteRes = await adminService.assignRole(testNewUserPhone, 'user');
+    if (demoteRes.status !== 200) throw new Error(`Expected 200, got ${demoteRes.status}`);
+    if (demoteRes.data.role !== 'user') throw new Error(`Expected role user, got ${demoteRes.data.role}`);
+  });
+
+  // 26. Test Swagger RBAC Endpoints Documentation
+  await assert('Swagger Spec (/api-docs) registers 3-tier RBAC admin routes and AssignRoleRequest', async () => {
+    const { swaggerSpec } = await import('../shared/config/swagger');
+    if (!swaggerSpec.components.schemas['AssignRoleRequest']) {
+      throw new Error('AssignRoleRequest schema missing in Swagger Spec');
+    }
+    if (!swaggerSpec.paths['/api/v1/admin/roles/assign']?.post) {
+      throw new Error('Missing /api/v1/admin/roles/assign in Swagger Spec');
+    }
+    if (!swaggerSpec.paths['/api/v1/admin/stats']?.get) {
+      throw new Error('Missing /api/v1/admin/stats in Swagger Spec');
+    }
+    if (!swaggerSpec.paths['/api/v1/admin/users']?.get) {
+      throw new Error('Missing /api/v1/admin/users in Swagger Spec');
+    }
+  });
+
   console.log(`\n========================================`);
   console.log(`🏁 Auth & Profile Tests Completed: ${passed} Passed, ${failed} Failed`);
   console.log(`========================================\n`);
