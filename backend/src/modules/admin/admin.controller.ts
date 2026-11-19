@@ -215,5 +215,19 @@ export const adminController = {
       return res.status(500).json({ success: false, error: error.message });
     }
   },
+
+  listKicks: async (req: Request, res: Response) => {
+    try {
+      const phone = req.query.phone as string | undefined;
+      const data = adminService.listPatientKicks({ phone });
+      return res.status(200).json({
+        success: true,
+        count: data.length,
+        data,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  },
 };
 

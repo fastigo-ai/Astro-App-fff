@@ -285,6 +285,14 @@ export interface IKickSession {
   completed: boolean;
   notes?: string;
   kickTimestamps?: string[];
+  vigourLevel?: string;
+  gameScore?: number;
+  streakDays?: number;
+  stimulusResponses?: Array<{
+    stimulus: string;
+    latencySeconds: number;
+    zone?: number;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -33,6 +33,16 @@ export const momController = {
     }
   },
 
+  getKickStats: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const phone = req.user?.phone || (req.query.phone as string) || '9366128220';
+      const data = await momService.getKickStats(phone);
+      return res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   saveMoodLog: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user;

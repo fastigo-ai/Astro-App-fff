@@ -5,6 +5,7 @@ import { optionalAuthMiddleware } from '../../shared/middlewares/authMiddleware'
 const router = Router();
 
 router.post('/kicks', optionalAuthMiddleware, momController.saveKickSession);
+router.get('/kicks/stats', optionalAuthMiddleware, momController.getKickStats);
 router.get('/kicks', optionalAuthMiddleware, momController.getKickSessions);
 
 router.post('/mood', optionalAuthMiddleware, momController.saveMoodLog);

@@ -22,6 +22,7 @@ router.post('/users/revoke', requireSuperAdmin, adminController.revokeUser);
 router.get('/stats', adminController.getStats);
 router.get('/users', adminController.getUsers);
 router.get('/payments', adminController.getPayments);
+router.get('/kicks', adminController.listKicks);
 
 // Course Programs Management
 router.post('/courses', coursesController.adminCreateCourse);

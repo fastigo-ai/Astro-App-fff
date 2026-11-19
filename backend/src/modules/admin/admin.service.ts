@@ -277,5 +277,16 @@ export const adminService = {
       },
     };
   },
+
+  listPatientKicks(filter?: { phone?: string }) {
+    const kicks = adminRepository.getAllKicks();
+    let result = [...kicks].sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    if (filter?.phone) {
+      result = result.filter(k => k.phone === filter.phone);
+    }
+    return result;
+  },
 };
 
