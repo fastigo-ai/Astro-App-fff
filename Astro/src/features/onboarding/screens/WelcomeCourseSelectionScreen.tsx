@@ -134,19 +134,6 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
       >
-        {/* National Awardee Credibility Banner (Image 1 reference) */}
-        <View style={styles.credibilityBanner}>
-          <View style={styles.credibilityTrimTop} />
-          <Text style={styles.credibilitySub}>An Initiative by</Text>
-          <Text style={styles.credibilityTitle}>
-            President & Prime Minister
-          </Text>
-          <Text style={styles.credibilityFoot}>
-            Awardee Team of IITians, Doctors & more..
-          </Text>
-          <View style={styles.credibilityTrimBottom} />
-        </View>
-
         {/* Section Heading */}
         <Text style={styles.selectCourseHeading}>
           {isHindi ? 'अपनी आवश्यकतानुसार पाठ्यक्रम चुनें' : 'Select Course as Required'}
@@ -265,42 +252,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 40,
-  },
-  // Credibility Banner (President & Prime Minister Awardee)
-  credibilityBanner: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    marginBottom: 16,
-  },
-  credibilityTrimTop: {
-    width: 220,
-    height: 1.5,
-    backgroundColor: '#D4AF37', // Gold trim
-    marginBottom: 6,
-  },
-  credibilitySub: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  credibilityTitle: {
-    fontSize: 19,
-    fontWeight: '900',
-    color: '#1F2937',
-    letterSpacing: -0.3,
-    marginTop: 2,
-  },
-  credibilityFoot: {
-    fontSize: 12,
-    color: '#4B5563',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  credibilityTrimBottom: {
-    width: 220,
-    height: 1.5,
-    backgroundColor: '#D4AF37', // Gold trim
-    marginTop: 8,
   },
   selectCourseHeading: {
     fontSize: 15,
