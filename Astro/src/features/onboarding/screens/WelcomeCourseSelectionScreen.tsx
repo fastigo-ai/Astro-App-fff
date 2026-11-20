@@ -71,6 +71,205 @@ const DEFAULT_BABIES = [
   },
 ];
 
+const COLOR_PALETTES = [
+  { bg: '#E0E7FF', text: '#3730A3', title: '#3730A3' },
+  { bg: '#FFE4E6', text: '#BE123C', title: '#BE123C' },
+  { bg: '#CCFBF1', text: '#0F766E', title: '#0F766E' },
+  { bg: '#FEF3C7', text: '#92400E', title: '#92400E' },
+  { bg: '#F3E8FF', text: '#6B21A8', title: '#6B21A8' },
+  { bg: '#ECFDF5', text: '#047857', title: '#047857' },
+  { bg: '#FFF7ED', text: '#C2410C', title: '#C2410C' },
+];
+
+const KNOWN_COURSES_CONFIG: Record<string, any> = {
+  garbhadhaan: {
+    canonicalId: 'garbhadhaan',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'गर्भधारण से पूर्व' : 'Before Pregnancy'),
+    categoryTagBg: '#E0E7FF',
+    categoryTagText: '#3730A3',
+    title: (isHindi: boolean) => (isHindi ? 'गर्भधान संस्कार' : 'Garbhadhaan'),
+    titleColor: '#3730A3',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'शिशु की योजना (Planning)' : 'Baby Planning',
+      isHindi ? 'प्राकृतिक गर्भधारण (Conception)' : 'Natural Conception',
+    ],
+    image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'Garbhadhaan',
+  },
+  garbhdhaan_sanskar: {
+    canonicalId: 'garbhadhaan',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'गर्भधारण से पूर्व' : 'Before Pregnancy'),
+    categoryTagBg: '#E0E7FF',
+    categoryTagText: '#3730A3',
+    title: (isHindi: boolean) => (isHindi ? 'गर्भधान संस्कार' : 'Garbhadhaan'),
+    titleColor: '#3730A3',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'शिशु की योजना (Planning)' : 'Baby Planning',
+      isHindi ? 'प्राकृतिक गर्भधारण (Conception)' : 'Natural Conception',
+    ],
+    image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'Garbhadhaan',
+  },
+  beej_sanskar: {
+    canonicalId: 'garbhadhaan',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'गर्भधारण से पूर्व' : 'Before Pregnancy'),
+    categoryTagBg: '#E0E7FF',
+    categoryTagText: '#3730A3',
+    title: (isHindi: boolean) => (isHindi ? 'गर्भधान संस्कार' : 'Garbhadhaan'),
+    titleColor: '#3730A3',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'शिशु की योजना (Planning)' : 'Baby Planning',
+      isHindi ? 'प्राकृतिक गर्भधारण (Conception)' : 'Natural Conception',
+    ],
+    image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'Garbhadhaan',
+  },
+  garbhsanskar: {
+    canonicalId: 'garbhsanskar',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'गर्भावस्था के दौरान' : 'During Pregnancy'),
+    categoryTagBg: '#FFE4E6',
+    categoryTagText: '#BE123C',
+    title: (isHindi: boolean) => (isHindi ? 'गर्भ संस्कार' : 'Garbh Sanskar'),
+    titleColor: '#BE123C',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'सकारात्मक गर्भावस्था' : 'Positive Pregnancy',
+      isHindi ? 'सुरक्षित सुखप्रसव' : 'Safe Delivery',
+      isHindi ? 'गुणवान श्रेष्ठ संतान' : 'Great Child',
+    ],
+    image: require('../../../assets/programs/garbh_sanskar.jpg'),
+    stage: 'pregnant' as const,
+    route: 'CoursePreview',
+  },
+  garbh_sanskar: {
+    canonicalId: 'garbhsanskar',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'गर्भावस्था के दौरान' : 'During Pregnancy'),
+    categoryTagBg: '#FFE4E6',
+    categoryTagText: '#BE123C',
+    title: (isHindi: boolean) => (isHindi ? 'गर्भ संस्कार' : 'Garbh Sanskar'),
+    titleColor: '#BE123C',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'सकारात्मक गर्भावस्था' : 'Positive Pregnancy',
+      isHindi ? 'सुरक्षित सुखप्रसव' : 'Safe Delivery',
+      isHindi ? 'गुणवान श्रेष्ठ संतान' : 'Great Child',
+    ],
+    image: require('../../../assets/programs/garbh_sanskar.jpg'),
+    stage: 'pregnant' as const,
+    route: 'CoursePreview',
+  },
+  balsanskar: {
+    canonicalId: 'balsanskar',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'प्रसव के पश्चात' : 'After Delivery'),
+    categoryTagBg: '#CCFBF1',
+    categoryTagText: '#0F766E',
+    title: (isHindi: boolean) => (isHindi ? 'बाल संस्कार' : 'Bal Sanskar'),
+    titleColor: '#0F766E',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'नवजात शिशु के संस्कार' : 'Sanskar for Newborn',
+      isHindi ? '0 से 2 वर्ष मस्तिष्क विकास' : '0-2 Yrs Brain Care',
+    ],
+    image: require('../../../assets/programs/bal_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'BalSanskar',
+  },
+  bal_sanskar: {
+    canonicalId: 'balsanskar',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'प्रसव के पश्चात' : 'After Delivery'),
+    categoryTagBg: '#CCFBF1',
+    categoryTagText: '#0F766E',
+    title: (isHindi: boolean) => (isHindi ? 'बाल संस्कार' : 'Bal Sanskar'),
+    titleColor: '#0F766E',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'नवजात शिशु के संस्कार' : 'Sanskar for Newborn',
+      isHindi ? '0 से 2 वर्ष मस्तिष्क विकास' : '0-2 Yrs Brain Care',
+    ],
+    image: require('../../../assets/programs/bal_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'BalSanskar',
+  },
+  bhavitavyam: {
+    canonicalId: 'bhavitavyam',
+    categoryTag: (isHindi: boolean) => (isHindi ? 'सभी के लिए' : 'For Everyone'),
+    categoryTagBg: '#FEF3C7',
+    categoryTagText: '#92400E',
+    title: (isHindi: boolean) => (isHindi ? 'भवितव्यम् (कुंडली)' : 'Bhavitavyam'),
+    titleColor: '#92400E',
+    bullets: (isHindi: boolean) => [
+      isHindi ? 'वैदिक ज्योतिषीय मार्गदर्शन' : 'Astrological Guidance',
+      isHindi ? 'अतुलनीय ग्रह शांति' : 'Unparalleled',
+    ],
+    image: require('../../../assets/programs/consultations.jpg'),
+    stage: 'planning' as const,
+    route: 'Kundli',
+  },
+};
+
+const buildDefaultCourses = (isHindi: boolean) => [
+  {
+    id: 'garbhadhaan',
+    categoryTag: isHindi ? 'गर्भधारण से पूर्व' : 'Before Pregnancy',
+    categoryTagBg: '#E0E7FF',
+    categoryTagText: '#3730A3',
+    title: isHindi ? 'गर्भधान संस्कार' : 'Garbhadhaan',
+    titleColor: '#3730A3',
+    bullets: [
+      isHindi ? 'शिशु की योजना (Planning)' : 'Baby Planning',
+      isHindi ? 'प्राकृतिक गर्भधारण (Conception)' : 'Natural Conception',
+    ],
+    image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'Garbhadhaan',
+  },
+  {
+    id: 'garbhsanskar',
+    categoryTag: isHindi ? 'गर्भावस्था के दौरान' : 'During Pregnancy',
+    categoryTagBg: '#FFE4E6',
+    categoryTagText: '#BE123C',
+    title: isHindi ? 'गर्भ संस्कार' : 'Garbh Sanskar',
+    titleColor: '#BE123C',
+    bullets: [
+      isHindi ? 'सकारात्मक गर्भावस्था' : 'Positive Pregnancy',
+      isHindi ? 'सुरक्षित सुखप्रसव' : 'Safe Delivery',
+      isHindi ? 'गुणवान श्रेष्ठ संतान' : 'Great Child',
+    ],
+    image: require('../../../assets/programs/garbh_sanskar.jpg'),
+    stage: 'pregnant' as const,
+    route: 'CoursePreview',
+  },
+  {
+    id: 'balsanskar',
+    categoryTag: isHindi ? 'प्रसव के पश्चात' : 'After Delivery',
+    categoryTagBg: '#CCFBF1',
+    categoryTagText: '#0F766E',
+    title: isHindi ? 'बाल संस्कार' : 'Bal Sanskar',
+    titleColor: '#0F766E',
+    bullets: [
+      isHindi ? 'नवजात शिशु के संस्कार' : 'Sanskar for Newborn',
+      isHindi ? '0 से 2 वर्ष मस्तिष्क विकास' : '0-2 Yrs Brain Care',
+    ],
+    image: require('../../../assets/programs/bal_sanskar.jpg'),
+    stage: 'planning' as const,
+    route: 'BalSanskar',
+  },
+  {
+    id: 'bhavitavyam',
+    categoryTag: isHindi ? 'सभी के लिए' : 'For Everyone',
+    categoryTagBg: '#FEF3C7',
+    categoryTagText: '#92400E',
+    title: isHindi ? 'भवितव्यम् (कुंडली)' : 'Bhavitavyam',
+    titleColor: '#92400E',
+    bullets: [
+      isHindi ? 'वैदिक ज्योतिषीय मार्गदर्शन' : 'Astrological Guidance',
+      isHindi ? 'अतुलनीय ग्रह शांति' : 'Unparalleled',
+    ],
+    image: require('../../../assets/programs/consultations.jpg'),
+    stage: 'planning' as const,
+    route: 'Kundli',
+  },
+];
+
 interface WelcomeCourseSelectionScreenProps {
   navigation?: any;
   route?: any;
@@ -84,9 +283,108 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
 
   const setHasLifeStage = useAuthStore(state => state.setHasLifeStage);
 
+  const [coursesList, setCoursesList] = useState<any[]>(() => buildDefaultCourses(isHindi));
   const [deliveredBabies, setDeliveredBabies] = useState<any[]>(DEFAULT_BABIES);
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  // 1. Fetch dynamic course list from Backend API (reflects courses added/edited by admin)
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .get('/api/v1/courses')
+      .then((res) => {
+        if (!isMounted || !res.data?.data || !Array.isArray(res.data.data)) return;
+        const apiData = res.data.data;
+        if (apiData.length === 0) return;
+
+        const seenCanonicalKeys = new Set<string>();
+        const processed: any[] = [];
+
+        apiData.forEach((item: any, idx: number) => {
+          const key = (item.id || '').toLowerCase();
+          const known = KNOWN_COURSES_CONFIG[key];
+
+          if (known) {
+            const canonical = known.canonicalId;
+            if (!seenCanonicalKeys.has(canonical)) {
+              seenCanonicalKeys.add(canonical);
+              processed.push({
+                id: canonical,
+                categoryTag: known.categoryTag(isHindi),
+                categoryTagBg: known.categoryTagBg,
+                categoryTagText: known.categoryTagText,
+                title: isHindi && item.hindiTitle ? item.hindiTitle : item.title || known.title(isHindi),
+                titleColor: known.titleColor,
+                bullets:
+                  item.tiers?.[0]?.features && item.tiers[0].features.length > 0
+                    ? item.tiers[0].features.slice(0, 2)
+                    : known.bullets(isHindi),
+                image: item.imageUrl ? { uri: item.imageUrl } : known.image,
+                stage: item.stage || known.stage,
+                route: known.route,
+              });
+            }
+          } else {
+            // New course dynamically created by Admin in Admin Dashboard!
+            const palette = COLOR_PALETTES[idx % COLOR_PALETTES.length];
+            const bullets =
+              item.tiers?.[0]?.features && item.tiers[0].features.length > 0
+                ? item.tiers[0].features.slice(0, 2)
+                : item.subtitle
+                ? [item.subtitle, item.duration || 'Holistic Care']
+                : ['Vedic Garbh Sanskar', 'Guided Mentorship'];
+
+            processed.push({
+              id: item.id,
+              categoryTag:
+                item.category ||
+                (item.stage === 'planning'
+                  ? isHindi
+                    ? 'गर्भधारण से पूर्व'
+                    : 'Before Pregnancy'
+                  : item.stage === 'pregnant'
+                  ? isHindi
+                    ? 'गर्भावस्था के दौरान'
+                    : 'During Pregnancy'
+                  : isHindi
+                  ? 'प्रसव के पश्चात'
+                  : 'After Delivery'),
+              categoryTagBg: palette.bg,
+              categoryTagText: palette.text,
+              title: isHindi && item.hindiTitle ? item.hindiTitle : item.title || 'Vedic Course',
+              titleColor: palette.title,
+              bullets,
+              image: item.imageUrl
+                ? { uri: item.imageUrl }
+                : require('../../../assets/programs/garbh_sanskar.jpg'),
+              stage: item.stage || 'pregnant',
+              route: 'CoursePreview',
+            });
+          }
+        });
+
+        // Ensure foundational courses are retained if not explicitly disabled
+        const defaults = buildDefaultCourses(isHindi);
+        defaults.forEach((def) => {
+          if (!seenCanonicalKeys.has(def.id) && !processed.some((p) => p.id === def.id)) {
+            processed.push(def);
+          }
+        });
+
+        if (processed.length > 0) {
+          setCoursesList(processed);
+        }
+      })
+      .catch(() => {
+        // Fallback to default courses on network failure
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isHindi]);
+
+  // 2. Fetch delivered babies for ticker
   useEffect(() => {
     let isMounted = true;
     api
@@ -127,79 +425,15 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
     };
   }, [deliveredBabies.length, loopDistance]);
 
-  const COURSES = [
-    {
-      id: 'garbhadhaan',
-      categoryTag: isHindi ? 'गर्भधारण से पूर्व' : 'Before Pregnancy',
-      categoryTagBg: '#E0E7FF',
-      categoryTagText: '#3730A3',
-      title: isHindi ? 'गर्भधान संस्कार' : 'Garbhadhaan',
-      titleColor: '#3730A3',
-      bullets: [
-        isHindi ? 'शिशु की योजना (Planning)' : 'Baby Planning',
-        isHindi ? 'प्राकृतिक गर्भधारण (Conception)' : 'Natural Conception',
-      ],
-      image: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
-      stage: 'planning' as const,
-      route: 'Garbhadhaan',
-    },
-    {
-      id: 'garbhsanskar',
-      categoryTag: isHindi ? 'गर्भावस्था के दौरान' : 'During Pregnancy',
-      categoryTagBg: '#FFE4E6',
-      categoryTagText: '#BE123C',
-      title: isHindi ? 'गर्भ संस्कार' : 'Garbh Sanskar',
-      titleColor: '#BE123C',
-      bullets: [
-        isHindi ? 'सकारात्मक गर्भावस्था' : 'Positive Pregnancy',
-        isHindi ? 'सुरक्षित सुखप्रसव' : 'Safe Delivery',
-        isHindi ? 'गुणवान श्रेष्ठ संतान' : 'Great Child',
-      ],
-      image: require('../../../assets/programs/garbh_sanskar.jpg'),
-      stage: 'pregnant' as const,
-      route: 'CoursePreview',
-    },
-    {
-      id: 'balsanskar',
-      categoryTag: isHindi ? 'प्रसव के पश्चात' : 'After Delivery',
-      categoryTagBg: '#CCFBF1',
-      categoryTagText: '#0F766E',
-      title: isHindi ? 'बाल संस्कार' : 'Bal Sanskar',
-      titleColor: '#0F766E',
-      bullets: [
-        isHindi ? 'नवजात शिशु के संस्कार' : 'Sanskar for Newborn',
-        isHindi ? '0 से 2 वर्ष मस्तिष्क विकास' : '0-2 Yrs Brain Care',
-      ],
-      image: require('../../../assets/programs/bal_sanskar.jpg'),
-      stage: 'planning' as const,
-      route: 'BalSanskar',
-    },
-    {
-      id: 'bhavitavyam',
-      categoryTag: isHindi ? 'सभी के लिए' : 'For Everyone',
-      categoryTagBg: '#FEF3C7',
-      categoryTagText: '#92400E',
-      title: isHindi ? 'भवितव्यम् (कुंडली)' : 'Bhavitavyam',
-      titleColor: '#92400E',
-      bullets: [
-        isHindi ? 'वैदिक ज्योतिषीय मार्गदर्शन' : 'Astrological Guidance',
-        isHindi ? 'अतुलनीय ग्रह शांति' : 'Unparalleled',
-      ],
-      image: require('../../../assets/programs/consultations.jpg'),
-      stage: 'planning' as const,
-      route: 'Kundli',
-    },
-  ];
-
-  const handleSelectCourse = (course: typeof COURSES[0]) => {
+  const handleSelectCourse = (course: any) => {
     // Save life stage in store
-    setHasLifeStage(true, course.stage, {
+    setHasLifeStage(true, course.stage || 'pregnant', {
       selected_module: course.id,
       confirmed_month: 2, // Default Month 2 Free Demo like Krishna Coming
     });
 
     if (course.route === 'CoursePreview') {
-      navigation.navigate('CoursePreview', { courseId: course.id });
+      navigation.navigate('CoursePreview', { courseId: course.id, courseTitle: course.title });
     } else {
       navigation.navigate(course.route);
     }
@@ -230,9 +464,9 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
           {isHindi ? 'अपनी आवश्यकतानुसार पाठ्यक्रम चुनें' : 'Select Course as Required'}
         </Text>
 
-        {/* 2x2 Grid of Module Cards */}
+        {/* Dynamic Grid of Module Cards */}
         <View style={styles.gridContainer}>
-          {COURSES.map((course) => (
+          {coursesList.map((course) => (
             <TouchableOpacity
               key={course.id}
               style={styles.courseCard}

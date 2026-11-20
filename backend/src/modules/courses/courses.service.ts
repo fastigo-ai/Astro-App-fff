@@ -304,12 +304,17 @@ export const coursesService = {
     const originalPrice = Number(body.originalPrice) || 4499;
     const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
     const durationMonths = Number(body.durationMonths) || 6;
+    const customFeatures = Array.isArray(body.features)
+      ? body.features
+      : [body.bullet1, body.bullet2].filter(Boolean);
 
     const record: any = {
       _id: id,
       id,
       title: body.title || 'Vedic Garbh Sanskar Program',
+      hindiTitle: body.hindiTitle || '',
       subtitle: body.subtitle || '',
+      imageUrl: body.imageUrl || '',
       category: body.category || 'Vedic Garbh Sanskar',
       stage: body.stage || 'pregnant',
       durationMonths,
@@ -332,7 +337,7 @@ export const coursesService = {
           discountPercent,
           monthlyRate: `₹${Math.round(price / durationMonths)}/mo`,
           highlightText: `Complete ${durationMonths}-month curriculum`,
-          features: [
+          features: customFeatures.length > 0 ? customFeatures : [
             'Daily Vedic Mantras & Garbh Samvad audios',
             'Pregnancy Brain Stimulation cognitive puzzles',
             'Live Doctor Zoom sessions & recorded masterclasses',

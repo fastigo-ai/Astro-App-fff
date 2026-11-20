@@ -15,6 +15,9 @@ export default function CreateCoursePage() {
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
+    imageUrl: '',
+    bullet1: '',
+    bullet2: '',
     overview: '',
     category: 'Vedic Garbh Sanskar',
     stage: 'pregnant',
@@ -91,6 +94,48 @@ export default function CreateCoursePage() {
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                 placeholder="e.g. Complete 9-Month Holistic Journey till Delivery"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+              />
+            </div>
+          </div>
+
+          {/* Photo URL & Key Highlights for App Card */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                Card Image URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                placeholder="https://... image banner"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                Key Highlight #1
+              </label>
+              <input
+                type="text"
+                value={formData.bullet1}
+                onChange={(e) => setFormData({ ...formData, bullet1: e.target.value })}
+                placeholder="e.g. Positive Pregnancy Care"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                Key Highlight #2
+              </label>
+              <input
+                type="text"
+                value={formData.bullet2}
+                onChange={(e) => setFormData({ ...formData, bullet2: e.target.value })}
+                placeholder="e.g. Safe Natural Delivery"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
               />
             </div>
