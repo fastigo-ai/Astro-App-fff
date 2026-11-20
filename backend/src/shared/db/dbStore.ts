@@ -325,6 +325,45 @@ export interface ISamvadNote {
   updatedAt?: string;
 }
 
+export interface ICourseExperienceConfig {
+  taglinePill?: string;
+  themeColor?: string;
+  themeBg?: string;
+  timelineMode?: 'pregnancy_months' | 'phases' | 'infant_months' | 'sessions' | 'direct';
+  timelineLabel?: string;
+  totalTimelineUnits?: number;
+  defaultUnit?: number;
+  mentor?: {
+    name: string;
+    role: string;
+    avatarUrl?: string;
+    classTitle: string;
+    classSubtitle?: string;
+    badgeText?: string;
+    showBanner?: boolean;
+  };
+  activityCard?: {
+    title: string;
+    titleBig?: string;
+    subtitle: string;
+    imageUrl?: string;
+    actionLabel?: string;
+  };
+  importanceCard?: {
+    titleSmall?: string;
+    titleBig?: string;
+    subtitle: string;
+    imageUrl?: string;
+  };
+  featureReelTitle?: string;
+  widgets?: {
+    showLiveSessions?: boolean;
+    showBrainupedia?: boolean;
+    showThoughtOfDay?: boolean;
+    showDietPlan?: boolean;
+  };
+}
+
 export interface IProgramSchemeRecord {
   id: string;
   title: string;
@@ -339,6 +378,9 @@ export interface IProgramSchemeRecord {
   overview: string;
   whoIsItFor: string;
   duration: string;
+  imageUrl?: string;
+  stage?: 'planning' | 'pregnant' | 'parenting';
+  experienceConfig?: ICourseExperienceConfig;
   unlockedModules: string[];
   tiers: {
     id: string;
@@ -970,6 +1012,233 @@ export const seedDefaultPrograms = () => {
       },
     ];
     ProgramSchemesCollection.write(defaultPrograms);
+  }
+
+  // Ensure experienceConfig is populated for all existing programs
+  const existingPrograms = ProgramSchemesCollection.read();
+  let updatedAnyConfig = false;
+  const defaultConfigsMap: Record<string, ICourseExperienceConfig> = {
+    garbh_sanskar: {
+      taglinePill: 'मैं से माँ तक की आनंदमयी यात्रा',
+      themeColor: '#BE123C',
+      themeBg: '#FFE4E6',
+      timelineMode: 'pregnancy_months',
+      timelineLabel: 'Pregnancy Month',
+      totalTimelineUnits: 9,
+      defaultUnit: 2,
+      mentor: {
+        name: 'Prof. Vipin Joshi',
+        role: 'Vedic Garbh Sanskar Guru',
+        classTitle: 'Miraculous Pregnancy',
+        classSubtitle: '— By Prof. Vipin Joshi. —',
+        badgeText: 'FREE',
+        showBanner: true,
+      },
+      activityCard: {
+        title: 'Garbh Sanskar',
+        titleBig: 'Activities',
+        subtitle: 'of this Month',
+        actionLabel: 'Explore Daily Activities',
+      },
+      importanceCard: {
+        titleSmall: 'Importance of',
+        titleBig: 'SECOND MONTH',
+        subtitle: 'in Pregnancy',
+      },
+      featureReelTitle: 'Garbh Sanskar Demo Features',
+      widgets: {
+        showLiveSessions: true,
+        showBrainupedia: true,
+        showThoughtOfDay: true,
+        showDietPlan: true,
+      },
+    },
+    beej_sanskar: {
+      taglinePill: 'बीज शुद्धि से श्रेष्ठ संतान का निर्माण',
+      themeColor: '#BE185D',
+      themeBg: '#FCE7F3',
+      timelineMode: 'phases',
+      timelineLabel: 'Conception Phase',
+      totalTimelineUnits: 3,
+      defaultUnit: 1,
+      mentor: {
+        name: 'Dr. Radhika Sen',
+        role: 'Ayurvedic Fertility Specialist',
+        classTitle: 'Beej Shuddhi Protocol',
+        classSubtitle: '— By Dr. Radhika Sen. —',
+        badgeText: 'FREE',
+        showBanner: true,
+      },
+      activityCard: {
+        title: 'Beej Sanskar',
+        titleBig: 'Protocols',
+        subtitle: 'for Couples',
+        actionLabel: 'Detox & Ojas Guidance',
+      },
+      importanceCard: {
+        titleSmall: 'Importance of',
+        titleBig: 'PRECONCEPTION DETOX',
+        subtitle: 'in Natural Conception',
+      },
+      featureReelTitle: 'Beej Sanskar Masterclass Features',
+      widgets: {
+        showLiveSessions: true,
+        showBrainupedia: false,
+        showThoughtOfDay: true,
+        showDietPlan: true,
+      },
+    },
+    garbhdhaan_sanskar: {
+      taglinePill: 'शुभ मुहूर्त एवं दिव्य आत्मा का आह्वान',
+      themeColor: '#3730A3',
+      themeBg: '#E0E7FF',
+      timelineMode: 'phases',
+      timelineLabel: 'Planning Window',
+      totalTimelineUnits: 6,
+      defaultUnit: 1,
+      mentor: {
+        name: 'Acharya Shastri',
+        role: 'Vedic Muhurat Astrologer',
+        classTitle: 'Auspicious Muhurat & Conception',
+        classSubtitle: '— By Acharya Shastri. —',
+        badgeText: 'FREE',
+        showBanner: true,
+      },
+      activityCard: {
+        title: 'Garbhadhaan',
+        titleBig: 'Rituals',
+        subtitle: 'and Muhurats',
+        actionLabel: 'Shubh Tithi Calendar',
+      },
+      importanceCard: {
+        titleSmall: 'Importance of',
+        titleBig: 'AUSPICIOUS TIMING',
+        subtitle: 'in Planetary Alignment',
+      },
+      featureReelTitle: 'Garbhadhaan Key Ceremonies',
+      widgets: {
+        showLiveSessions: true,
+        showBrainupedia: false,
+        showThoughtOfDay: true,
+        showDietPlan: false,
+      },
+    },
+    bal_sanskar: {
+      taglinePill: '०-२ वर्ष शिशु संस्कार एवं मस्तिष्क विकास',
+      themeColor: '#0F766E',
+      themeBg: '#CCFBF1',
+      timelineMode: 'infant_months',
+      timelineLabel: 'Newborn Milestone',
+      totalTimelineUnits: 24,
+      defaultUnit: 1,
+      mentor: {
+        name: 'Dr. Ananya Roy',
+        role: 'Senior Pediatrician & Child Development',
+        classTitle: 'Early Brain Stimulation (0-2 Yrs)',
+        classSubtitle: '— By Dr. Ananya Roy. —',
+        badgeText: 'FREE',
+        showBanner: true,
+      },
+      activityCard: {
+        title: 'Bal Sanskar',
+        titleBig: 'Ceremonies',
+        subtitle: 'for Newborn',
+        actionLabel: 'Namkaran & Annaprashan',
+      },
+      importanceCard: {
+        titleSmall: 'Importance of',
+        titleBig: 'FIRST 1000 DAYS',
+        subtitle: 'in Cognitive Growth',
+      },
+      featureReelTitle: 'Bal Sanskar Infant Routines',
+      widgets: {
+        showLiveSessions: true,
+        showBrainupedia: true,
+        showThoughtOfDay: true,
+        showDietPlan: true,
+      },
+    },
+    infant_care: {
+      taglinePill: 'प्रसूता स्वास्थ्य एवं नवजात शिशु सुरक्षा',
+      themeColor: '#B45309',
+      themeBg: '#FEF3C7',
+      timelineMode: 'infant_months',
+      timelineLabel: 'Postpartum Week',
+      totalTimelineUnits: 24,
+      defaultUnit: 1,
+      mentor: {
+        name: 'Sister Mary & Dr. Radhika',
+        role: 'Certified Lactation & Postpartum Coach',
+        classTitle: 'Postpartum Healing & Lactation',
+        classSubtitle: '— Lactation & Recovery Coach —',
+        badgeText: 'FREE',
+        showBanner: true,
+      },
+      activityCard: {
+        title: 'Mother & Infant',
+        titleBig: 'Care Routine',
+        subtitle: 'Postpartum Guidance',
+        actionLabel: 'Abhyanga & Lactation',
+      },
+      importanceCard: {
+        titleSmall: 'Importance of',
+        titleBig: '40 DAYS REST (JAAPA)',
+        subtitle: 'in Mother Healing',
+      },
+      featureReelTitle: 'Postpartum Recovery & Infant Care',
+      widgets: {
+        showLiveSessions: true,
+        showBrainupedia: false,
+        showThoughtOfDay: true,
+        showDietPlan: true,
+      },
+    },
+    consultations: {
+      taglinePill: 'विशेषज्ञ चिकित्सकों व आचार्यों से १-ऑन-१ परामर्श',
+      themeColor: '#6B21A8',
+      themeBg: '#F3E8FF',
+      timelineMode: 'sessions',
+      timelineLabel: 'Care Session',
+      totalTimelineUnits: 3,
+      defaultUnit: 1,
+      mentor: {
+        name: 'Chief Astrologer & OB-GYN Team',
+        role: 'Super-Specialist Panel',
+        classTitle: 'Personalized Kundli & Medical Consultation',
+        classSubtitle: '— Private Confidential Session —',
+        badgeText: 'EXCLUSIVE',
+        showBanner: true,
+      },
+      activityCard: {
+        title: 'Astrology & Medical',
+        titleBig: 'Consultation',
+        subtitle: '1-on-1 Video Call',
+        actionLabel: 'Book Your Slot',
+      },
+      importanceCard: {
+        titleSmall: 'Importance of',
+        titleBig: 'JANMA KUNDLI',
+        subtitle: 'in Planetary Harmony',
+      },
+      featureReelTitle: 'Specialist Consultation Showcase',
+      widgets: {
+        showLiveSessions: false,
+        showBrainupedia: false,
+        showThoughtOfDay: true,
+        showDietPlan: false,
+      },
+    },
+  };
+
+  existingPrograms.forEach((p) => {
+    if (!p.experienceConfig && defaultConfigsMap[p.id]) {
+      p.experienceConfig = defaultConfigsMap[p.id];
+      updatedAnyConfig = true;
+    }
+  });
+
+  if (updatedAnyConfig) {
+    ProgramSchemesCollection.write(existingPrograms);
   }
 
   // Seed default coupons if empty

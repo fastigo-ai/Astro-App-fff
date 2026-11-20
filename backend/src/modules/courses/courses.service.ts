@@ -308,6 +308,43 @@ export const coursesService = {
       ? body.features
       : [body.bullet1, body.bullet2].filter(Boolean);
 
+    const experienceConfig = body.experienceConfig || {
+      taglinePill: body.taglinePill || body.subtitle || '',
+      themeColor: body.themeColor || '#65A30D',
+      themeBg: body.themeBg || '#FFE4E6',
+      timelineMode: body.timelineMode || (body.stage === 'planning' ? 'phases' : body.stage === 'parenting' ? 'infant_months' : 'pregnancy_months'),
+      timelineLabel: body.timelineLabel || (body.stage === 'planning' ? 'Planning Phase' : body.stage === 'parenting' ? 'Infant Month' : 'Pregnancy Month'),
+      totalTimelineUnits: Number(body.totalTimelineUnits) || (body.stage === 'planning' ? 6 : body.stage === 'parenting' ? 24 : 9),
+      defaultUnit: Number(body.defaultUnit) || (body.stage === 'pregnant' ? 2 : 1),
+      mentor: {
+        name: body.mentorName || 'Senior Ayurvedic Mentor',
+        role: body.mentorRole || 'Garbh Sanskar Specialist',
+        classTitle: body.classTitle || body.title || 'Vedic Program Masterclass',
+        classSubtitle: body.classSubtitle || `— By ${body.mentorName || 'Senior Faculty'} —`,
+        avatarUrl: body.mentorAvatarUrl || '',
+        badgeText: body.badgeText || 'FREE',
+        showBanner: body.showMentorBanner !== false,
+      },
+      activityCard: {
+        title: body.activityCardTitle || body.title || 'Course Activities',
+        titleBig: body.activityCardBig || 'Activities',
+        subtitle: body.activityCardSubtitle || 'of this Month',
+        actionLabel: body.activityCardAction || 'Explore Activities',
+      },
+      importanceCard: {
+        titleSmall: body.importanceCardSmall || 'Importance of',
+        titleBig: body.importanceCardBig || 'CURRENT PHASE',
+        subtitle: body.importanceCardSubtitle || 'in Your Journey',
+      },
+      featureReelTitle: body.featureReelTitle || `${body.title || 'Course'} Key Features`,
+      widgets: {
+        showLiveSessions: body.showLiveSessions !== false,
+        showBrainupedia: body.showBrainupedia ?? (body.stage === 'pregnant'),
+        showThoughtOfDay: body.showThoughtOfDay !== false,
+        showDietPlan: body.showDietPlan !== false,
+      },
+    };
+
     const record: any = {
       _id: id,
       id,
@@ -344,6 +381,7 @@ export const coursesService = {
           ],
         },
       ],
+      experienceConfig,
       status: body.status || 'active',
       overview: body.overview || '',
       unlockedModules: ['kicks', 'bump', 'samvad', 'mood', 'activities', 'diet', 'doctor_chat', 'live'],
@@ -359,7 +397,43 @@ export const coursesService = {
     if (!existing) {
       throw new AppError(`Course ${id} not found`, 404, 'COURSE_NOT_FOUND');
     }
-    return courseRepository.updateById(id, { ...body, updatedAt: new Date().toISOString() });
+
+    let updatedExp = body.experienceConfig || existing.experienceConfig || {};
+    if (
+      body.taglinePill !== undefined ||
+      body.mentorName !== undefined ||
+      body.classTitle !== undefined ||
+      body.timelineMode !== undefined ||
+      body.timelineLabel !== undefined ||
+      body.showMentorBanner !== undefined ||
+      body.showThoughtOfDay !== undefined ||
+      body.showLiveSessions !== undefined ||
+      body.showBrainupedia !== undefined
+    ) {
+      updatedExp = {
+        ...updatedExp,
+        taglinePill: body.taglinePill ?? updatedExp.taglinePill,
+        timelineMode: body.timelineMode ?? updatedExp.timelineMode,
+        timelineLabel: body.timelineLabel ?? updatedExp.timelineLabel,
+        mentor: {
+          showBanner: body.showMentorBanner !== undefined ? Boolean(body.showMentorBanner) : (updatedExp.mentor?.showBanner ?? true),
+          mentorName: body.mentorName ?? updatedExp.mentor?.mentorName,
+          classTitle: body.classTitle ?? updatedExp.mentor?.classTitle,
+          subtitle: body.mentorSubtitle ?? updatedExp.mentor?.subtitle,
+        },
+        widgets: {
+          showThoughtOfDay: body.showThoughtOfDay !== undefined ? Boolean(body.showThoughtOfDay) : (updatedExp.widgets?.showThoughtOfDay ?? true),
+          showLiveSessions: body.showLiveSessions !== undefined ? Boolean(body.showLiveSessions) : (updatedExp.widgets?.showLiveSessions ?? true),
+          showBrainupedia: body.showBrainupedia !== undefined ? Boolean(body.showBrainupedia) : (updatedExp.widgets?.showBrainupedia ?? true),
+        },
+      };
+    }
+
+    return courseRepository.updateById(id, {
+      ...body,
+      experienceConfig: updatedExp,
+      updatedAt: new Date().toISOString(),
+    });
   },
 
   async adminDeleteCourse(id: string) {

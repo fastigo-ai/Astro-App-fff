@@ -492,11 +492,10 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
       confirmed_month: 2, // Default Month 2 Free Demo like Krishna Coming
     });
 
-    if (course.route === 'CoursePreview') {
-      navigation.navigate('CoursePreview', { courseId: course.id, courseTitle: course.title });
-    } else {
-      navigation.navigate(course.route);
-    }
+    navigation.navigate('CoursePreview', {
+      courseId: course.id,
+      courseTitle: course.title,
+    });
   };
 
   return (

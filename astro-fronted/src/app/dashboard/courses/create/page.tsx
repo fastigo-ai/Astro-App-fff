@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, BookOpen, Sliders, UserCheck, Layers } from 'lucide-react';
 import Header from '@/components/Header';
 import { api } from '@/lib/api';
 
@@ -24,6 +24,20 @@ export default function CreateCoursePage() {
     durationMonths: 6,
     price: 2499,
     originalPrice: 4499,
+    // Mobile App Screen Dynamic Experience Config
+    taglinePill: '',
+    timelineMode: 'pregnancy_months',
+    timelineLabel: 'Pregnancy Month',
+    showMentorBanner: true,
+    classTitle: '',
+    mentorName: 'Prof. Vipin Joshi',
+    mentorSubtitle: 'Course Masterclass',
+    activityCardTitle: '',
+    activityCardTitleBig: 'Activities',
+    activityCardSub: 'of this Month',
+    showThoughtOfDay: true,
+    showLiveSessions: true,
+    showBrainupedia: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,6 +227,173 @@ export default function CreateCoursePage() {
                 onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
               />
+            </div>
+          </div>
+
+          {/* App Dynamic Screen Experience (Universal Frame Styling) */}
+          <div className="p-6 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-5">
+            <div className="flex items-center space-x-2.5">
+              <Sliders className="w-5 h-5 text-saffron-600" />
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">App Screen Styling & Experience Config</h3>
+                <p className="text-xs text-slate-600">
+                  Configure how this course renders inside the mobile app course preview and dashboard frame.
+                </p>
+              </div>
+            </div>
+
+            {/* Tagline & Timeline Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Tagline Pill (Hindi/Eng)
+                </label>
+                <input
+                  type="text"
+                  value={formData.taglinePill}
+                  onChange={(e) => setFormData({ ...formData, taglinePill: e.target.value })}
+                  placeholder="e.g. मैं से माँ तक की आनंदमयी यात्रा"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Timeline Mode
+                </label>
+                <select
+                  value={formData.timelineMode}
+                  onChange={(e) => {
+                    const mode = e.target.value;
+                    const defaultLabels: Record<string, string> = {
+                      pregnancy_months: 'Pregnancy Month',
+                      conception_phases: 'Conception Phase',
+                      infant_months: 'Infant Age Month',
+                      consultations: 'Consultation Session',
+                    };
+                    setFormData({
+                      ...formData,
+                      timelineMode: mode,
+                      timelineLabel: defaultLabels[mode] || 'Program Month',
+                    });
+                  }}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                >
+                  <option value="pregnancy_months">Pregnancy Months (Month 1-9)</option>
+                  <option value="conception_phases">Conception Phases (Pre-Pregnancy)</option>
+                  <option value="infant_months">Infant Age Months (0-2 Yrs)</option>
+                  <option value="consultations">Consultation Sessions (Astrology / 1-on-1)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Timeline Selector Label
+                </label>
+                <input
+                  type="text"
+                  value={formData.timelineLabel}
+                  onChange={(e) => setFormData({ ...formData, timelineLabel: e.target.value })}
+                  placeholder="e.g. Pregnancy Month / Conception Phase"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                />
+              </div>
+            </div>
+
+            {/* Mentor Banner Details */}
+            <div className="pt-2 border-t border-amber-200/60">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-800">Featured Class / Mentor Banner</span>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showMentorBanner}
+                    onChange={(e) => setFormData({ ...formData, showMentorBanner: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <span className="text-xs font-semibold text-slate-700">Show Free Class Banner</span>
+                </label>
+              </div>
+
+              {formData.showMentorBanner && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Mentor Name</label>
+                    <input
+                      type="text"
+                      value={formData.mentorName}
+                      onChange={(e) => setFormData({ ...formData, mentorName: e.target.value })}
+                      placeholder="e.g. Prof. Vipin Joshi"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Free Class Title</label>
+                    <input
+                      type="text"
+                      value={formData.classTitle}
+                      onChange={(e) => setFormData({ ...formData, classTitle: e.target.value })}
+                      placeholder="e.g. Miraculous Pregnancy"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Class Subtitle</label>
+                    <input
+                      type="text"
+                      value={formData.mentorSubtitle}
+                      onChange={(e) => setFormData({ ...formData, mentorSubtitle: e.target.value })}
+                      placeholder="e.g. Garbh Sanskar Class"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Widget Toggles */}
+            <div className="pt-2 border-t border-amber-200/60">
+              <span className="text-xs font-bold text-slate-800 block mb-2">Display Widgets on Course Screen</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showThoughtOfDay}
+                    onChange={(e) => setFormData({ ...formData, showThoughtOfDay: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Thought of Day</p>
+                    <p className="text-[10px] text-slate-500">Daily inspirational Vedic quote</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showLiveSessions}
+                    onChange={(e) => setFormData({ ...formData, showLiveSessions: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Live Sessions</p>
+                    <p className="text-[10px] text-slate-500">Live doctor & interactive zoom</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showBrainupedia}
+                    onChange={(e) => setFormData({ ...formData, showBrainupedia: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Brainupedia</p>
+                    <p className="text-[10px] text-slate-500">Cognitive quiz & puzzle games</p>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 

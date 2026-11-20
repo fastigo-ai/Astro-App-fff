@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,398 @@ import {
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuthStore } from '~/store/useAuthStore';
+import { api } from '~/shared/api';
+
+const COURSE_ASSET_IMAGES: Record<string, any> = {
+  garbh_sanskar: require('../../../assets/programs/garbh_sanskar.jpg'),
+  beej_sanskar: require('../../../assets/programs/beej_sanskar.jpg'),
+  garbhdhaan_sanskar: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+  garbhadhaan: require('../../../assets/programs/garbhdhaan_sanskar.jpg'),
+  bal_sanskar: require('../../../assets/programs/bal_sanskar.jpg'),
+  infant_care: require('../../../assets/programs/infant_care.jpg'),
+  consultations: require('../../../assets/programs/consultations.jpg'),
+  bhavitavyam: require('../../../assets/programs/consultations.jpg'),
+  baby_cute: require('../../../assets/images/baby_cute.png'),
+  mentor_prof: require('../../../assets/images/mentor_prof.png'),
+};
+
+export interface ICourseExperience {
+  title: string;
+  hindiTitle?: string;
+  taglinePill: string;
+  timelineMode: 'pregnancy_months' | 'conception_phases' | 'infant_months' | 'consultations';
+  timelineLabel: string;
+  mentor: {
+    showBanner?: boolean;
+    classTitle: string;
+    mentorName: string;
+    subtitle: string;
+    avatarKey?: string;
+  };
+  activityCard: {
+    title: string;
+    titleBig: string;
+    sub: string;
+    imageKey: string;
+  };
+  importanceCard: {
+    titleSmall: string;
+    titleBig: string;
+    sub: string;
+    imageKey: string;
+  };
+  featureReelTitle: string;
+  reelItems: Array<{
+    id: number;
+    title: string;
+    subtitle: string;
+    duration: string;
+    imageKey?: string;
+  }>;
+  widgets: {
+    showThoughtOfDay?: boolean;
+    showLiveSessions?: boolean;
+    showBrainupedia?: boolean;
+  };
+  featuresSummaryList?: string[];
+}
+
+const DEFAULT_COURSE_EXPERIENCES: Record<string, ICourseExperience> = {
+  garbh_sanskar: {
+    title: 'Garbh Sanskar',
+    hindiTitle: 'गर्भ संस्कार',
+    taglinePill: 'मैं से माँ तक की आनंदमयी यात्रा',
+    timelineMode: 'pregnancy_months',
+    timelineLabel: 'Pregnancy Month',
+    mentor: {
+      showBanner: true,
+      classTitle: 'Miraculous Pregnancy',
+      mentorName: 'Prof. Vipin Joshi',
+      subtitle: 'Garbh Sanskar Class',
+      avatarKey: 'mentor_prof',
+    },
+    activityCard: {
+      title: 'Garbh Sanskar',
+      titleBig: 'Activities',
+      sub: 'of this Month',
+      imageKey: 'garbh_sanskar',
+    },
+    importanceCard: {
+      titleSmall: 'Importance of',
+      titleBig: 'MONTH {month}',
+      sub: 'in Pregnancy',
+      imageKey: 'baby_cute',
+    },
+    featureReelTitle: 'Garbh Sanskar Demo Features',
+    reelItems: [
+      { id: 1, title: '1. Jeevan Sutra (जीवन सूत्र)', subtitle: 'Daily morning inspiring life lessons & sacred positive thoughts for fetus development.', duration: '6:30 Mins (Vocal Guide)', imageKey: 'consultations' },
+      { id: 2, title: '2. Garbh Music (432Hz Raagas)', subtitle: 'Scientifically tuned 432Hz Vedic classical soundwaves stimulating fetal brain neurons.', duration: '18:45 Mins (432Hz Audio)', imageKey: 'garbh_sanskar' },
+      { id: 3, title: '3. Garbh Sutra (गर्भ सूत्र)', subtitle: 'Vedic guidelines & spiritual lifestyle discipline taught by Prof. Vipin Joshi.', duration: '10:15 Mins (Masterclass)', imageKey: 'mentor_prof' },
+      { id: 4, title: '4. Garbh Samvad (गर्भ संवाद)', subtitle: 'Soul-to-soul womb conversation scripts strengthening the mother-child emotional bond.', duration: '12:00 Mins (Guided Samvad)', imageKey: 'garbhdhaan_sanskar' },
+      { id: 5, title: '5. Vedic Mantra Vrushti (मंत्र वृष्टि)', subtitle: 'Potent Vedic chanting creating an aura of serenity, protection and spiritual energy.', duration: '14:20 Mins (Sacred Chants)', imageKey: 'bal_sanskar' },
+    ],
+    widgets: {
+      showThoughtOfDay: true,
+      showLiveSessions: true,
+      showBrainupedia: true,
+    },
+    featuresSummaryList: [
+      'Art to Live Happy Life',
+      'Garbh Sanskar Music (432Hz)',
+      'Meditation & Yognidra',
+      'Vedic Mantra Vrushti',
+      'Supraj Santanotpatti Hawan',
+      'Personal Isht Mantra',
+      'Punsavan & Simantonayana Sanskar',
+    ],
+  },
+  beej_sanskar: {
+    title: 'Beej Sanskar',
+    hindiTitle: 'बीज संस्कार',
+    taglinePill: 'पवित्र गर्भाधान हेतु बीज एवं शरीर शुद्धि',
+    timelineMode: 'conception_phases',
+    timelineLabel: 'Conception Phase',
+    mentor: {
+      showBanner: true,
+      classTitle: 'Cellular & DNA Purification',
+      mentorName: 'Dr. Sunita & Vedic Team',
+      subtitle: 'Beej Sanskar Masterclass',
+      avatarKey: 'mentor_prof',
+    },
+    activityCard: {
+      title: 'Beej Sanskar',
+      titleBig: 'Detox Rituals',
+      sub: 'for Couple Purity',
+      imageKey: 'beej_sanskar',
+    },
+    importanceCard: {
+      titleSmall: 'Importance of',
+      titleBig: 'PHASE {month}',
+      sub: 'in Beej Sanskar',
+      imageKey: 'baby_cute',
+    },
+    featureReelTitle: 'Beej Sanskar Demo Features',
+    reelItems: [
+      { id: 1, title: '1. Beej Shuddhi Vidhi', subtitle: 'Vedic body purification mantras and cellular detoxification routines for couples.', duration: '8:00 Mins (Daily Routine)', imageKey: 'beej_sanskar' },
+      { id: 2, title: '2. Panchakarma Diet', subtitle: 'Ayurvedic sattvic nutritional diet plan enhancing ovum and sperm vitality.', duration: '12:15 Mins (Diet Guide)', imageKey: 'consultations' },
+      { id: 3, title: '3. Swara & Prana Yoga', subtitle: 'Breath synchronization techniques balancing solar and lunar energy channels.', duration: '15:00 Mins (Yoga Session)', imageKey: 'mentor_prof' },
+      { id: 4, title: '4. Beej Dhyan', subtitle: 'Conscious meditation to invite a noble, healthy, and highly elevated soul.', duration: '10:30 Mins (Meditation)', imageKey: 'garbhdhaan_sanskar' },
+      { id: 5, title: '5. Vedic Mantra Jaap', subtitle: 'Vedic sacred chants to remove hereditary doshas and negative planetary impressions.', duration: '14:00 Mins (Sacred Chants)', imageKey: 'bal_sanskar' },
+    ],
+    widgets: {
+      showThoughtOfDay: true,
+      showLiveSessions: true,
+      showBrainupedia: false,
+    },
+    featuresSummaryList: [
+      'Ayurvedic Couple Detox Protocol',
+      'Ovum & Sperm Health Enhancement',
+      'Vedic Swara Yoga & Breathing',
+      'Ancestral Karma Purification',
+      'Sattvic Nutrition Plan',
+      'Personalized Doctor Guidance',
+    ],
+  },
+  garbhdhaan_sanskar: {
+    title: 'Garbhadhaan Sanskar',
+    hindiTitle: 'गर्भाधान संस्कार',
+    taglinePill: 'दिव्य संतान के आगमन की पावन शुरुआत',
+    timelineMode: 'conception_phases',
+    timelineLabel: 'Pre-Conception Month',
+    mentor: {
+      showBanner: true,
+      classTitle: 'Sacred Conception & Muhurat',
+      mentorName: 'Prof. Vipin Joshi',
+      subtitle: 'Garbhadhaan Sanskar Class',
+      avatarKey: 'mentor_prof',
+    },
+    activityCard: {
+      title: 'Garbhadhaan',
+      titleBig: 'Conception Care',
+      sub: 'Daily Guidance',
+      imageKey: 'garbhdhaan_sanskar',
+    },
+    importanceCard: {
+      titleSmall: 'Significance of',
+      titleBig: 'MONTH {month}',
+      sub: 'in Baby Planning',
+      imageKey: 'baby_cute',
+    },
+    featureReelTitle: 'Garbhadhaan Demo Features',
+    reelItems: [
+      { id: 1, title: '1. Rutu-Kaal Shuddhi', subtitle: 'Sacred timing and astrological favorable windows for blissful conception.', duration: '7:45 Mins (Vedic Guide)', imageKey: 'garbhdhaan_sanskar' },
+      { id: 2, title: '2. Couple Mind Harmonization', subtitle: 'Harmonizing heart frequencies between mother and father before conception.', duration: '11:20 Mins (Audio Guide)', imageKey: 'consultations' },
+      { id: 3, title: '3. Ojas Booster Diet', subtitle: 'Ayurvedic superfoods optimizing fertility and emotional stability.', duration: '9:10 Mins (Diet Routine)', imageKey: 'mentor_prof' },
+      { id: 4, title: '4. Santan Gopal Jaap', subtitle: 'Daily rhythmic recitation of Shri Santan Gopal Stotram for divine blessings.', duration: '16:00 Mins (Sacred Chants)', imageKey: 'garbh_sanskar' },
+      { id: 5, title: '5. Mental Serenity Sutra', subtitle: 'Stress-busting affirmations ensuring a tranquil home atmosphere.', duration: '8:30 Mins (Affirmations)', imageKey: 'bal_sanskar' },
+    ],
+    widgets: {
+      showThoughtOfDay: true,
+      showLiveSessions: true,
+      showBrainupedia: false,
+    },
+    featuresSummaryList: [
+      'Auspicious Muhurat Calculation',
+      'Santan Gopal Mantra Chanting',
+      'Couple Emotional Harmonization',
+      'Fertility-Boosting Ojas Diet',
+      'Mindfulness & Stress Relief',
+    ],
+  },
+  bal_sanskar: {
+    title: 'Bal Sanskar',
+    hindiTitle: 'बाल संस्कार',
+    taglinePill: 'शिशु के प्रथम 2 वर्ष - मस्तिष्क और संस्कार की नींव',
+    timelineMode: 'infant_months',
+    timelineLabel: 'Infant Age Month',
+    mentor: {
+      showBanner: true,
+      classTitle: '0-2 Yrs Brain Stimulation',
+      mentorName: 'Dr. Anita Rao & Team',
+      subtitle: 'Bal Sanskar Workshop',
+      avatarKey: 'mentor_prof',
+    },
+    activityCard: {
+      title: 'Bal Sanskar',
+      titleBig: 'Brain Games',
+      sub: '0-2 Years',
+      imageKey: 'bal_sanskar',
+    },
+    importanceCard: {
+      titleSmall: 'Milestones of',
+      titleBig: 'MONTH {month}',
+      sub: 'in Baby Development',
+      imageKey: 'baby_cute',
+    },
+    featureReelTitle: 'Bal Sanskar Demo Features',
+    reelItems: [
+      { id: 1, title: '1. Suvarnaprashan Samskara', subtitle: 'Vedic golden drops ritual for boosting immunity, memory, and cognitive sharpness.', duration: '6:15 Mins (Health Ritual)', imageKey: 'bal_sanskar' },
+      { id: 2, title: '2. Shishu Lullabies (432Hz)', subtitle: 'Soothing Vedic lullabies and 432Hz sleep melodies for calm and peaceful sleep.', duration: '20:00 Mins (Lullaby Audio)', imageKey: 'garbh_sanskar' },
+      { id: 3, title: '3. Sensory High-Contrast Cards', subtitle: 'High contrast black and white flashcards stimulating optic nerve development.', duration: '8:45 Mins (Visual Session)', imageKey: 'mentor_prof' },
+      { id: 4, title: '4. Panchatantra Audio Tale', subtitle: 'Moral storytelling cultivating noble character and subconscious wisdom.', duration: '10:00 Mins (Audio Story)', imageKey: 'garbhdhaan_sanskar' },
+      { id: 5, title: '5. Baby Motor Skills & Play', subtitle: 'Gentle physical exercises enhancing neck control and body coordination.', duration: '12:30 Mins (Activity Guide)', imageKey: 'consultations' },
+    ],
+    widgets: {
+      showThoughtOfDay: true,
+      showLiveSessions: true,
+      showBrainupedia: true,
+    },
+    featuresSummaryList: [
+      'Daily 0-2 Years Brain Puzzles & Sensory Cards',
+      'Suvarnaprashan Ayurvedic Immunity Drops',
+      'Vedic Moral Stories & Shishu Geeth',
+      'Physical Milestone Tracking',
+      'Pediatrician Live Consultations',
+    ],
+  },
+  infant_care: {
+    title: 'Infant Care',
+    hindiTitle: 'शिशु देखभाल',
+    taglinePill: 'वैज्ञानिक और पारंपरिक नवजात शिशु देखभाल',
+    timelineMode: 'infant_months',
+    timelineLabel: 'Infant Care Month',
+    mentor: {
+      showBanner: true,
+      classTitle: 'Neonatal & Mother Wellness',
+      mentorName: 'Dr. Anita Rao (MD)',
+      subtitle: 'Infant Wellness Guide',
+      avatarKey: 'mentor_prof',
+    },
+    activityCard: {
+      title: 'Infant Care',
+      titleBig: 'Daily Care',
+      sub: 'for Newborn',
+      imageKey: 'infant_care',
+    },
+    importanceCard: {
+      titleSmall: 'Essentials of',
+      titleBig: 'MONTH {month}',
+      sub: 'in Baby Care',
+      imageKey: 'baby_cute',
+    },
+    featureReelTitle: 'Infant Care Demo Features',
+    reelItems: [
+      { id: 1, title: '1. Abhyanga Massage Guide', subtitle: 'Traditional warm sesame/almond oil massage strengthening baby bones and muscles.', duration: '12:00 Mins (Video Guide)', imageKey: 'infant_care' },
+      { id: 2, title: '2. Colic & Burp Relief', subtitle: 'Gentle tummy massage and upright holding methods relieving infant gas.', duration: '8:30 Mins (Doctor Tutorial)', imageKey: 'consultations' },
+      { id: 3, title: '3. Baby Sleep Training', subtitle: 'Creating rhythmic circadian rhythms for uninterrupted infant night sleep.', duration: '14:00 Mins (Masterclass)', imageKey: 'mentor_prof' },
+      { id: 4, title: '4. Postpartum Lactation Diet', subtitle: 'Nutrient-rich post-partum diet increasing milk flow and maternal strength.', duration: '10:15 Mins (Diet Routine)', imageKey: 'garbhdhaan_sanskar' },
+      { id: 5, title: '5. Gentle Hygiene & Bath', subtitle: 'Natural herbal bath and diaper rash prevention tips from pediatricians.', duration: '7:50 Mins (Care Guide)', imageKey: 'garbh_sanskar' },
+    ],
+    widgets: {
+      showThoughtOfDay: true,
+      showLiveSessions: false,
+      showBrainupedia: false,
+    },
+    featuresSummaryList: [
+      'Doctor-Guided Newborn First 100 Days Care',
+      'Abhyanga Baby Massage Tutorials',
+      'Colic, Gas & Teething Instant Remedies',
+      'Mother Lactation & Postpartum Recovery',
+      'Pediatrician 24/7 Q&A Support',
+    ],
+  },
+  consultations: {
+    title: 'Bhavitavyam',
+    hindiTitle: 'भवितव्यम् ज्योतिष',
+    taglinePill: 'जन्म कुंडली, नक्षत्र एवं दिव्य मार्गदर्शन',
+    timelineMode: 'consultations',
+    timelineLabel: 'Consultation Session',
+    mentor: {
+      showBanner: true,
+      classTitle: 'Kundali & Nakshatra Guidance',
+      mentorName: 'Acharya Raman Shastri',
+      subtitle: 'Vedic Astrology Consultation',
+      avatarKey: 'mentor_prof',
+    },
+    activityCard: {
+      title: 'Bhavitavyam',
+      titleBig: 'Kundali Sessions',
+      sub: 'Vedic Astrology',
+      imageKey: 'consultations',
+    },
+    importanceCard: {
+      titleSmall: 'Importance of',
+      titleBig: 'SESSION {month}',
+      sub: 'in Vedic Guidance',
+      imageKey: 'baby_cute',
+    },
+    featureReelTitle: 'Astrology Demo Features',
+    reelItems: [
+      { id: 1, title: '1. Janma Kundali Analysis', subtitle: 'In-depth analysis of child planetary positions and auspicious yogas.', duration: '25:00 Mins (Consultation)', imageKey: 'consultations' },
+      { id: 2, title: '2. Nakshatra Sanskar', subtitle: 'Identifying primary birth constellation and protective gemstones / deities.', duration: '15:30 Mins (Guidance)', imageKey: 'garbhdhaan_sanskar' },
+      { id: 3, title: '3. Graha Shanti Vidhi', subtitle: 'Vedic pacification remedies to eliminate planetary afflictions.', duration: '18:00 Mins (Vedic Ritual)', imageKey: 'mentor_prof' },
+      { id: 4, title: '4. Ishta Devata Puja', subtitle: 'Establishing family guardian deity worship for lifetime protection.', duration: '12:45 Mins (Spiritual Puja)', imageKey: 'garbh_sanskar' },
+      { id: 5, title: '5. Auspicious Naming Sanskar', subtitle: 'Auspicious first-letter syllable selection based on Nakshatra Charana.', duration: '10:00 Mins (Naming Guide)', imageKey: 'bal_sanskar' },
+    ],
+    widgets: {
+      showThoughtOfDay: true,
+      showLiveSessions: true,
+      showBrainupedia: false,
+    },
+    featuresSummaryList: [
+      'Comprehensive Birth Chart (Janma Kundali)',
+      'Nakshatra & Planetary Dosha Analysis',
+      'Auspicious Vedic Naming Guidance (Namkaran)',
+      '1-on-1 Acharya Video Consultations',
+      'Personalized Remedies & Yantras',
+    ],
+  },
+};
+
+const resolveExperience = (
+  courseId: string,
+  serverCourse?: any,
+  isHindi?: boolean
+): ICourseExperience => {
+  const normId = (courseId || 'garbh_sanskar').toLowerCase();
+  const matchedKey =
+    normId.includes('beej')
+      ? 'beej_sanskar'
+      : normId.includes('dhaan') || normId.includes('dhan') || normId.includes('conception')
+      ? 'garbhdhaan_sanskar'
+      : normId.includes('bal') || normId.includes('baal')
+      ? 'bal_sanskar'
+      : normId.includes('infant')
+      ? 'infant_care'
+      : normId.includes('bhavi') || normId.includes('consult')
+      ? 'consultations'
+      : 'garbh_sanskar';
+
+  const base = DEFAULT_COURSE_EXPERIENCES[matchedKey] || DEFAULT_COURSE_EXPERIENCES.garbh_sanskar;
+  const cfg = serverCourse?.experienceConfig || {};
+
+  return {
+    ...base,
+    title: serverCourse?.title || base.title,
+    hindiTitle: serverCourse?.hindiTitle || base.hindiTitle,
+    taglinePill: cfg.taglinePill || (isHindi && base.hindiTitle ? base.hindiTitle : base.taglinePill),
+    timelineMode: cfg.timelineMode || base.timelineMode,
+    timelineLabel: cfg.timelineLabel || base.timelineLabel,
+    mentor: {
+      showBanner: cfg.mentor?.showBanner !== undefined ? cfg.mentor.showBanner : (base.mentor?.showBanner ?? true),
+      mentorName: cfg.mentor?.mentorName || base.mentor.mentorName,
+      classTitle: cfg.mentor?.classTitle || base.mentor.classTitle,
+      subtitle: cfg.mentor?.subtitle || base.mentor.subtitle,
+      avatarKey: cfg.mentor?.avatarKey || base.mentor.avatarKey,
+    },
+    activityCard: {
+      ...base.activityCard,
+      ...(cfg.activityCard || {}),
+    },
+    importanceCard: {
+      ...base.importanceCard,
+      ...(cfg.importanceCard || {}),
+    },
+    featureReelTitle: cfg.featureReelTitle || base.featureReelTitle,
+    reelItems: (cfg.reelItems && cfg.reelItems.length > 0) ? cfg.reelItems : base.reelItems,
+    widgets: {
+      showThoughtOfDay: cfg.widgets?.showThoughtOfDay !== undefined ? cfg.widgets.showThoughtOfDay : (base.widgets?.showThoughtOfDay ?? true),
+      showLiveSessions: cfg.widgets?.showLiveSessions !== undefined ? cfg.widgets.showLiveSessions : (base.widgets?.showLiveSessions ?? true),
+      showBrainupedia: cfg.widgets?.showBrainupedia !== undefined ? cfg.widgets.showBrainupedia : (base.widgets?.showBrainupedia ?? true),
+    },
+    featuresSummaryList: (cfg.featuresSummaryList && cfg.featuresSummaryList.length > 0) ? cfg.featuresSummaryList : base.featuresSummaryList,
+  };
+};
 
 const { width } = Dimensions.get('window');
 
@@ -45,6 +437,28 @@ export const CoursePreviewScreen = () => {
   const route = useRoute<any>();
   const { i18n } = useTranslation();
   const isHindi = i18n.language?.startsWith('hi') ?? false;
+
+  const currentCourseId = (route.params?.courseId || 'garbh_sanskar').toLowerCase();
+  const [courseData, setCourseData] = useState<any>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .get(`/api/v1/courses/${currentCourseId}`)
+      .then(res => {
+        if (isMounted && res.data?.data) {
+          setCourseData(res.data.data);
+        }
+      })
+      .catch(() => {
+        // Silently fall back to built-in presets
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentCourseId]);
+
+  const experience = resolveExperience(currentCourseId, courseData, isHindi);
 
   const activateDemo = useAuthStore(state => state.activateDemo);
   const setJourneyData = useAuthStore(state => state.setJourneyData);
@@ -181,9 +595,9 @@ export const CoursePreviewScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.titleCenter}>
-          <Text style={styles.headerTitle}>Garbh Sanskar</Text>
+          <Text style={styles.headerTitle}>{experience.title}</Text>
           <View style={styles.subPill}>
-            <Text style={styles.subPillText}>मैं से माँ तक की आनंदमयी यात्रा</Text>
+            <Text style={styles.subPillText}>{experience.taglinePill}</Text>
           </View>
         </View>
 
@@ -200,38 +614,40 @@ export const CoursePreviewScreen = () => {
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
       >
-        {/* Mentor Professor Vipin Joshi Free Class Banner */}
-        <View style={styles.mentorBannerCard}>
-          <View style={styles.mentorFreeBadge}>
-            <Text style={styles.mentorFreeBadgeText}>FREE</Text>
-          </View>
-
-          <View style={styles.mentorRow}>
-            <View style={styles.mentorTextCol}>
-              <Text style={styles.classSub}>Garbh Sanskar Class</Text>
-              <Text style={styles.classMain}>Miraculous Pregnancy</Text>
-              <Text style={styles.classBy}>— By Prof. Vipin Joshi. —</Text>
-
-              <TouchableOpacity 
-                style={styles.viewDetailsBtn}
-                onPress={() => setShowUpgradeModal(true)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.viewDetailsText}>View Details</Text>
-              </TouchableOpacity>
+        {/* Mentor / Guide Free Class Banner */}
+        {experience.mentor?.showBanner !== false && (
+          <View style={styles.mentorBannerCard}>
+            <View style={styles.mentorFreeBadge}>
+              <Text style={styles.mentorFreeBadgeText}>FREE</Text>
             </View>
 
-            <View style={styles.mentorAvatarWrapper}>
-              <RNImage
-                source={require('../../../assets/images/mentor_prof.png')}
-                style={styles.mentorAvatar}
-                resizeMode="cover"
-              />
+            <View style={styles.mentorRow}>
+              <View style={styles.mentorTextCol}>
+                <Text style={styles.classSub}>{experience.mentor?.subtitle || 'Course Masterclass'}</Text>
+                <Text style={styles.classMain}>{experience.mentor?.classTitle || experience.title}</Text>
+                <Text style={styles.classBy}>— By {experience.mentor?.mentorName || 'Prof. Vipin Joshi'}. —</Text>
+
+                <TouchableOpacity 
+                  style={styles.viewDetailsBtn}
+                  onPress={() => setShowUpgradeModal(true)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.viewDetailsText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.mentorAvatarWrapper}>
+                <RNImage
+                  source={COURSE_ASSET_IMAGES[experience.mentor?.avatarKey || 'mentor_prof'] || COURSE_ASSET_IMAGES.mentor_prof}
+                  style={styles.mentorAvatar}
+                  resizeMode="cover"
+                />
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
-        {/* Running Month Selector Pill */}
+        {/* Dynamic Running Month / Phase / Session Selector Pill */}
         <View style={styles.monthPillWrapper}>
           <TouchableOpacity 
             style={styles.monthSelectorPill}
@@ -239,7 +655,9 @@ export const CoursePreviewScreen = () => {
             activeOpacity={0.85}
           >
             <Text style={styles.monthSelectorPillText}>
-              {selectedMonth === 2 ? 'Pregnancy Month 2 (Free Demo)' : `Pregnancy Month ${selectedMonth}`}
+              {selectedMonth === 2 
+                ? `${experience.timelineLabel} 2 (Free Demo)` 
+                : `${experience.timelineLabel} ${selectedMonth}`}
             </Text>
             <View style={styles.monthArrowBox}>
               <ChevronDown size={18} color="#FFFFFF" />
@@ -256,26 +674,28 @@ export const CoursePreviewScreen = () => {
             onPress={() => {
               setPreviewContent({
                 id: 1,
-                title: isHindi ? 'गर्भ संस्कार दैनिक क्रियाएं' : 'Month 2 Garbh Sanskar Activities',
-                subtitle: isHindi ? 'माह 2 की विशेष क्रियाएं, गर्भ संवाद एवं सकारात्मक ध्यान' : 'Month 2 Daily Positive Mindset, Sensory Stimulation & Samvad',
+                title: isHindi ? `${experience.title} दैनिक क्रियाएं` : `${experience.timelineLabel} ${selectedMonth} ${experience.title} Activities`,
+                subtitle: isHindi 
+                  ? `${experience.timelineLabel} ${selectedMonth} की विशेष क्रियाएं एवं सकारात्मक ध्यान` 
+                  : `${experience.timelineLabel} ${selectedMonth} Daily Positive Mindset, Sensory Stimulation & Samvad`,
                 duration: '15 Mins / Day',
               });
               setShowPreviewModal(true);
             }}
           >
             <View style={styles.quickCardTextCol}>
-              <Text style={styles.quickCardTitle}>Garbh Sanskar</Text>
-              <Text style={styles.quickCardTitleBig}>Activities</Text>
-              <Text style={styles.quickCardSub}>of this Month</Text>
+              <Text style={styles.quickCardTitle}>{experience.activityCard?.title || experience.title}</Text>
+              <Text style={styles.quickCardTitleBig}>{experience.activityCard?.titleBig || 'Activities'}</Text>
+              <Text style={styles.quickCardSub}>{experience.activityCard?.sub || 'of this Month'}</Text>
             </View>
             <RNImage
-              source={require('../../../assets/programs/garbh_sanskar.jpg')}
+              source={COURSE_ASSET_IMAGES[experience.activityCard?.imageKey || 'garbh_sanskar'] || COURSE_ASSET_IMAGES.garbh_sanskar}
               style={styles.quickCardImg}
               resizeMode="cover"
             />
           </TouchableOpacity>
 
-          {/* Sky Blue Card: Fetus Development Visual */}
+          {/* Sky Blue Card: Fetus Development / Importance Visual */}
           <TouchableOpacity 
             style={[styles.quickCard, styles.quickCardBlue]}
             activeOpacity={0.88}
@@ -286,24 +706,27 @@ export const CoursePreviewScreen = () => {
             }}
           >
             <View style={styles.quickCardTextCol}>
-              <Text style={styles.quickCardTitleSmall}>Importance of</Text>
+              <Text style={styles.quickCardTitleSmall}>{experience.importanceCard?.titleSmall || 'Importance of'}</Text>
               <Text style={styles.quickCardTitleBig}>
-                {selectedMonth === 2 ? 'SECOND MONTH' : `MONTH ${selectedMonth}`}
+                {(experience.importanceCard?.titleBig || 'MONTH {month}').replace(
+                  '{month}',
+                  selectedMonth === 2 ? 'SECOND' : String(selectedMonth)
+                )}
               </Text>
-              <Text style={styles.quickCardSub}>in Pregnancy</Text>
+              <Text style={styles.quickCardSub}>{experience.importanceCard?.sub || 'in Pregnancy'}</Text>
             </View>
             <RNImage
-              source={require('../../../assets/images/baby_cute.png')}
+              source={COURSE_ASSET_IMAGES[experience.importanceCard?.imageKey || 'baby_cute'] || COURSE_ASSET_IMAGES.baby_cute}
               style={styles.quickCardImgBaby}
               resizeMode="contain"
             />
           </TouchableOpacity>
         </View>
 
-        {/* Garbh Sanskar Demo Features Section (Numbered horizontal cards 1 to 5) */}
+        {/* Dynamic Demo Features Section (Numbered horizontal cards) */}
         <View style={styles.demoFeaturesSection}>
           <View style={styles.demoFeaturesHeaderPill}>
-            <Text style={styles.demoFeaturesHeaderText}>Garbh Sanskar Demo Features</Text>
+            <Text style={styles.demoFeaturesHeaderText}>{experience.featureReelTitle}</Text>
           </View>
 
           <ScrollView 
@@ -311,201 +734,99 @@ export const CoursePreviewScreen = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.demoCardsScroll}
           >
-            {/* Card 1: Jeevan Sutra */}
-            <TouchableOpacity 
-              style={styles.demoFeatureCard}
-              activeOpacity={0.88}
-              onPress={() => {
-                setPreviewContent({
-                  id: 1,
-                  title: '1. Jeevan Sutra (जीवन सूत्र)',
-                  subtitle: 'Daily morning inspiring life lessons & sacred positive thoughts for fetus development.',
-                  duration: '6:30 Mins (Vocal Guide)',
-                });
-                setShowPreviewModal(true);
-              }}
-            >
-              <RNImage
-                source={require('../../../assets/programs/consultations.jpg')}
-                style={styles.demoCardBg}
-                resizeMode="cover"
-              />
-              <View style={styles.demoCardOverlay}>
-                <Text style={styles.demoCardNumber}>1</Text>
-                <View style={styles.demoCardPlayRow}>
-                  <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={styles.demoCardTitle}>Jeevan Sutra</Text>
+            {experience.reelItems.map((item, idx) => (
+              <TouchableOpacity 
+                key={item.id || idx}
+                style={styles.demoFeatureCard}
+                activeOpacity={0.88}
+                onPress={() => {
+                  setPreviewContent({
+                    id: item.id || (idx + 1),
+                    title: item.title,
+                    subtitle: item.subtitle,
+                    duration: item.duration,
+                  });
+                  setShowPreviewModal(true);
+                }}
+              >
+                <RNImage
+                  source={COURSE_ASSET_IMAGES[item.imageKey || 'garbh_sanskar'] || COURSE_ASSET_IMAGES.garbh_sanskar}
+                  style={styles.demoCardBg}
+                  resizeMode="cover"
+                />
+                <View style={styles.demoCardOverlay}>
+                  <Text style={styles.demoCardNumber}>{idx + 1}</Text>
+                  <View style={styles.demoCardPlayRow}>
+                    <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
+                    <Text style={styles.demoCardTitle} numberOfLines={1}>
+                      {item.title.replace(/^\d+\.\s*/, '')}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Card 2: 432Hz Raagas */}
-            <TouchableOpacity 
-              style={styles.demoFeatureCard}
-              activeOpacity={0.88}
-              onPress={() => {
-                setPreviewContent({
-                  id: 2,
-                  title: '2. Garbh Music (432Hz Raagas)',
-                  subtitle: 'Scientifically tuned 432Hz Vedic classical soundwaves stimulating fetal brain neurons.',
-                  duration: '18:45 Mins (432Hz Audio)',
-                });
-                setShowPreviewModal(true);
-              }}
-            >
-              <RNImage
-                source={require('../../../assets/programs/garbh_sanskar.jpg')}
-                style={styles.demoCardBg}
-                resizeMode="cover"
-              />
-              <View style={styles.demoCardOverlay}>
-                <Text style={styles.demoCardNumber}>2</Text>
-                <View style={styles.demoCardPlayRow}>
-                  <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={styles.demoCardTitle}>Garbh Music (432Hz)</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Card 3: Garbh Sanskar Sutra */}
-            <TouchableOpacity 
-              style={styles.demoFeatureCard}
-              activeOpacity={0.88}
-              onPress={() => {
-                setPreviewContent({
-                  id: 3,
-                  title: '3. Garbh Sutra (गर्भ सूत्र)',
-                  subtitle: 'Vedic guidelines & spiritual lifestyle discipline taught by Prof. Vipin Joshi.',
-                  duration: '10:15 Mins (Masterclass)',
-                });
-                setShowPreviewModal(true);
-              }}
-            >
-              <RNImage
-                source={require('../../../assets/images/mentor_prof.png')}
-                style={styles.demoCardBg}
-                resizeMode="cover"
-              />
-              <View style={styles.demoCardOverlay}>
-                <Text style={styles.demoCardNumber}>3</Text>
-                <View style={styles.demoCardPlayRow}>
-                  <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={styles.demoCardTitle}>Garbh Sutra</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Card 4: Garbh Samvad */}
-            <TouchableOpacity 
-              style={styles.demoFeatureCard}
-              activeOpacity={0.88}
-              onPress={() => {
-                setPreviewContent({
-                  id: 4,
-                  title: '4. Garbh Samvad (गर्भ संवाद)',
-                  subtitle: 'Soul-to-soul womb conversation scripts strengthening the mother-child emotional bond.',
-                  duration: '12:00 Mins (Guided Samvad)',
-                });
-                setShowPreviewModal(true);
-              }}
-            >
-              <RNImage
-                source={require('../../../assets/programs/garbhdhaan_sanskar.jpg')}
-                style={styles.demoCardBg}
-                resizeMode="cover"
-              />
-              <View style={styles.demoCardOverlay}>
-                <Text style={styles.demoCardNumber}>4</Text>
-                <View style={styles.demoCardPlayRow}>
-                  <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={styles.demoCardTitle}>Garbh Samvad</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Card 5: Vedic Mantra Vrushti */}
-            <TouchableOpacity 
-              style={styles.demoFeatureCard}
-              activeOpacity={0.88}
-              onPress={() => {
-                setPreviewContent({
-                  id: 5,
-                  title: '5. Vedic Mantra Vrushti (मंत्र वृष्टि)',
-                  subtitle: 'Potent Vedic chanting creating an aura of serenity, protection and spiritual energy.',
-                  duration: '14:20 Mins (Sacred Chants)',
-                });
-                setShowPreviewModal(true);
-              }}
-            >
-              <RNImage
-                source={require('../../../assets/programs/bal_sanskar.jpg')}
-                style={styles.demoCardBg}
-                resizeMode="cover"
-              />
-              <View style={styles.demoCardOverlay}>
-                <Text style={styles.demoCardNumber}>5</Text>
-                <View style={styles.demoCardPlayRow}>
-                  <Play size={12} color="#FFFFFF" fill="#FFFFFF" />
-                  <Text style={styles.demoCardTitle}>Mantra Vrushti</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
 
-        {/* Thought of the Day Card */}
-        <TouchableOpacity 
-          style={styles.thoughtCard}
-          activeOpacity={0.9}
-          onPress={() => setShowThoughtModal(true)}
-        >
-          <View style={styles.thoughtHeaderPill}>
-            <Text style={styles.thoughtHeaderPillText}>Thought of the day</Text>
-          </View>
-          <Text style={styles.thoughtBodyText}>
-            भाई-बहन का रिश्ता बचपन की यादों, निस्वार्थ स्नेह और जीवनभर साथ निभाने वाले विश्वास से संवरता है।
-          </Text>
-          <Text style={styles.thoughtDateText}>11th Nov '26 • Tap for meaning</Text>
-        </TouchableOpacity>
-
-        {/* Live Sessions Banner */}
-        <TouchableOpacity 
-          style={styles.liveSessionCard}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('LiveSessions')}
-        >
-          <View style={styles.livePill}>
-            <Text style={styles.livePillText}>Live Sessions</Text>
-          </View>
-          <View style={styles.liveInnerRow}>
-            <View>
-              <Text style={styles.liveTitle}>प्रबोधन (कहानी सत्र)</Text>
-              <Text style={styles.liveSub}>Watch in the live section of Astro Baby App</Text>
+        {/* Thought of the Day Card (Conditional) */}
+        {experience.widgets?.showThoughtOfDay !== false && (
+          <TouchableOpacity 
+            style={styles.thoughtCard}
+            activeOpacity={0.9}
+            onPress={() => setShowThoughtModal(true)}
+          >
+            <View style={styles.thoughtHeaderPill}>
+              <Text style={styles.thoughtHeaderPillText}>Thought of the day</Text>
             </View>
-            <View style={styles.liveRedTag}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveRedText}>LIVE</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+            <Text style={styles.thoughtBodyText}>
+              भाई-बहन का रिश्ता बचपन की यादों, निस्वार्थ स्नेह और जीवनभर साथ निभाने वाले विश्वास से संवरता है।
+            </Text>
+            <Text style={styles.thoughtDateText}>11th Nov '26 • Tap for meaning</Text>
+          </TouchableOpacity>
+        )}
 
-        {/* Brainupedia & Audio Library Section */}
-        <TouchableOpacity 
-          style={styles.brainupediaCard}
-          activeOpacity={0.9}
-          onPress={() => setShowBrainupediaModal(true)}
-        >
-          <Text style={styles.brainupediaTitle}>Brainupedia</Text>
-          <Text style={styles.brainupediaSub}>
-            Astro Baby brings you exciting Brain Games, Quizzes & Puzzle Sessions for Pregnant Ladies. 🧠
-          </Text>
-        </TouchableOpacity>
+        {/* Live Sessions Banner (Conditional) */}
+        {experience.widgets?.showLiveSessions !== false && (
+          <TouchableOpacity 
+            style={styles.liveSessionCard}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('LiveSessions')}
+          >
+            <View style={styles.livePill}>
+              <Text style={styles.livePillText}>Live Sessions</Text>
+            </View>
+            <View style={styles.liveInnerRow}>
+              <View>
+                <Text style={styles.liveTitle}>प्रबोधन (कहानी सत्र)</Text>
+                <Text style={styles.liveSub}>Watch in the live section of Astro Baby App</Text>
+              </View>
+              <View style={styles.liveRedTag}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveRedText}>LIVE</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Brainupedia & Audio Library Section (Conditional) */}
+        {experience.widgets?.showBrainupedia !== false && (
+          <TouchableOpacity 
+            style={styles.brainupediaCard}
+            activeOpacity={0.9}
+            onPress={() => setShowBrainupediaModal(true)}
+          >
+            <Text style={styles.brainupediaTitle}>Brainupedia</Text>
+            <Text style={styles.brainupediaSub}>
+              Astro Baby brings you exciting Brain Games, Quizzes & Puzzle Sessions for Pregnant Ladies. 🧠
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Features Summary Card with Read More */}
         <View style={styles.featuresListCard}>
           <Text style={styles.featuresListTitle}>Features</Text>
           <View style={styles.featuresListGrid}>
-            {[
+            {(experience.featuresSummaryList || [
               'Art to Live Happy Life',
               'Garbh Sanskar Music (432Hz)',
               'Meditation & Yognidra',
@@ -513,7 +834,7 @@ export const CoursePreviewScreen = () => {
               'Supraj Santanotpatti Hawan',
               'Personal Isht Mantra',
               'Punsavan & Simantonayana Sanskar',
-            ].map((f, i) => (
+            ]).map((f, i) => (
               <View key={i} style={styles.featureBulletRow}>
                 <Text style={styles.featureBulletDot}>•</Text>
                 <Text style={styles.featureBulletText}>{f}</Text>
