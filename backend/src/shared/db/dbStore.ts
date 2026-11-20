@@ -671,6 +671,26 @@ export const FaqsCollection = new JsonCollection<IFaqRecord>('faqs');
 export const DoctorsCollection = new JsonCollection<IDoctorRecord>('doctors');
 export const SupportTicketsCollection = new JsonCollection<ISupportTicket>('support_tickets');
 
+export interface IDeliveredBabyRecord {
+  _id?: string;
+  id: string;
+  babyName: string;
+  parentsName: string;
+  city: string;
+  imageUrl: string;
+  deliveryDate?: string;
+  deliveryType?: string;
+  testimonial?: string;
+  gender?: 'boy' | 'girl' | 'twins' | 'other';
+  weight?: string;
+  likesCount?: number;
+  order?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export const DeliveredBabiesCollection = new JsonCollection<IDeliveredBabyRecord>('delivered_babies');
+
 export interface IDailyActivityRecord {
   _id?: string;
   id: string;
@@ -1453,6 +1473,87 @@ export const seedDefaultPrograms = () => {
         medicalAdvice: '• Fetal movement (quickening) becomes noticeable in Month 4-5. Log all baby flutters.\n• Normal blood pressure range: 110/70 to 120/80 mmHg.\n• If experiencing persistent severe headaches or sudden ankle swelling, immediately alert doctor.',
         hydrationLiters: 2.8,
         updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }
+
+  // Seed default delivered babies if empty
+  if (DeliveredBabiesCollection.read().length === 0) {
+    DeliveredBabiesCollection.write([
+      {
+        id: 'baby_1',
+        babyName: 'Baby Anay',
+        parentsName: 'Priyanka & Saurabh Patil',
+        city: 'Mumbai, Maharashtra',
+        imageUrl: 'https://images.unsplash.com/photo-1544126592-807ade215a0c?auto=format&fit=crop&w=600&q=80',
+        deliveryDate: 'Delivered 12 Oct 2026',
+        deliveryType: 'Normal Delivery',
+        weight: '3.3 kg',
+        gender: 'boy',
+        testimonial: 'Practicing Garbh Samvad & daily Raga meditation kept our pregnancy calm and joyful. Blessed with a serene baby boy!',
+        likesCount: 1420,
+        order: 1,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'baby_2',
+        babyName: 'Baby Myra',
+        parentsName: 'Sunita & Deepak Sharma',
+        city: 'Jaipur, Rajasthan',
+        imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=600&q=80',
+        deliveryDate: 'Delivered 28 Sep 2026',
+        deliveryType: 'Normal Delivery',
+        weight: '3.1 kg',
+        gender: 'girl',
+        testimonial: 'The doctor guidance and Vedic mantras gave us immense confidence throughout our 9 months journey.',
+        likesCount: 980,
+        order: 2,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'baby_3',
+        babyName: 'Baby Kabir',
+        parentsName: 'Neha & Ankit Gupta',
+        city: 'Delhi NCR',
+        imageUrl: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=600&q=80',
+        deliveryDate: 'Delivered 05 Nov 2026',
+        deliveryType: 'Normal Delivery',
+        weight: '3.4 kg',
+        gender: 'boy',
+        testimonial: 'AstroBaby activities became our sacred evening ritual. Our baby responds to the Krishna flute lullabies naturally!',
+        likesCount: 1150,
+        order: 3,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'baby_4',
+        babyName: 'Baby Shanaya',
+        parentsName: 'Pooja & Rohan Verma',
+        city: 'Bengaluru, Karnataka',
+        imageUrl: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80',
+        deliveryDate: 'Delivered 18 Oct 2026',
+        deliveryType: 'Normal Delivery',
+        weight: '3.2 kg',
+        gender: 'girl',
+        testimonial: 'A completely healthy normal delivery! The daily breathing exercises and positive visualization were life changers.',
+        likesCount: 1240,
+        order: 4,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'baby_5',
+        babyName: 'Baby Advik',
+        parentsName: 'Ritu & Manan Mehta',
+        city: 'Ahmedabad, Gujarat',
+        imageUrl: 'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=600&q=80',
+        deliveryDate: 'Delivered 01 Nov 2026',
+        deliveryType: 'Normal Delivery',
+        weight: '3.5 kg',
+        gender: 'boy',
+        testimonial: 'Truly India’s most authentic Garbh Sanskar program. Every mother should experience this divine blessing.',
+        likesCount: 1330,
+        order: 5,
+        createdAt: new Date().toISOString(),
       },
     ]);
   }

@@ -14,6 +14,7 @@ import {
   LifeBuoy,
   LogOut,
   Sparkles,
+  Baby,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -57,6 +58,11 @@ const NAV_ITEMS = [
     label: 'Support Tickets',
     href: '/dashboard/support',
     icon: LifeBuoy,
+  },
+  {
+    label: 'Delivered Babies',
+    href: '/dashboard/delivered-babies',
+    icon: Baby,
   },
 ];
 

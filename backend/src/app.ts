@@ -23,6 +23,7 @@ import supportRoutes from './modules/support/support.routes';
 import coursesRoutes from './modules/courses/courses.routes';
 import classesRoutes from './modules/classes/classes.routes';
 import locationsRoutes from './modules/locations/locations.routes';
+import { adminController } from './modules/admin/admin.controller';
 import { setupSwagger } from './shared/config/swagger';
 
 const app: Application = express();
@@ -62,6 +63,7 @@ app.use('/api/v1/courses', coursesRoutes);
 app.use('/api/v1/classes', classesRoutes);
 app.use('/api/locations', locationsRoutes);
 app.use('/api/v1/locations', locationsRoutes);
+app.get('/api/v1/delivered-babies', adminController.getDeliveredBabies);
 
 // 6. Swagger API Documentation UI (/api-docs)
 setupSwagger(app);

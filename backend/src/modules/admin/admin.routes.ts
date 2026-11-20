@@ -5,6 +5,7 @@ import { classesController } from '../classes/classes.controller';
 import { coursesController } from '../courses/courses.controller';
 import { activityController } from '../activity/activity.controller';
 import { authMiddleware, requireAdmin, requireSuperAdmin } from '../../shared/middlewares/authMiddleware';
+import { uploadBabyMiddleware } from '../../shared/middlewares/babyUploadMiddleware';
 
 const router = Router();
 
@@ -73,6 +74,11 @@ router.post('/broadcasts', adminController.createBroadcast);
 router.get('/support/tickets', supportController.adminListTickets);
 router.post('/support/tickets/:id/reply', supportController.adminReplyTicket);
 router.put('/support/tickets/:id/status', supportController.adminUpdateStatus);
+
+// Delivered Babies Showcase (Admin CRUD)
+router.get('/delivered-babies', adminController.getDeliveredBabies);
+router.post('/delivered-babies', uploadBabyMiddleware, adminController.createDeliveredBaby);
+router.delete('/delivered-babies/:id', adminController.deleteDeliveredBaby);
 
 export default router;
 

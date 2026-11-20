@@ -53,10 +53,13 @@ class ApiClient {
     const token = this.getToken();
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       Accept: 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
+
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -307,6 +310,27 @@ class ApiClient {
     return this.request(`/admin/support/tickets/${ticketId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
+    });
+  }
+
+  // ==========================
+  // 7. Delivered Babies Showcase
+  // ==========================
+  async getDeliveredBabies() {
+    return this.request<{ success: boolean; count: number; data: any[] }>('/admin/delivered-babies');
+  }
+
+  async createDeliveredBaby(payload: FormData | Record<string, any>) {
+    const isFormData = payload instanceof FormData;
+    return this.request('/admin/delivered-babies', {
+      method: 'POST',
+      body: isFormData ? payload : JSON.stringify(payload),
+    });
+  }
+
+  async deleteDeliveredBaby(id: string) {
+    return this.request(`/admin/delivered-babies/${id}`, {
+      method: 'DELETE',
     });
   }
 }

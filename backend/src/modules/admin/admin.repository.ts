@@ -3,8 +3,10 @@ import {
   BroadcastNotificationsCollection,
   CouponsCollection,
   CourseLessonsCollection,
+  DeliveredBabiesCollection,
   IBroadcastNotification,
   ICoupon,
+  IDeliveredBabyRecord,
   IKitDispatch,
   KickSessionsCollection,
   KitDispatchesCollection,
@@ -114,6 +116,18 @@ export class AdminRepository {
 
   async upsertUserJourney(phone: string, update: Record<string, any>) {
     return UserJourneysCollection.upsert({ phone }, update);
+  }
+
+  getAllDeliveredBabies() {
+    return DeliveredBabiesCollection.read();
+  }
+
+  async createDeliveredBaby(baby: IDeliveredBabyRecord) {
+    return DeliveredBabiesCollection.insert(baby);
+  }
+
+  async deleteDeliveredBaby(id: string) {
+    return DeliveredBabiesCollection.delete(id);
   }
 }
 

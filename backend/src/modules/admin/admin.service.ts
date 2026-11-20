@@ -248,19 +248,20 @@ export const adminService = {
     }
 
     const cleanPhone = targetPhone.trim();
-    const user = adminRepository.getUserByPhone(cleanPhone);
-    if (!user) {
-      return {
-        status: 404 as const,
-        error: `User with phone ${cleanPhone} not found`,
-      };
-    }
 
     // Safety guard: Prevent demoting primary root SUPER_ADMIN_PHONE
     if (cleanPhone === SUPER_ADMIN_PHONE && newRole !== 'super_admin') {
       return {
         status: 403 as const,
         error: `The root super administrator (${SUPER_ADMIN_PHONE}) cannot be demoted`,
+      };
+    }
+
+    const user = adminRepository.getUserByPhone(cleanPhone);
+    if (!user) {
+      return {
+        status: 404 as const,
+        error: `User with phone ${cleanPhone} not found`,
       };
     }
 
@@ -287,6 +288,49 @@ export const adminService = {
       result = result.filter(k => k.phone === filter.phone);
     }
     return result;
+  },
+
+  getDeliveredBabies() {
+    const babies = adminRepository.getAllDeliveredBabies();
+    return [...babies]
+      .filter((b: any) => !b.is_deleted)
+      .sort((a, b) => (a.order || 999) - (b.order || 999));
+  },
+
+  async createDeliveredBaby(data: {
+    babyName: string;
+    parentsName: string;
+    city: string;
+    imageUrl: string;
+    deliveryDate?: string;
+    deliveryType?: string;
+    testimonial?: string;
+    gender?: 'boy' | 'girl' | 'twins';
+    weight?: string;
+  }) {
+    const id = `baby_${Date.now()}`;
+    const newBaby = {
+      id,
+      babyName: data.babyName.trim(),
+      parentsName: data.parentsName.trim(),
+      city: data.city.trim(),
+      imageUrl: data.imageUrl.trim(),
+      deliveryDate: data.deliveryDate?.trim() || `Delivered ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+      deliveryType: data.deliveryType || 'Normal Delivery',
+      testimonial: data.testimonial?.trim() || 'Blessed with health, joy, and spiritual harmony through Garbh Sanskar.',
+      gender: data.gender || 'boy',
+      weight: data.weight?.trim() || '3.2 kg',
+      likesCount: Math.floor(Math.random() * 500) + 800,
+      order: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await adminRepository.createDeliveredBaby(newBaby);
+    return newBaby;
+  },
+
+  async deleteDeliveredBaby(id: string) {
+    return adminRepository.deleteDeliveredBaby(id);
   },
 };
 

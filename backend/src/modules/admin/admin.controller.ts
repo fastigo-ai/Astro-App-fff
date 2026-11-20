@@ -229,5 +229,76 @@ export const adminController = {
       return res.status(500).json({ success: false, error: error.message });
     }
   },
+
+  getDeliveredBabies: async (req: Request, res: Response) => {
+    try {
+      const data = adminService.getDeliveredBabies();
+      return res.status(200).json({
+        success: true,
+        count: data.length,
+        data,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  createDeliveredBaby: async (req: Request, res: Response) => {
+    try {
+      let imageUrl = req.body.imageUrl;
+      if (req.file) {
+        // If file uploaded via multer diskStorage
+        const host = req.get('host') || 'localhost:3000';
+        const protocol = req.protocol || 'http';
+        imageUrl = `${protocol}://${host}/uploads/babies/${req.file.filename}`;
+      }
+
+      const { babyName, parentsName, city, deliveryDate, deliveryType, testimonial, gender, weight } = req.body;
+
+      if (!babyName || !parentsName || !city || !imageUrl) {
+        return res.status(400).json({
+          success: false,
+          error: 'babyName, parentsName, city, and a photo (file or imageUrl) are required.',
+        });
+      }
+
+      const baby = await adminService.createDeliveredBaby({
+        babyName,
+        parentsName,
+        city,
+        imageUrl,
+        deliveryDate,
+        deliveryType,
+        testimonial,
+        gender,
+        weight,
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Delivered baby showcase added successfully!',
+        data: baby,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  },
+
+  deleteDeliveredBaby: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ success: false, error: 'Baby ID is required' });
+      }
+      const deleted = await adminService.deleteDeliveredBaby(id as string);
+      return res.status(200).json({
+        success: true,
+        message: 'Delivered baby showcase deleted successfully',
+        deleted,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  },
 };
 

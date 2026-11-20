@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   ScrollView,
   Image as RNImage,
   Dimensions,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,11 +19,57 @@ import {
   Award,
   ShieldCheck,
   CheckCircle2,
+  Heart,
+  Baby,
 } from 'lucide-react-native';
 import { useAuthStore } from '~/store/useAuthStore';
+import { api } from '../../../shared/api';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 44) / 2;
+
+const DEFAULT_BABIES = [
+  {
+    id: 'default_1',
+    babyName: 'Baby Anay',
+    parentsName: 'Priyanka & Saurabh Patil',
+    city: 'Mumbai, MH',
+    deliveryType: 'Normal Delivery',
+    weight: '3.3 kg',
+    localSource: require('../../../assets/images/family_collage.png'),
+    imageUrl: 'https://images.unsplash.com/photo-1544126592-807ade215a0c?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'default_2',
+    babyName: 'Baby Myra',
+    parentsName: 'Sunita & Deepak Sharma',
+    city: 'Jaipur, RJ',
+    deliveryType: 'Normal Delivery',
+    weight: '3.1 kg',
+    localSource: require('../../../assets/images/baby_cute.png'),
+    imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'default_3',
+    babyName: 'Baby Kabir',
+    parentsName: 'Neha & Ankit Gupta',
+    city: 'Delhi NCR',
+    deliveryType: 'Normal Delivery',
+    weight: '3.4 kg',
+    localSource: require('../../../assets/images/hero-1.png'),
+    imageUrl: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'default_4',
+    babyName: 'Baby Shanaya',
+    parentsName: 'Pooja & Rohan Verma',
+    city: 'Bengaluru, KA',
+    deliveryType: 'Normal Delivery',
+    weight: '3.2 kg',
+    localSource: require('../../../assets/images/hero-2.png'),
+    imageUrl: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=600&q=80',
+  },
+];
 
 interface WelcomeCourseSelectionScreenProps {
   navigation?: any;
@@ -35,6 +83,49 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
   const isHindi = i18n.language?.startsWith('hi') ?? false;
 
   const setHasLifeStage = useAuthStore(state => state.setHasLifeStage);
+
+  const [deliveredBabies, setDeliveredBabies] = useState<any[]>(DEFAULT_BABIES);
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let isMounted = true;
+    api
+      .get('/api/v1/delivered-babies')
+      .then((res) => {
+        if (isMounted && res.data?.data && res.data.data.length > 0) {
+          setDeliveredBabies(res.data.data);
+        }
+      })
+      .catch(() => {
+        // Quiet fallback to DEFAULT_BABIES
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const CARD_ITEM_HEIGHT = 160;
+  const CARD_GAP = 12;
+  const TOTAL_ITEM_HEIGHT = CARD_ITEM_HEIGHT + CARD_GAP;
+  const loopDistance = deliveredBabies.length * TOTAL_ITEM_HEIGHT;
+
+  useEffect(() => {
+    scrollY.setValue(0);
+    const animation = Animated.loop(
+      Animated.timing(scrollY, {
+        toValue: -loopDistance,
+        duration: Math.max(14000, deliveredBabies.length * 3800),
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
+  }, [deliveredBabies.length, loopDistance]);
 
   const COURSES = [
     {
@@ -197,20 +288,49 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Happy Babies & Families Collage Banner */}
-          <View style={styles.familiesCollageCard}>
-            <RNImage
-              source={require('../../../assets/images/family_collage.png')}
-              style={styles.familyCollageImage}
-              resizeMode="cover"
-            />
-            <View style={styles.familyCollageOverlay}>
-              <View style={styles.verifiedCountBadge}>
-                <CheckCircle2 size={14} color="#10B981" />
-                <Text style={styles.verifiedCountText}>
-                  {isHindi ? '1,50,000+ खुशहाल माताएं व दिव्य शिशु' : '1,50,000+ Happy Families Blessed'}
-                </Text>
-              </View>
+          {/* Smooth Vertical Auto-Scroller Reel */}
+          <View style={styles.autoScrollerViewport}>
+            <Animated.View
+              style={[
+                styles.scrollerTrack,
+                {
+                  transform: [{ translateY: scrollY }],
+                },
+              ]}
+            >
+              {[...deliveredBabies, ...deliveredBabies, ...deliveredBabies].map((baby, idx) => (
+                <View key={`${baby.id || idx}_${idx}`} style={styles.babyFeedCard}>
+                  <RNImage
+                    source={baby.localSource || { uri: baby.imageUrl }}
+                    style={styles.babyCardImage}
+                    resizeMode="cover"
+                  />
+                  {/* Subtle Dark Gradient Overlay for Crisp Text Readability */}
+                  <View style={styles.babyCardOverlay}>
+                    <View style={styles.babyHeaderRow}>
+                      <Text style={styles.babyNameText} numberOfLines={1}>
+                        {baby.babyName}
+                      </Text>
+                      <View style={styles.babyTypeBadge}>
+                        <Text style={styles.babyTypeBadgeText}>
+                          {baby.deliveryType || 'Normal Delivery'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.babyParentsText} numberOfLines={1}>
+                      {baby.parentsName} • {baby.city}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </Animated.View>
+
+            {/* Persistent Floating Social Proof Badge */}
+            <View style={styles.floatingVerifiedBadge}>
+              <CheckCircle2 size={13} color="#10B981" />
+              <Text style={styles.verifiedCountText}>
+                {isHindi ? '1,50,000+ खुशहाल माताएं व दिव्य शिशु' : '1,50,000+ Happy Families Blessed'}
+              </Text>
             </View>
           </View>
         </View>
@@ -348,11 +468,12 @@ const styles = StyleSheet.create({
   // Social proof section
   socialProofSection: {
     marginTop: 8,
+    marginBottom: 20,
   },
   socialDividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   dividerLine: {
     flex: 1,
@@ -367,36 +488,88 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     textAlign: 'center',
   },
-  familiesCollageCard: {
+  autoScrollerViewport: {
     width: '100%',
-    height: 160,
+    height: 250,
     borderRadius: 18,
     overflow: 'hidden',
     position: 'relative',
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
     borderColor: '#F3F4F6',
   },
-  familyCollageImage: {
+  scrollerTrack: {
+    width: '100%',
+  },
+  babyFeedCard: {
+    width: '100%',
+    height: 160,
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#E5E7EB',
+  },
+  babyCardImage: {
     width: '100%',
     height: '100%',
   },
-  familyCollageOverlay: {
+  babyCardOverlay: {
     position: 'absolute',
-    bottom: 8,
-    left: 8,
-    right: 8,
-    alignItems: 'center',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
   },
-  verifiedCountBadge: {
+  babyHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  babyNameText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    flex: 1,
+  },
+  babyTypeBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  babyTypeBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  babyParentsText: {
+    fontSize: 11,
+    color: '#FDE68A',
+    fontWeight: '600',
+  },
+  floatingVerifiedBadge: {
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 3,
   },
   verifiedCountText: {
     fontSize: 11,
