@@ -72,8 +72,19 @@ export const ProfileSetupScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       setIsLoading(true);
-      // Sync to backend
-      await api.post('/api/v1/profile/details', { name: name.trim(), dob, city, state: selectedState }).catch(() => {});
+      const phone = useAuthStore.getState().phoneNumber || useAuthStore.getState().user?.phone;
+      
+      // Sync to backend (persisted in UserJourneysCollection for admin panel)
+      await api.post('/api/v1/profile/details', { 
+        phone,
+        name: name.trim(), 
+        dob, 
+        city, 
+        state: selectedState,
+        avatar,
+      }).catch((err) => {
+        console.warn('Backend profile sync non-blocking warning:', err);
+      });
       
       // Update local state and immediately navigate to WelcomeCourseSelection
       await setHasProfile(true, { name: name.trim(), dob, city, state: selectedState });
