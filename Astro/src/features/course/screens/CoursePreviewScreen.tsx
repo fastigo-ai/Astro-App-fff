@@ -408,21 +408,24 @@ const resolveExperience = (
     timelineLabel: cfg.timelineLabel || base.timelineLabel,
     mentor: {
       showBanner: cfg.mentor?.showBanner !== undefined ? cfg.mentor.showBanner : (base.mentor?.showBanner ?? true),
-      mentorName: cfg.mentor?.mentorName || base.mentor.mentorName,
+      mentorName: cfg.mentor?.mentorName || cfg.mentor?.name || base.mentor.mentorName,
       classTitle: cfg.mentor?.classTitle || base.mentor.classTitle,
-      subtitle: cfg.mentor?.subtitle || base.mentor.subtitle,
+      subtitle: cfg.mentor?.subtitle || cfg.mentor?.classSubtitle || cfg.mentor?.role || base.mentor.subtitle,
       avatarKey: cfg.mentor?.avatarKey || base.mentor.avatarKey,
     },
     activityCard: {
       ...base.activityCard,
-      ...(cfg.activityCard || {}),
+      title: cfg.activityCard?.title || base.activityCard.title,
+      titleBig: cfg.activityCard?.titleBig || base.activityCard.titleBig,
+      sub: cfg.activityCard?.sub || cfg.activityCard?.subtitle || base.activityCard.sub,
+      imageKey: cfg.activityCard?.imageKey || base.activityCard.imageKey,
     },
     importanceCard: {
       ...base.importanceCard,
       ...(cfg.importanceCard || {}),
     },
     featureReelTitle: cfg.featureReelTitle || base.featureReelTitle,
-    reelItems: (cfg.reelItems && cfg.reelItems.length > 0) ? cfg.reelItems : base.reelItems,
+    reelItems: (cfg.reelItems && Array.isArray(cfg.reelItems) && cfg.reelItems.length > 0) ? cfg.reelItems : base.reelItems,
     widgets: {
       showThoughtOfDay: cfg.widgets?.showThoughtOfDay !== undefined ? cfg.widgets.showThoughtOfDay : (base.widgets?.showThoughtOfDay ?? true),
       showLiveSessions: cfg.widgets?.showLiveSessions !== undefined ? cfg.widgets.showLiveSessions : (base.widgets?.showLiveSessions ?? true),

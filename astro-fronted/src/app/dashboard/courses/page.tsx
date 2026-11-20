@@ -68,6 +68,8 @@ export default function CoursesListPage() {
 
   const handleOpenEdit = (course: any) => {
     const highlights = course.cardHighlights || [];
+    const exp = course.experienceConfig || {};
+    const reelItems = exp.reelItems || [];
     setEditingCourse(course);
     setSaveSuccessMsg(null);
     setEditFormData({
@@ -81,12 +83,30 @@ export default function CoursesListPage() {
       durationMonths: course.durationMonths || 6,
       price: course.pricing?.currentPrice || course.price || 2499,
       originalPrice: course.pricing?.originalPrice || course.originalPrice || 4499,
-      taglinePill: course.experienceConfig?.taglinePill || '',
-      showThoughtOfDay: course.experienceConfig?.widgets?.showThoughtOfDay ?? true,
-      showLiveSessions: course.experienceConfig?.widgets?.showLiveSessions ?? true,
-      showBrainupedia: course.experienceConfig?.widgets?.showBrainupedia ?? true,
-      showAudioLibrary: course.experienceConfig?.widgets?.showAudioLibrary ?? true,
-      showTools: course.experienceConfig?.widgets?.showTools ?? true,
+      taglinePill: exp.taglinePill || '',
+      showThoughtOfDay: exp.widgets?.showThoughtOfDay ?? true,
+      showLiveSessions: exp.widgets?.showLiveSessions ?? true,
+      showBrainupedia: exp.widgets?.showBrainupedia ?? true,
+      showAudioLibrary: exp.widgets?.showAudioLibrary ?? true,
+      showTools: exp.widgets?.showTools ?? true,
+      featureReelTitle: exp.featureReelTitle || `${course.title || 'Course'} Masterclass Features`,
+      activityCardTitle: exp.activityCard?.title || course.title || 'Course Activities',
+      activityCardSubtitle: exp.activityCard?.subtitle || 'of this Month',
+      reel1Title: reelItems[0]?.title || '',
+      reel1Subtitle: reelItems[0]?.subtitle || '',
+      reel1Duration: reelItems[0]?.duration || '8:00 Mins',
+      reel2Title: reelItems[1]?.title || '',
+      reel2Subtitle: reelItems[1]?.subtitle || '',
+      reel2Duration: reelItems[1]?.duration || '15:00 Mins',
+      reel3Title: reelItems[2]?.title || '',
+      reel3Subtitle: reelItems[2]?.subtitle || '',
+      reel3Duration: reelItems[2]?.duration || '10:00 Mins',
+      reel4Title: reelItems[3]?.title || '',
+      reel4Subtitle: reelItems[3]?.subtitle || '',
+      reel4Duration: reelItems[3]?.duration || '12:00 Mins',
+      reel5Title: reelItems[4]?.title || '',
+      reel5Subtitle: reelItems[4]?.subtitle || '',
+      reel5Duration: reelItems[4]?.duration || '14:00 Mins',
     });
   };
 
@@ -117,6 +137,24 @@ export default function CoursesListPage() {
         showBrainupedia: editFormData.showBrainupedia,
         showAudioLibrary: editFormData.showAudioLibrary,
         showTools: editFormData.showTools,
+        featureReelTitle: editFormData.featureReelTitle,
+        activityCardTitle: editFormData.activityCardTitle,
+        activityCardSubtitle: editFormData.activityCardSubtitle,
+        reel1Title: editFormData.reel1Title,
+        reel1Subtitle: editFormData.reel1Subtitle,
+        reel1Duration: editFormData.reel1Duration,
+        reel2Title: editFormData.reel2Title,
+        reel2Subtitle: editFormData.reel2Subtitle,
+        reel2Duration: editFormData.reel2Duration,
+        reel3Title: editFormData.reel3Title,
+        reel3Subtitle: editFormData.reel3Subtitle,
+        reel3Duration: editFormData.reel3Duration,
+        reel4Title: editFormData.reel4Title,
+        reel4Subtitle: editFormData.reel4Subtitle,
+        reel4Duration: editFormData.reel4Duration,
+        reel5Title: editFormData.reel5Title,
+        reel5Subtitle: editFormData.reel5Subtitle,
+        reel5Duration: editFormData.reel5Duration,
       };
 
       await api.updateCourse(editingCourse.id || editingCourse._id, payload);
@@ -544,6 +582,110 @@ export default function CoursesListPage() {
                       <p className="text-[10px] text-slate-500">Daily Vedic inspirational quote</p>
                     </div>
                   </label>
+                </div>
+              </div>
+
+              {/* Course Masterclass Feature Activities (Reel 1 to 5) - Shown on next Course Preview Screen */}
+              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-4">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-950 flex items-center">
+                      <Sparkles className="w-3.5 h-3.5 mr-1.5 text-indigo-600" />
+                      Course Preview Feature Activities (Masterclass Reel 1 to 5)
+                    </span>
+                    <span className="text-[10px] text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full font-bold">
+                      Next Screen in Mobile App
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-indigo-700 mt-0.5">
+                    These 5 activity names appear horizontally immediately after selecting this course in the app.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Feature Reel Header Pill</label>
+                    <input
+                      type="text"
+                      value={editFormData.featureReelTitle || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, featureReelTitle: e.target.value })}
+                      placeholder="e.g. Beej Sanskar Masterclass Features"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Monthly Activity Card Title</label>
+                    <input
+                      type="text"
+                      value={editFormData.activityCardTitle || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, activityCardTitle: e.target.value })}
+                      placeholder="e.g. Beej Sanskar Protocols"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Monthly Card Subtitle</label>
+                    <input
+                      type="text"
+                      value={editFormData.activityCardSubtitle || ''}
+                      onChange={(e) => setEditFormData({ ...editFormData, activityCardSubtitle: e.target.value })}
+                      placeholder="e.g. for Couples / of this Month"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                    />
+                  </div>
+                </div>
+
+                {/* 5 Numbered Activities */}
+                <div className="space-y-2.5 pt-2 border-t border-indigo-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 text-[10px] font-bold text-indigo-900 px-1">
+                    <span className="sm:col-span-1 text-center">#</span>
+                    <span className="sm:col-span-4">Activity Name</span>
+                    <span className="sm:col-span-5">Short Description / Benefits</span>
+                    <span className="sm:col-span-2">Duration</span>
+                  </div>
+
+                  {[
+                    { num: 1, title: 'reel1Title', sub: 'reel1Subtitle', dur: 'reel1Duration', ph: 'e.g. 1. Beej Shuddhi Vidhi' },
+                    { num: 2, title: 'reel2Title', sub: 'reel2Subtitle', dur: 'reel2Duration', ph: 'e.g. 2. Panchakarma Diet' },
+                    { num: 3, title: 'reel3Title', sub: 'reel3Subtitle', dur: 'reel3Duration', ph: 'e.g. 3. Swara & Prana Yoga' },
+                    { num: 4, title: 'reel4Title', sub: 'reel4Subtitle', dur: 'reel4Duration', ph: 'e.g. 4. Beej Dhyan' },
+                    { num: 5, title: 'reel5Title', sub: 'reel5Subtitle', dur: 'reel5Duration', ph: 'e.g. 5. Vedic Mantra Jaap' },
+                  ].map((act) => (
+                    <div key={act.num} className="p-2 rounded-xl bg-white border border-slate-200/90 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                      <div className="sm:col-span-1 flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white text-[11px] font-extrabold flex items-center justify-center">
+                          {act.num}
+                        </span>
+                      </div>
+                      <div className="sm:col-span-4">
+                        <input
+                          type="text"
+                          value={(editFormData as any)[act.title] || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, [act.title]: e.target.value })}
+                          placeholder={act.ph}
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-5">
+                        <input
+                          type="text"
+                          value={(editFormData as any)[act.sub] || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, [act.sub]: e.target.value })}
+                          placeholder="Short Description / Benefit details"
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          value={(editFormData as any)[act.dur] || ''}
+                          onChange={(e) => setEditFormData({ ...editFormData, [act.dur]: e.target.value })}
+                          placeholder="e.g. 10:00 Mins"
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

@@ -356,6 +356,13 @@ export interface ICourseExperienceConfig {
     imageUrl?: string;
   };
   featureReelTitle?: string;
+  reelItems?: Array<{
+    id: number;
+    title: string;
+    subtitle: string;
+    duration: string;
+    imageKey?: string;
+  }>;
   widgets?: {
     showLiveSessions?: boolean;
     showBrainupedia?: boolean;
@@ -1055,6 +1062,13 @@ export const seedDefaultPrograms = () => {
         subtitle: 'in Pregnancy',
       },
       featureReelTitle: 'Garbh Sanskar Demo Features',
+      reelItems: [
+        { id: 1, title: '1. Jeevan Sutra (जीवन सूत्र)', subtitle: 'Daily morning inspiring life lessons & sacred positive thoughts for fetus development.', duration: '6:30 Mins (Vocal Guide)', imageKey: 'consultations' },
+        { id: 2, title: '2. Garbh Music (432Hz Raagas)', subtitle: 'Scientifically tuned 432Hz Vedic classical soundwaves stimulating fetal brain neurons.', duration: '18:45 Mins (432Hz Audio)', imageKey: 'garbh_sanskar' },
+        { id: 3, title: '3. Garbh Sutra (गर्भ सूत्र)', subtitle: 'Vedic guidelines & spiritual lifestyle discipline taught by Prof. Vipin Joshi.', duration: '10:15 Mins (Masterclass)', imageKey: 'mentor_prof' },
+        { id: 4, title: '4. Garbh Samvad (गर्भ संवाद)', subtitle: 'Soul-to-soul womb conversation scripts strengthening the mother-child emotional bond.', duration: '12:00 Mins (Guided Samvad)', imageKey: 'garbhdhaan_sanskar' },
+        { id: 5, title: '5. Vedic Mantra Vrushti (मंत्र वृष्टि)', subtitle: 'Potent Vedic chanting creating an aura of serenity, protection and spiritual energy.', duration: '14:20 Mins (Sacred Chants)', imageKey: 'bal_sanskar' },
+      ],
       widgets: {
         showLiveSessions: true,
         showBrainupedia: true,
@@ -1092,6 +1106,13 @@ export const seedDefaultPrograms = () => {
         subtitle: 'in Natural Conception',
       },
       featureReelTitle: 'Beej Sanskar Masterclass Features',
+      reelItems: [
+        { id: 1, title: '1. Beej Shuddhi Vidhi', subtitle: 'Vedic body purification mantras and cellular detoxification routines for couples.', duration: '8:00 Mins (Daily Routine)', imageKey: 'beej_sanskar' },
+        { id: 2, title: '2. Panchakarma Diet', subtitle: 'Ayurvedic sattvic nutritional diet plan enhancing ovum and sperm vitality.', duration: '12:15 Mins (Diet Guide)', imageKey: 'consultations' },
+        { id: 3, title: '3. Swara & Prana Yoga', subtitle: 'Breath synchronization techniques balancing solar and lunar energy channels.', duration: '15:00 Mins (Yoga Session)', imageKey: 'mentor_prof' },
+        { id: 4, title: '4. Beej Dhyan', subtitle: 'Conscious meditation to invite a noble, healthy, and highly elevated soul.', duration: '10:30 Mins (Meditation)', imageKey: 'garbhdhaan_sanskar' },
+        { id: 5, title: '5. Vedic Mantra Jaap', subtitle: 'Vedic sacred chants to remove hereditary doshas and negative planetary impressions.', duration: '14:00 Mins (Sacred Chants)', imageKey: 'bal_sanskar' },
+      ],
       widgets: {
         showLiveSessions: true,
         showBrainupedia: false,
@@ -1127,6 +1148,13 @@ export const seedDefaultPrograms = () => {
         subtitle: 'in Planetary Alignment',
       },
       featureReelTitle: 'Garbhadhaan Key Ceremonies',
+      reelItems: [
+        { id: 1, title: '1. Rutu-Kaal Shuddhi', subtitle: 'Identifying optimal fertile cycles according to Ayurveda & planetary nakshatras.', duration: '9:00 Mins (Timing Guide)', imageKey: 'garbhdhaan_sanskar' },
+        { id: 2, title: '2. Couple Mind Harmonization', subtitle: 'Synchronized meditation for emotional alignment and sacred connection.', duration: '14:30 Mins (Meditation)', imageKey: 'consultations' },
+        { id: 3, title: '3. Ojas Booster Diet', subtitle: 'Ancient herbal formulations with Shatavari and Ashwagandha for vital essence.', duration: '11:00 Mins (Diet Guide)', imageKey: 'mentor_prof' },
+        { id: 4, title: '4. Santan Gopal Jaap', subtitle: 'Powerful Vedic invocation for conceiving an intelligent, virtuous child.', duration: '21:00 Mins (Sacred Stotra)', imageKey: 'garbh_sanskar' },
+        { id: 5, title: '5. Mental Serenity Sutra', subtitle: 'Stress reduction techniques preventing cortisol spikes during conception.', duration: '12:00 Mins (Relaxation)', imageKey: 'bal_sanskar' },
+      ],
       widgets: {
         showLiveSessions: true,
         showBrainupedia: false,
@@ -1162,6 +1190,13 @@ export const seedDefaultPrograms = () => {
         subtitle: 'in Cognitive Growth',
       },
       featureReelTitle: 'Bal Sanskar Infant Routines',
+      reelItems: [
+        { id: 1, title: '1. Suvarnaprashan Samskara', subtitle: 'Traditional Ayurvedic gold-infused Rasayana protocol boosting newborn immunity and IQ.', duration: '7:30 Mins (Vidhi Guide)', imageKey: 'bal_sanskar' },
+        { id: 2, title: '2. Shishu Lullabies (432Hz)', subtitle: 'Soothing Vedic lullabies and gentle soundscapes for deep infant sleep.', duration: '15:00 Mins (432Hz Audio)', imageKey: 'garbh_sanskar' },
+        { id: 3, title: '3. Sensory High-Contrast Cards', subtitle: 'Visual cognitive stimulation cards activating early optic nerve pathways.', duration: '10:00 Mins (Flashcards)', imageKey: 'consultations' },
+        { id: 4, title: '4. Panchatantra Audio Tale', subtitle: 'Moral story narration embedding virtue, courage, and linguistic aptitude.', duration: '8:45 Mins (Audio Story)', imageKey: 'mentor_prof' },
+        { id: 5, title: '5. Baby Motor Skills & Play', subtitle: 'Guided tummy time, reflex coordination and joyful movement milestones.', duration: '12:00 Mins (Activity Video)', imageKey: 'garbhdhaan_sanskar' },
+      ],
       widgets: {
         showLiveSessions: true,
         showBrainupedia: true,
@@ -1199,6 +1234,13 @@ export const seedDefaultPrograms = () => {
         subtitle: 'in Mother Healing',
       },
       featureReelTitle: 'Postpartum Recovery & Infant Care',
+      reelItems: [
+        { id: 1, title: '1. Abhyanga Massage Guide', subtitle: 'Step-by-step Ayurvedic infant massage routine with warm herbal oil.', duration: '12:00 Mins (Video Routine)', imageKey: 'infant_care' },
+        { id: 2, title: '2. Colic & Burp Relief', subtitle: 'Proven gentle techniques to relieve infant gastric distress and colic crying.', duration: '9:30 Mins (Care Guide)', imageKey: 'baby_cute' },
+        { id: 3, title: '3. Baby Sleep Training', subtitle: 'Circadian rhythm establishment helping infants sleep calmly through the night.', duration: '14:00 Mins (Audio Guide)', imageKey: 'consultations' },
+        { id: 4, title: '4. Postpartum Lactation Diet', subtitle: 'Nutrient-rich post-partum diet increasing milk flow and maternal strength.', duration: '10:15 Mins (Diet Routine)', imageKey: 'garbhdhaan_sanskar' },
+        { id: 5, title: '5. Gentle Hygiene & Bath', subtitle: 'Natural herbal bath and diaper rash prevention tips from pediatricians.', duration: '7:50 Mins (Care Guide)', imageKey: 'garbh_sanskar' },
+      ],
       widgets: {
         showLiveSessions: true,
         showBrainupedia: false,
@@ -1234,6 +1276,13 @@ export const seedDefaultPrograms = () => {
         subtitle: 'in Planetary Harmony',
       },
       featureReelTitle: 'Specialist Consultation Showcase',
+      reelItems: [
+        { id: 1, title: '1. Janma Kundali Analysis', subtitle: 'In-depth analysis of child planetary positions and auspicious yogas.', duration: '25:00 Mins (Consultation)', imageKey: 'consultations' },
+        { id: 2, title: '2. Nakshatra Sanskar', subtitle: 'Identifying primary birth constellation and protective gemstones / deities.', duration: '15:30 Mins (Guidance)', imageKey: 'garbhdhaan_sanskar' },
+        { id: 3, title: '3. Graha Shanti Vidhi', subtitle: 'Vedic pacification remedies to eliminate planetary afflictions.', duration: '18:00 Mins (Vedic Ritual)', imageKey: 'mentor_prof' },
+        { id: 4, title: '4. Ishta Devata Puja', subtitle: 'Establishing family guardian deity worship for lifetime protection.', duration: '12:45 Mins (Spiritual Puja)', imageKey: 'garbh_sanskar' },
+        { id: 5, title: '5. Auspicious Naming Sanskar', subtitle: 'Auspicious first-letter syllable selection based on Nakshatra Charana.', duration: '10:00 Mins (Naming Guide)', imageKey: 'bal_sanskar' },
+      ],
       widgets: {
         showLiveSessions: false,
         showBrainupedia: false,
@@ -1257,9 +1306,25 @@ export const seedDefaultPrograms = () => {
   };
 
   existingPrograms.forEach((p) => {
-    if (!p.experienceConfig && defaultConfigsMap[p.id]) {
-      p.experienceConfig = defaultConfigsMap[p.id];
-      updatedAnyConfig = true;
+    if (defaultConfigsMap[p.id]) {
+      const def = defaultConfigsMap[p.id];
+      if (!p.experienceConfig) {
+        p.experienceConfig = def;
+        updatedAnyConfig = true;
+      } else {
+        if (!p.experienceConfig.reelItems || p.experienceConfig.reelItems.length === 0) {
+          p.experienceConfig.reelItems = def.reelItems;
+          updatedAnyConfig = true;
+        }
+        if (!p.experienceConfig.featureReelTitle && def.featureReelTitle) {
+          p.experienceConfig.featureReelTitle = def.featureReelTitle;
+          updatedAnyConfig = true;
+        }
+        if (!p.experienceConfig.activityCard && def.activityCard) {
+          p.experienceConfig.activityCard = def.activityCard;
+          updatedAnyConfig = true;
+        }
+      }
     }
     if (!p.cardHighlights || p.cardHighlights.length === 0 || (p.cardHighlights[0] && p.cardHighlights[0].length > 35)) {
       if (defaultCardHighlights[p.id]) {

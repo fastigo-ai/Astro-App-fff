@@ -36,6 +36,23 @@ export default function CreateCoursePage() {
     activityCardTitle: '',
     activityCardTitleBig: 'Activities',
     activityCardSub: 'of this Month',
+    activityCardSubtitle: 'of this Month',
+    featureReelTitle: '',
+    reel1Title: '',
+    reel1Subtitle: '',
+    reel1Duration: '8:00 Mins',
+    reel2Title: '',
+    reel2Subtitle: '',
+    reel2Duration: '15:00 Mins',
+    reel3Title: '',
+    reel3Subtitle: '',
+    reel3Duration: '10:00 Mins',
+    reel4Title: '',
+    reel4Subtitle: '',
+    reel4Duration: '12:00 Mins',
+    reel5Title: '',
+    reel5Subtitle: '',
+    reel5Duration: '14:00 Mins',
     showThoughtOfDay: true,
     showLiveSessions: true,
     showBrainupedia: true,
@@ -450,6 +467,97 @@ export default function CreateCoursePage() {
                     <p className="text-[10px] text-slate-500">Daily inspirational Vedic quote</p>
                   </div>
                 </label>
+              </div>
+            </div>
+
+            {/* Course Masterclass Feature Activities (Reel 1 to 5) */}
+            <div className="pt-4 border-t border-amber-200/60 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block">
+                    Course Preview Feature Activities (Masterclass Reel 1 to 5)
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    These 5 activity names appear horizontally immediately after selecting this course in the mobile app.
+                  </span>
+                </div>
+                <span className="text-[10px] text-saffron-700 bg-saffron-50 px-2 py-0.5 rounded-full font-bold border border-saffron-200">
+                  Mobile Preview Reel
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Feature Reel Header Pill
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.featureReelTitle}
+                    onChange={(e) => setFormData({ ...formData, featureReelTitle: e.target.value })}
+                    placeholder="e.g. Masterclass Key Features"
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Monthly Activity Card Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.activityCardSubtitle}
+                    onChange={(e) => setFormData({ ...formData, activityCardSubtitle: e.target.value })}
+                    placeholder="e.g. of this Month / for Couples"
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                  />
+                </div>
+              </div>
+
+              {/* 5 Activity Rows */}
+              <div className="space-y-2.5 pt-2">
+                {[
+                  { num: 1, title: 'reel1Title', sub: 'reel1Subtitle', dur: 'reel1Duration', ph: 'Activity 1 Name (e.g. 1. Pratah Shuddhi)' },
+                  { num: 2, title: 'reel2Title', sub: 'reel2Subtitle', dur: 'reel2Duration', ph: 'Activity 2 Name (e.g. 2. 432Hz Raagas)' },
+                  { num: 3, title: 'reel3Title', sub: 'reel3Subtitle', dur: 'reel3Duration', ph: 'Activity 3 Name (e.g. 3. Spiritual Sutra)' },
+                  { num: 4, title: 'reel4Title', sub: 'reel4Subtitle', dur: 'reel4Duration', ph: 'Activity 4 Name (e.g. 4. Soul-to-Soul Samvad)' },
+                  { num: 5, title: 'reel5Title', sub: 'reel5Subtitle', dur: 'reel5Duration', ph: 'Activity 5 Name (e.g. 5. Vedic Mantra Jaap)' },
+                ].map((act) => (
+                  <div key={act.num} className="p-2.5 rounded-xl bg-white border border-slate-200/90 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div className="sm:col-span-1 flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-lg bg-saffron-600 text-white text-[11px] font-extrabold flex items-center justify-center">
+                        {act.num}
+                      </span>
+                    </div>
+                    <div className="sm:col-span-4">
+                      <input
+                        type="text"
+                        value={(formData as any)[act.title] || ''}
+                        onChange={(e) => setFormData({ ...formData, [act.title]: e.target.value })}
+                        placeholder={act.ph}
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-5">
+                      <input
+                        type="text"
+                        value={(formData as any)[act.sub] || ''}
+                        onChange={(e) => setFormData({ ...formData, [act.sub]: e.target.value })}
+                        placeholder="Short Description / Benefit details"
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        value={(formData as any)[act.dur] || ''}
+                        onChange={(e) => setFormData({ ...formData, [act.dur]: e.target.value })}
+                        placeholder="e.g. 10:00 Mins"
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-saffron-500"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
