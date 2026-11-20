@@ -345,6 +345,10 @@ export const coursesService = {
       },
     };
 
+    const cardHighlights: string[] = Array.isArray(body.cardHighlights) && body.cardHighlights.length > 0
+      ? body.cardHighlights.filter(Boolean).map((s: string) => String(s).trim())
+      : [body.bullet1, body.bullet2, body.bullet3].filter(Boolean).map((s: string) => String(s).trim());
+
     const record: any = {
       _id: id,
       id,
@@ -352,6 +356,7 @@ export const coursesService = {
       hindiTitle: body.hindiTitle || '',
       subtitle: body.subtitle || '',
       imageUrl: body.imageUrl || '',
+      cardHighlights: cardHighlights.length > 0 ? cardHighlights : ['Vedic Care', 'Expert Mentorship'],
       category: body.category || 'Vedic Garbh Sanskar',
       stage: body.stage || 'pregnant',
       durationMonths,
@@ -398,6 +403,15 @@ export const coursesService = {
       throw new AppError(`Course ${id} not found`, 404, 'COURSE_NOT_FOUND');
     }
 
+    let updatedCardHighlights = existing.cardHighlights;
+    if (body.cardHighlights !== undefined) {
+      updatedCardHighlights = Array.isArray(body.cardHighlights)
+        ? body.cardHighlights.filter(Boolean).map((s: string) => String(s).trim())
+        : [String(body.cardHighlights).trim()];
+    } else if (body.bullet1 !== undefined || body.bullet2 !== undefined || body.bullet3 !== undefined) {
+      updatedCardHighlights = [body.bullet1, body.bullet2, body.bullet3].filter(Boolean).map((s: string) => String(s).trim());
+    }
+
     let updatedExp = body.experienceConfig || existing.experienceConfig || {};
     if (
       body.taglinePill !== undefined ||
@@ -431,6 +445,7 @@ export const coursesService = {
 
     return courseRepository.updateById(id, {
       ...body,
+      cardHighlights: updatedCardHighlights,
       experienceConfig: updatedExp,
       updatedAt: new Date().toISOString(),
     });

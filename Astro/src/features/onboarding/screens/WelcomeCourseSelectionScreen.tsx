@@ -364,10 +364,23 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
           const key = (item.id || '').toLowerCase();
           const known = KNOWN_COURSES_CONFIG[key];
 
+          const customHighlights =
+            item.cardHighlights && item.cardHighlights.length > 0
+              ? item.cardHighlights
+              : item.experienceConfig?.cardHighlights && item.experienceConfig.cardHighlights.length > 0
+              ? item.experienceConfig.cardHighlights
+              : null;
+
           if (known) {
             const canonical = known.canonicalId;
             if (!seenCanonicalKeys.has(canonical)) {
               seenCanonicalKeys.add(canonical);
+
+              const bullets =
+                customHighlights && customHighlights.length > 0
+                  ? customHighlights.slice(0, 3).map((b: string) => String(b).replace(/^[\s•\-\*\d\.]+\s*/, '').trim())
+                  : known.bullets(isHindi);
+
               processed.push({
                 id: canonical,
                 categoryTag: known.categoryTag(isHindi),
@@ -375,10 +388,7 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
                 categoryTagText: known.categoryTagText,
                 title: isHindi && item.hindiTitle ? item.hindiTitle : item.title || known.title(isHindi),
                 titleColor: known.titleColor,
-                bullets:
-                  item.tiers?.[0]?.features && item.tiers[0].features.length > 0
-                    ? item.tiers[0].features.slice(0, 2)
-                    : known.bullets(isHindi),
+                bullets,
                 image: item.imageUrl ? { uri: item.imageUrl } : known.image,
                 stage: item.stage || known.stage,
                 route: known.route,
@@ -388,10 +398,10 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
             // New course dynamically created by Admin in Admin Dashboard!
             const palette = COLOR_PALETTES[idx % COLOR_PALETTES.length];
             const bullets =
-              item.tiers?.[0]?.features && item.tiers[0].features.length > 0
-                ? item.tiers[0].features.slice(0, 2)
+              customHighlights && customHighlights.length > 0
+                ? customHighlights.slice(0, 3).map((b: string) => String(b).replace(/^[\s•\-\*\d\.]+\s*/, '').trim())
                 : item.subtitle
-                ? [item.subtitle, item.duration || 'Holistic Care']
+                ? [item.subtitle.slice(0, 30), item.duration ? item.duration.slice(0, 30) : 'Holistic Care']
                 : ['Vedic Garbh Sanskar', 'Guided Mentorship'];
 
             processed.push({
@@ -549,7 +559,7 @@ export const WelcomeCourseSelectionScreen: React.FC<WelcomeCourseSelectionScreen
                 {course.bullets.map((bullet, idx) => (
                   <View key={idx} style={styles.bulletRow}>
                     <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{bullet}</Text>
+                    <Text style={styles.bulletText} numberOfLines={1}>{bullet}</Text>
                   </View>
                 ))}
               </View>

@@ -380,6 +380,7 @@ export interface IProgramSchemeRecord {
   duration: string;
   imageUrl?: string;
   stage?: 'planning' | 'pregnant' | 'parenting';
+  cardHighlights?: string[];
   experienceConfig?: ICourseExperienceConfig;
   unlockedModules: string[];
   tiers: {
@@ -779,6 +780,7 @@ export const seedDefaultPrograms = () => {
         hindiTitle: 'गर्भ संस्कार',
         subtitle: 'Positive Pregnancy & Womb Bonding',
         category: 'Pregnancy',
+        cardHighlights: ['Positive Pregnancy', 'Safe Delivery', 'Great Child'],
         badge: 'MOST POPULAR',
         color: '#65A30D',
         rating: 4.9,
@@ -834,6 +836,7 @@ export const seedDefaultPrograms = () => {
         hindiTitle: 'बीज संस्कार',
         subtitle: 'Fertility Detox & Egg/Sperm Vitality',
         category: 'Conception',
+        cardHighlights: ['Fertility Detox', 'Egg & Sperm Vitality'],
         badge: 'FERTILITY CARE',
         color: '#EC4899',
         rating: 4.95,
@@ -871,6 +874,7 @@ export const seedDefaultPrograms = () => {
         hindiTitle: 'गर्भाधान संस्कार',
         subtitle: 'Auspicious Pre-Pregnancy Planning & Muhurat',
         category: 'Planning',
+        cardHighlights: ['Baby Planning', 'Natural Conception'],
         badge: 'PLANNING',
         color: '#3B82F6',
         rating: 4.9,
@@ -907,6 +911,7 @@ export const seedDefaultPrograms = () => {
         hindiTitle: 'बाल संस्कार',
         subtitle: 'Newborn Nurturing & Sacred Ceremonies',
         category: 'Newborn',
+        cardHighlights: ['Sanskar for Newborn', '0-2 Yrs Brain Care'],
         badge: 'NEWBORN 0-2 YRS',
         color: '#06B6D4',
         rating: 4.92,
@@ -943,6 +948,7 @@ export const seedDefaultPrograms = () => {
         hindiTitle: 'शिशु एवं प्रसूता देखभाल',
         subtitle: 'Postpartum Mother Care & Infant Parenting Coach',
         category: 'Postpartum',
+        cardHighlights: ['Lactation Coaching', 'Postpartum Recovery'],
         badge: 'POSTPARTUM COACHING',
         color: '#F59E0B',
         rating: 4.88,
@@ -979,6 +985,7 @@ export const seedDefaultPrograms = () => {
         hindiTitle: 'विशेषज्ञ परामर्श (१-ऑन-१)',
         subtitle: 'Direct 1-on-1 Video Consultations',
         category: 'Consultations',
+        cardHighlights: ['Astrological Guidance', 'Unparalleled Peace'],
         badge: '1-ON-1 SESSIONS',
         color: '#854D0E',
         rating: 4.96,
@@ -1230,10 +1237,29 @@ export const seedDefaultPrograms = () => {
     },
   };
 
+  const defaultCardHighlights: Record<string, string[]> = {
+    garbh_sanskar: ['Positive Pregnancy', 'Safe Delivery', 'Great Child'],
+    garbhsanskar: ['Positive Pregnancy', 'Safe Delivery', 'Great Child'],
+    beej_sanskar: ['Fertility Detox', 'Egg & Sperm Vitality'],
+    garbhdhaan_sanskar: ['Baby Planning', 'Natural Conception'],
+    garbhadhaan: ['Baby Planning', 'Natural Conception'],
+    bal_sanskar: ['Sanskar for Newborn', '0-2 Yrs Brain Care'],
+    balsanskar: ['Sanskar for Newborn', '0-2 Yrs Brain Care'],
+    infant_care: ['Lactation Coaching', 'Postpartum Recovery'],
+    consultations: ['Astrological Guidance', 'Unparalleled Peace'],
+    bhavitavyam: ['Astrological Guidance', 'Unparalleled Peace'],
+  };
+
   existingPrograms.forEach((p) => {
     if (!p.experienceConfig && defaultConfigsMap[p.id]) {
       p.experienceConfig = defaultConfigsMap[p.id];
       updatedAnyConfig = true;
+    }
+    if (!p.cardHighlights || p.cardHighlights.length === 0 || (p.cardHighlights[0] && p.cardHighlights[0].length > 35)) {
+      if (defaultCardHighlights[p.id]) {
+        p.cardHighlights = defaultCardHighlights[p.id];
+        updatedAnyConfig = true;
+      }
     }
   });
 

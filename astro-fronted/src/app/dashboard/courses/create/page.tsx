@@ -18,6 +18,7 @@ export default function CreateCoursePage() {
     imageUrl: '',
     bullet1: '',
     bullet2: '',
+    bullet3: '',
     overview: '',
     category: 'Vedic Garbh Sanskar',
     stage: 'pregnant',
@@ -51,7 +52,14 @@ export default function CreateCoursePage() {
 
     try {
       setLoading(true);
-      await api.createCourse(formData);
+      const cardHighlights = [formData.bullet1, formData.bullet2, formData.bullet3]
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      await api.createCourse({
+        ...formData,
+        cardHighlights,
+      });
       router.push('/dashboard/courses');
     } catch (err: any) {
       setError(err.message || 'Failed to create course');
@@ -113,45 +121,64 @@ export default function CreateCoursePage() {
             </div>
           </div>
 
-          {/* Photo URL & Key Highlights for App Card */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                Card Image URL (Optional)
-              </label>
-              <input
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                placeholder="https://... image banner"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
-              />
+          {/* Photo URL & Short App Card Bullet Highlights */}
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 text-xs text-blue-900">
+              <span className="font-bold">App Card Box Contents:</span> Keep highlight bullets short and concise (2 to 4 words each, e.g. <i>"Baby Planning"</i>, <i>"Natural Conception"</i>, <i>"Safe Delivery"</i>) so the course card boxes in the app remain clean, elegant, and readable.
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                Key Highlight #1
-              </label>
-              <input
-                type="text"
-                value={formData.bullet1}
-                onChange={(e) => setFormData({ ...formData, bullet1: e.target.value })}
-                placeholder="e.g. Positive Pregnancy Care"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  Image URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  placeholder="https://... card banner"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                Key Highlight #2
-              </label>
-              <input
-                type="text"
-                value={formData.bullet2}
-                onChange={(e) => setFormData({ ...formData, bullet2: e.target.value })}
-                placeholder="e.g. Safe Natural Delivery"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
-              />
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  Card Bullet #1 *
+                </label>
+                <input
+                  type="text"
+                  value={formData.bullet1}
+                  onChange={(e) => setFormData({ ...formData, bullet1: e.target.value })}
+                  placeholder="e.g. Baby Planning"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  Card Bullet #2 *
+                </label>
+                <input
+                  type="text"
+                  value={formData.bullet2}
+                  onChange={(e) => setFormData({ ...formData, bullet2: e.target.value })}
+                  placeholder="e.g. Natural Conception"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  Card Bullet #3 (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.bullet3}
+                  onChange={(e) => setFormData({ ...formData, bullet3: e.target.value })}
+                  placeholder="e.g. Great Child"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500 text-xs font-semibold"
+                />
+              </div>
             </div>
           </div>
 
