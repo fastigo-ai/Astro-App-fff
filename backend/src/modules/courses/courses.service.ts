@@ -339,7 +339,9 @@ export const coursesService = {
       featureReelTitle: body.featureReelTitle || `${body.title || 'Course'} Key Features`,
       widgets: {
         showLiveSessions: body.showLiveSessions !== false,
-        showBrainupedia: body.showBrainupedia ?? (body.stage === 'pregnant'),
+        showBrainupedia: body.showBrainupedia !== false,
+        showAudioLibrary: body.showAudioLibrary !== false,
+        showTools: body.showTools !== false,
         showThoughtOfDay: body.showThoughtOfDay !== false,
         showDietPlan: body.showDietPlan !== false,
       },
@@ -422,7 +424,9 @@ export const coursesService = {
       body.showMentorBanner !== undefined ||
       body.showThoughtOfDay !== undefined ||
       body.showLiveSessions !== undefined ||
-      body.showBrainupedia !== undefined
+      body.showBrainupedia !== undefined ||
+      body.showAudioLibrary !== undefined ||
+      body.showTools !== undefined
     ) {
       updatedExp = {
         ...updatedExp,
@@ -439,6 +443,8 @@ export const coursesService = {
           showThoughtOfDay: body.showThoughtOfDay !== undefined ? Boolean(body.showThoughtOfDay) : (updatedExp.widgets?.showThoughtOfDay ?? true),
           showLiveSessions: body.showLiveSessions !== undefined ? Boolean(body.showLiveSessions) : (updatedExp.widgets?.showLiveSessions ?? true),
           showBrainupedia: body.showBrainupedia !== undefined ? Boolean(body.showBrainupedia) : (updatedExp.widgets?.showBrainupedia ?? true),
+          showAudioLibrary: body.showAudioLibrary !== undefined ? Boolean(body.showAudioLibrary) : (updatedExp.widgets?.showAudioLibrary ?? true),
+          showTools: body.showTools !== undefined ? Boolean(body.showTools) : (updatedExp.widgets?.showTools ?? true),
         },
       };
     }

@@ -361,6 +361,8 @@ export interface ICourseExperienceConfig {
     showBrainupedia?: boolean;
     showThoughtOfDay?: boolean;
     showDietPlan?: boolean;
+    showAudioLibrary?: boolean;
+    showTools?: boolean;
   };
 }
 
@@ -1058,6 +1060,8 @@ export const seedDefaultPrograms = () => {
         showBrainupedia: true,
         showThoughtOfDay: true,
         showDietPlan: true,
+        showAudioLibrary: true,
+        showTools: true,
       },
     },
     beej_sanskar: {
@@ -1163,6 +1167,8 @@ export const seedDefaultPrograms = () => {
         showBrainupedia: true,
         showThoughtOfDay: true,
         showDietPlan: true,
+        showAudioLibrary: true,
+        showTools: true,
       },
     },
     infant_care: {

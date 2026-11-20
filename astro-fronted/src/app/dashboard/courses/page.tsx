@@ -42,6 +42,8 @@ export default function CoursesListPage() {
     showThoughtOfDay: true,
     showLiveSessions: true,
     showBrainupedia: true,
+    showAudioLibrary: true,
+    showTools: true,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
@@ -83,6 +85,8 @@ export default function CoursesListPage() {
       showThoughtOfDay: course.experienceConfig?.widgets?.showThoughtOfDay ?? true,
       showLiveSessions: course.experienceConfig?.widgets?.showLiveSessions ?? true,
       showBrainupedia: course.experienceConfig?.widgets?.showBrainupedia ?? true,
+      showAudioLibrary: course.experienceConfig?.widgets?.showAudioLibrary ?? true,
+      showTools: course.experienceConfig?.widgets?.showTools ?? true,
     });
   };
 
@@ -111,6 +115,8 @@ export default function CoursesListPage() {
         showThoughtOfDay: editFormData.showThoughtOfDay,
         showLiveSessions: editFormData.showLiveSessions,
         showBrainupedia: editFormData.showBrainupedia,
+        showAudioLibrary: editFormData.showAudioLibrary,
+        showTools: editFormData.showTools,
       };
 
       await api.updateCourse(editingCourse.id || editingCourse._id, payload);
@@ -239,6 +245,30 @@ export default function CoursesListPage() {
                           {course.stage || 'pregnant'}
                         </span>
                       </div>
+                    </div>
+
+                    {/* Enabled Modules Pill Row */}
+                    <div className="mt-3.5 flex flex-wrap gap-1.5">
+                      {course.experienceConfig?.widgets?.showAudioLibrary !== false && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                          🎵 Audio Lib
+                        </span>
+                      )}
+                      {course.experienceConfig?.widgets?.showBrainupedia !== false && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
+                          🧠 Games
+                        </span>
+                      )}
+                      {course.experienceConfig?.widgets?.showTools !== false && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                          🩺 Tools
+                        </span>
+                      )}
+                      {course.experienceConfig?.widgets?.showLiveSessions !== false && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">
+                          🔴 Live
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -441,6 +471,79 @@ export default function CoursesListPage() {
                     placeholder="e.g. मैं से माँ तक की आनंदमयी यात्रा"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-saffron-500"
                   />
+                </div>
+              </div>
+
+              {/* Included Support Modules & Widget Toggles */}
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-3">
+                <span className="text-xs font-bold text-amber-900 block">
+                  Included Support Modules & Features (Enabled for this Course):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <label className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editFormData.showAudioLibrary}
+                      onChange={(e) => setEditFormData({ ...editFormData, showAudioLibrary: e.target.checked })}
+                      className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">🎵 Audio Library</p>
+                      <p className="text-[10px] text-slate-500">432Hz Raagas, Mantras & Samvad</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editFormData.showBrainupedia}
+                      onChange={(e) => setEditFormData({ ...editFormData, showBrainupedia: e.target.checked })}
+                      className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">🧠 Brainupedia & Games</p>
+                      <p className="text-[10px] text-slate-500">Cognitive quiz & puzzle sessions</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editFormData.showTools}
+                      onChange={(e) => setEditFormData({ ...editFormData, showTools: e.target.checked })}
+                      className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">🩺 Interactive Tools</p>
+                      <p className="text-[10px] text-slate-500">Kick counter, womb game, water tracker</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editFormData.showLiveSessions}
+                      onChange={(e) => setEditFormData({ ...editFormData, showLiveSessions: e.target.checked })}
+                      className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">🔴 Live Sessions</p>
+                      <p className="text-[10px] text-slate-500">Live doctor & zoom sessions</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center space-x-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editFormData.showThoughtOfDay}
+                      onChange={(e) => setEditFormData({ ...editFormData, showThoughtOfDay: e.target.checked })}
+                      className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">💡 Thought of Day</p>
+                      <p className="text-[10px] text-slate-500">Daily Vedic inspirational quote</p>
+                    </div>
+                  </label>
                 </div>
               </div>
 

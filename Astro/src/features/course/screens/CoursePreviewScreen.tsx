@@ -89,6 +89,8 @@ export interface ICourseExperience {
     showThoughtOfDay?: boolean;
     showLiveSessions?: boolean;
     showBrainupedia?: boolean;
+    showAudioLibrary?: boolean;
+    showTools?: boolean;
   };
   featuresSummaryList?: string[];
 }
@@ -425,6 +427,8 @@ const resolveExperience = (
       showThoughtOfDay: cfg.widgets?.showThoughtOfDay !== undefined ? cfg.widgets.showThoughtOfDay : (base.widgets?.showThoughtOfDay ?? true),
       showLiveSessions: cfg.widgets?.showLiveSessions !== undefined ? cfg.widgets.showLiveSessions : (base.widgets?.showLiveSessions ?? true),
       showBrainupedia: cfg.widgets?.showBrainupedia !== undefined ? cfg.widgets.showBrainupedia : (base.widgets?.showBrainupedia ?? true),
+      showAudioLibrary: cfg.widgets?.showAudioLibrary !== undefined ? cfg.widgets.showAudioLibrary : (base.widgets?.showAudioLibrary ?? true),
+      showTools: cfg.widgets?.showTools !== undefined ? cfg.widgets.showTools : (base.widgets?.showTools ?? true),
     },
     featuresSummaryList: (cfg.featuresSummaryList && cfg.featuresSummaryList.length > 0) ? cfg.featuresSummaryList : base.featuresSummaryList,
   };
@@ -808,18 +812,80 @@ export const CoursePreviewScreen = () => {
           </TouchableOpacity>
         )}
 
-        {/* Brainupedia & Audio Library Section (Conditional) */}
+        {/* Vedic Audio Library Section (Conditional) */}
+        {experience.widgets?.showAudioLibrary !== false && (
+          <TouchableOpacity 
+            style={styles.audioLibraryCard}
+            activeOpacity={0.9}
+            onPress={() => {
+              setPreviewContent({
+                id: 99,
+                title: isHindi ? 'वैदिक ऑडियो लाइब्रेरी (432Hz राग)' : 'Vedic Audio Library (432Hz Raagas)',
+                subtitle: isHindi 
+                  ? 'दैनिक श्लोक, गर्भ संवाद, 432Hz ध्यान संगीत एवं शांत निद्रा राग' 
+                  : 'Daily Shlokas, Soulful Garbh Samvad, 432Hz Vedic Soundwaves & Peaceful Sleep Lullabies',
+                duration: 'Unlimited Access',
+              });
+              setShowPreviewModal(true);
+            }}
+          >
+            <View style={styles.audioLibInnerRow}>
+              <View style={styles.audioIconBox}>
+                <Music size={22} color="#D97706" />
+              </View>
+              <View style={styles.audioTextCol}>
+                <View style={styles.audioTitleRow}>
+                  <Text style={styles.audioLibraryTitle}>Vedic Audio Library</Text>
+                  <View style={styles.audioBadge}>
+                    <Text style={styles.audioBadgeText}>INCLUDED</Text>
+                  </View>
+                </View>
+                <Text style={styles.audioLibrarySub}>
+                  432Hz Raagas, Garbh Samvad, Vedic Mantras & Sleep Lullabies 🎵
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Brainupedia & IQ Stimulation Section (Conditional) */}
         {experience.widgets?.showBrainupedia !== false && (
           <TouchableOpacity 
             style={styles.brainupediaCard}
             activeOpacity={0.9}
             onPress={() => setShowBrainupediaModal(true)}
           >
-            <Text style={styles.brainupediaTitle}>Brainupedia</Text>
+            <Text style={styles.brainupediaTitle}>Brainupedia & Brain Games</Text>
             <Text style={styles.brainupediaSub}>
               Astro Baby brings you exciting Brain Games, Quizzes & Puzzle Sessions for Pregnant Ladies. 🧠
             </Text>
           </TouchableOpacity>
+        )}
+
+        {/* Interactive Support Tools (Kick Counter, Womb Game, Water Tracker) */}
+        {experience.widgets?.showTools !== false && (
+          <View style={styles.toolsSupportCard}>
+            <View style={styles.toolsHeaderRow}>
+              <View style={styles.toolsIconBox}>
+                <Sparkles size={18} color="#059669" />
+              </View>
+              <View>
+                <Text style={styles.toolsTitle}>Interactive Support Tools</Text>
+                <Text style={styles.toolsSub}>Included with your program</Text>
+              </View>
+            </View>
+            <View style={styles.toolsPillRow}>
+              <View style={styles.toolPill}>
+                <Text style={styles.toolPillText}>🩺 Fetal Kick Counter</Text>
+              </View>
+              <View style={styles.toolPill}>
+                <Text style={styles.toolPillText}>🎮 Interactive Womb Game</Text>
+              </View>
+              <View style={styles.toolPill}>
+                <Text style={styles.toolPillText}>💧 Water Intake Tracker</Text>
+              </View>
+            </View>
+          </View>
         )}
 
         {/* Features Summary Card with Read More */}
@@ -1672,6 +1738,58 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#DC2626',
   },
+  // Audio Library
+  audioLibraryCard: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    padding: 14,
+    marginBottom: 14,
+  },
+  audioLibInnerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  audioIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  audioTextCol: {
+    flex: 1,
+  },
+  audioTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 3,
+  },
+  audioLibraryTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#92400E',
+  },
+  audioBadge: {
+    backgroundColor: '#FDE68A',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  audioBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  audioLibrarySub: {
+    fontSize: 11.5,
+    color: '#78350F',
+    lineHeight: 16,
+  },
   // Brainupedia
   brainupediaCard: {
     backgroundColor: '#FDF4FF',
@@ -1691,6 +1809,56 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: '#701A75',
     lineHeight: 16,
+  },
+  // Tools Support
+  toolsSupportCard: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    padding: 14,
+    marginBottom: 14,
+  },
+  toolsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  toolsIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  toolsTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#065F46',
+  },
+  toolsSub: {
+    fontSize: 11,
+    color: '#047857',
+  },
+  toolsPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  toolPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  toolPillText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#047857',
   },
   // Features list
   featuresListCard: {

@@ -39,6 +39,8 @@ export default function CreateCoursePage() {
     showThoughtOfDay: true,
     showLiveSessions: true,
     showBrainupedia: true,
+    showAudioLibrary: true,
+    showTools: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -378,33 +380,22 @@ export default function CreateCoursePage() {
               )}
             </div>
 
-            {/* Widget Toggles */}
+            {/* Widget & Tool Toggles */}
             <div className="pt-2 border-t border-amber-200/60">
-              <span className="text-xs font-bold text-slate-800 block mb-2">Display Widgets on Course Screen</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <span className="text-xs font-bold text-slate-800 block mb-2">
+                Included Support Modules & Widgets (Enabled for this Course)
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.showThoughtOfDay}
-                    onChange={(e) => setFormData({ ...formData, showThoughtOfDay: e.target.checked })}
+                    checked={formData.showAudioLibrary}
+                    onChange={(e) => setFormData({ ...formData, showAudioLibrary: e.target.checked })}
                     className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
                   />
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Thought of Day</p>
-                    <p className="text-[10px] text-slate-500">Daily inspirational Vedic quote</p>
-                  </div>
-                </label>
-
-                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.showLiveSessions}
-                    onChange={(e) => setFormData({ ...formData, showLiveSessions: e.target.checked })}
-                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
-                  />
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">Live Sessions</p>
-                    <p className="text-[10px] text-slate-500">Live doctor & interactive zoom</p>
+                    <p className="text-xs font-bold text-slate-800">🎵 Audio Library</p>
+                    <p className="text-[10px] text-slate-500">432Hz Raagas, Mantras & Samvad</p>
                   </div>
                 </label>
 
@@ -416,8 +407,47 @@ export default function CreateCoursePage() {
                     className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
                   />
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Brainupedia</p>
-                    <p className="text-[10px] text-slate-500">Cognitive quiz & puzzle games</p>
+                    <p className="text-xs font-bold text-slate-800">🧠 Brainupedia & Games</p>
+                    <p className="text-[10px] text-slate-500">Cognitive quiz & puzzle sessions</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showTools}
+                    onChange={(e) => setFormData({ ...formData, showTools: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">🩺 Interactive Tools</p>
+                    <p className="text-[10px] text-slate-500">Kick counter, womb game, water tracker</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showLiveSessions}
+                    onChange={(e) => setFormData({ ...formData, showLiveSessions: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">🔴 Live Sessions</p>
+                    <p className="text-[10px] text-slate-500">Live doctor & interactive zoom</p>
+                  </div>
+                </label>
+
+                <label className="flex items-center space-x-2.5 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.showThoughtOfDay}
+                    onChange={(e) => setFormData({ ...formData, showThoughtOfDay: e.target.checked })}
+                    className="rounded text-saffron-600 focus:ring-saffron-500 w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">💡 Thought of Day</p>
+                    <p className="text-[10px] text-slate-500">Daily inspirational Vedic quote</p>
                   </div>
                 </label>
               </div>
